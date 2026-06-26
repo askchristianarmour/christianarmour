@@ -1,45 +1,29 @@
 import { supabase } from './supabase'
+import type { AuthError } from '@supabase/supabase-js'
 import type { LockStatus } from '../types/database'
+import { isApiRateLimitError, withRateLimit } from './rate-limiter'
+
+const MAX_ATTEMPTS = 5
 
 function normalizeEmail(email: string) {
   return email.toLowerCase().trim()
 }
 
-async function signInViaEdgeFunction(email: string, password: string) {
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/secure-sign-in`
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify({ email, password }),
-  })
-
-  if (res.status === 404 || res.status === 502 || res.status === 503) {
-    throw new Error('EDGE_FUNCTION_UNAVAILABLE')
-  }
-
-  const result = await res.json()
-
-  if (!res.ok) {
-    return { error: result.error ?? 'Sign in failed.' }
-  }
-
-  const { error } = await supabase.auth.setSession({
-    access_token: result.access_token,
-    refresh_token: result.refresh_token,
-  })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  return { error: null }
+function isWrongCredentials(error: AuthError) {
+  return (
+    error.message === 'Invalid login credentials' ||
+    error.code === 'invalid_credentials'
+  )
 }
 
-async function signInViaRpc(email: string, password: string) {
+export function formatAuthError(error: AuthError) {
+  if (isApiRateLimitError(error)) {
+    return 'API rate limit reached. Please wait a few minutes before trying again.'
+  }
+  return error.message
+}
+
+async function signInRequest(email: string, password: string) {
   const normalized = normalizeEmail(email)
 
   const { data: lockStatus, error: lockError } = await supabase.rpc(
@@ -47,13 +31,11 @@ async function signInViaRpc(email: string, password: string) {
     { p_email: normalized },
   )
 
-  if (lockError) {
-    return { error: lockError.message }
-  }
-
-  const status = lockStatus as LockStatus
-  if (status.locked) {
-    return { error: 'Account locked. Try again after 24 hours.' }
+  if (!lockError) {
+    const status = lockStatus as LockStatus
+    if (status.locked) {
+      return { error: 'Account locked after too many wrong passwords. Try again after 24 hours.' }
+    }
   }
 
   const { error } = await supabase.auth.signInWithPassword({
@@ -62,12 +44,23 @@ async function signInViaRpc(email: string, password: string) {
   })
 
   if (error) {
-    const { data: failResult } = await supabase.rpc('record_failed_login', {
-      p_email: normalized,
-    })
+    if (isWrongCredentials(error)) {
+      const { data: failResult } = await supabase.rpc('record_failed_login', {
+        p_email: normalized,
+      })
 
-    const fail = failResult as LockStatus
-    return { error: fail?.message ?? error.message }
+      const fail = failResult as LockStatus
+      if (fail?.message) {
+        return { error: fail.message }
+      }
+
+      const remaining = fail?.remaining ?? MAX_ATTEMPTS - 1
+      return {
+        error: `Invalid email or password. ${remaining} attempt(s) remaining before lockout.`,
+      }
+    }
+
+    return { error: formatAuthError(error) }
   }
 
   await supabase.rpc('reset_login_attempts', { p_email: normalized })
@@ -75,9 +68,6 @@ async function signInViaRpc(email: string, password: string) {
 }
 
 export async function secureSignIn(email: string, password: string) {
-  try {
-    return await signInViaEdgeFunction(email, password)
-  } catch {
-    return signInViaRpc(email, password)
-  }
+  const normalized = normalizeEmail(email)
+  return withRateLimit('signIn', normalized, () => signInRequest(normalized, password))
 }

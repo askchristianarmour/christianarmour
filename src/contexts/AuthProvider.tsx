@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
-import { secureSignIn } from '../lib/auth'
+import { formatAuthError, secureSignIn } from '../lib/auth'
+import { withRateLimit } from '../lib/rate-limiter'
 import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -33,20 +34,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string) => {
     const normalized = email.toLowerCase().trim()
 
-    const { data, error } = await supabase.auth.signUp({
-      email: normalized,
-      password,
+    return withRateLimit('signUp', normalized, async () => {
+      const { data, error } = await supabase.auth.signUp({
+        email: normalized,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      })
+
+      if (error) {
+        if (error.message.toLowerCase().includes('already registered')) {
+          return { error: 'This email is already registered. Please sign in instead.' }
+        }
+        return { error: formatAuthError(error) }
+      }
+
+      if (data.user?.identities?.length === 0) {
+        return { error: 'This email is already registered. Please sign in instead.' }
+      }
+
+      if (data.session) {
+        return { error: null }
+      }
+
+      return { error: null, needsEmailConfirmation: true }
     })
-
-    if (error) {
-      return { error: error.message }
-    }
-
-    if (data.session) {
-      return { error: null }
-    }
-
-    return { error: null, needsEmailConfirmation: true }
   }
 
   const signOut = async () => {

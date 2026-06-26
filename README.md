@@ -30,7 +30,7 @@
 | 🔐 | **Email & password auth** | Sign up, sign in, and sign out via Supabase |
 | 🔗 | **Magic-link reset** | Forgot password flow with email reset link |
 | 👁️ | **Password visibility** | Show/hide toggle on every password field |
-| 🔒 | **Account lockout** | 3 failed sign-in attempts → 24-hour lock |
+| 🔒 | **Account lockout** | 5 wrong passwords → 24-hour lock (sign-in sends no email) |
 | 🛡️ | **Row Level Security** | Bearer JWT tokens enforced at the database layer |
 
 ---
@@ -119,6 +119,7 @@ Open [http://localhost:5173](http://localhost:5173)
 | Setting | Value |
 |---------|-------|
 | **Email provider** | Enabled |
+| **Confirm email** | **Disabled** (recommended — avoids signup rate limits; users sign in immediately) |
 | **Site URL** | `https://christianarmour.vercel.app` |
 | **Redirect URLs** | `https://christianarmour.vercel.app/reset-password` |
 | | `http://localhost:5173/reset-password` |
@@ -178,7 +179,7 @@ christianarmour/
 
 - **JWT bearer tokens** — automatically attached to every Supabase API request
 - **Row Level Security** — likes and comments require `auth.uid()`
-- **Login lockout** — 3 failed attempts lock the account for 24 hours
+- **Login lockout** — 5 wrong passwords lock the account for 24 hours (not triggered on sign-up or rate-limit errors)
 - **No secrets in frontend** — only the Supabase anon key is exposed (safe with RLS)
 
 ---

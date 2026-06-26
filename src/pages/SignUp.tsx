@@ -4,7 +4,9 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { PasswordInput } from '../components/PasswordInput'
+import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useAuth } from '../hooks/useAuth'
+import { useRateLimit } from '../hooks/useRateLimit'
 
 const schema = z
   .object({
@@ -28,13 +30,19 @@ export function SignUp() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '', confirmPassword: '' },
   })
 
+  const email = watch('email')
+  const rateLimit = useRateLimit('signUp', email)
+
   const onSubmit = async (data: FormData) => {
+    if (rateLimit.isBlocked) return
+
     setAuthError(null)
     setSuccessMessage(null)
 
@@ -95,6 +103,11 @@ export function SignUp() {
             {...register('confirmPassword')}
           />
 
+          <RateLimitBanner
+            message={rateLimit.message}
+            retryAfterSeconds={rateLimit.retryAfterSeconds}
+          />
+
           {authError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {authError}
@@ -112,10 +125,14 @@ export function SignUp() {
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || rateLimit.isBlocked}
             className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
-            {isSubmitting ? 'Creating account…' : 'Sign up'}
+            {isSubmitting
+              ? 'Creating account…'
+              : rateLimit.isBlocked
+                ? `Wait ${rateLimit.retryAfterSeconds}s`
+                : 'Sign up'}
           </button>
         </form>
 

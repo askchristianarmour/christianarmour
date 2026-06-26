@@ -1,4 +1,6 @@
 import { supabase } from './supabase'
+import { formatAuthError } from './auth'
+import { withRateLimit } from './rate-limiter'
 
 function normalizeEmail(email: string) {
   return email.toLowerCase().trim()
@@ -11,20 +13,30 @@ export function getResetPasswordRedirectUrl() {
 export async function sendPasswordResetLink(email: string) {
   const normalized = normalizeEmail(email)
 
-  const { error } = await supabase.auth.resetPasswordForEmail(normalized, {
-    redirectTo: getResetPasswordRedirectUrl(),
-  })
+  return withRateLimit('forgotPassword', normalized, async () => {
+    const { error } = await supabase.auth.resetPasswordForEmail(normalized, {
+      redirectTo: getResetPasswordRedirectUrl(),
+    })
 
-  return { error: error?.message ?? null }
+    if (error) {
+      return { error: formatAuthError(error) }
+    }
+
+    return { error: null }
+  })
 }
 
-export async function updatePassword(newPassword: string) {
-  const { error } = await supabase.auth.updateUser({ password: newPassword })
+export async function updatePassword(newPassword: string, email?: string) {
+  const key = email ? normalizeEmail(email) : 'session'
 
-  if (error) {
-    return { error: error.message }
-  }
+  return withRateLimit('resetPassword', key, async () => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
 
-  await supabase.auth.signOut()
-  return { error: null }
+    if (error) {
+      return { error: formatAuthError(error) }
+    }
+
+    await supabase.auth.signOut()
+    return { error: null }
+  })
 }

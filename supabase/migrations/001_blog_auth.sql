@@ -89,7 +89,7 @@ set search_path = public
 as $$
 declare
   v_attempt login_attempts%rowtype;
-  v_max_attempts int := 3;
+  v_max_attempts int := 5;
 begin
   select * into v_attempt from login_attempts where email = lower(trim(p_email));
 
@@ -127,7 +127,7 @@ set search_path = public
 as $$
 declare
   v_email text := lower(trim(p_email));
-  v_max_attempts int := 3;
+  v_max_attempts int := 5;
   v_lock_hours int := 24;
   v_failed int;
   v_locked_until timestamptz;
@@ -147,14 +147,14 @@ begin
 
     return json_build_object(
       'locked', true,
-      'message', 'Too many failed attempts. Account locked for 24 hours.',
+      'message', 'Too many wrong passwords. Account locked for 24 hours.',
       'remaining', 0
     );
   end if;
 
   return json_build_object(
     'locked', false,
-    'message', format('Invalid credentials. %s attempt(s) remaining.', v_max_attempts - v_failed),
+    'message', format('Invalid email or password. %s attempt(s) remaining.', v_max_attempts - v_failed),
     'remaining', v_max_attempts - v_failed
   );
 end;
