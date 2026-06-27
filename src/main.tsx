@@ -12,6 +12,9 @@ import { SignUp } from './pages/SignUp'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
 import { Profile } from './pages/Profile'
+import { Activity } from './pages/Activity'
+import { Analytics } from './pages/Analytics'
+import { WritePost } from './pages/WritePost'
 import './index.css'
 
 const queryClient = new QueryClient()
@@ -30,6 +33,9 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/activity" element={<Activity />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/add-post" element={<WritePost />} />
               </Route>
             </Routes>
           </BrowserRouter>

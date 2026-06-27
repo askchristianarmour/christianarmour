@@ -4,12 +4,13 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User as UserIcon, Lock, Heart, MessageSquare, Shield, ChevronLeft, Camera } from 'lucide-react'
+import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Trash2, Image as ImageIcon } from 'lucide-react'
 
 interface ActivityLike {
   id: string
   post_id: string
   user_id: string
+  created_at: string
   posts: {
     title: string
   } | null
@@ -26,6 +27,10 @@ interface ActivityComment {
   } | null
 }
 
+type ActivityItem =
+  | (ActivityLike & { type: 'like' })
+  | (ActivityComment & { type: 'comment' })
+
 export function Profile() {
   const { user, loading } = useAuth()
   const { success: toastSuccess, error: toastError } = useToast()
@@ -39,6 +44,190 @@ export function Profile() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isUpdatingName, setIsUpdatingName] = useState(false)
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState<'settings' | 'activity' | 'add-post' | 'permissions'>('settings')
+
+  // Add post state
+  const [postTitle, setPostTitle] = useState('')
+  const [postContent, setPostContent] = useState('')
+  const [commentsEnabled, setCommentsEnabled] = useState(false)
+  const [showPublishPreview, setShowPublishPreview] = useState(false)
+
+  // Post Header Image & Crop state
+  const [postImageSrc, setPostImageSrc] = useState<string | null>(null)
+  const [postImageBlob, setPostImageBlob] = useState<Blob | null>(null)
+  const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
+  const [postCropZoom, setPostCropZoom] = useState(1)
+  const [postCropPosition, setPostCropPosition] = useState({ x: 0, y: 0 })
+  const [postIsDragging, setPostIsDragging] = useState(false)
+  const [postDragStart, setPostDragStart] = useState({ x: 0, y: 0 })
+
+  // Permissions state
+  const [newAccessEmail, setNewAccessEmail] = useState('')
+
+  // Fetch current user permissions
+  const { data: userPermission } = useQuery({
+    queryKey: ['user-permissions', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      if (!user?.id) return null
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('*')
+        .eq('email', user.email)
+        .single()
+
+      if (error) {
+        // Return default permissions if query fails (table not created yet, etc.)
+        return {
+          email: user.email,
+          can_post: user.email === 'ask@christianarmour.com',
+          is_admin: user.email === 'ask@christianarmour.com',
+        }
+      }
+      return data
+    },
+  })
+
+  const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
+  const canPost = user?.email === 'ask@christianarmour.com' || !!userPermission?.can_post
+
+  // Fetch all permissions for Admin View
+  const { data: allPermissions, refetch: refetchPermissions, error: permissionsTableError } = useQuery({
+    queryKey: ['all-permissions'],
+    enabled: !!user?.id && isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('*')
+        .order('email', { ascending: true })
+
+      if (error) throw error
+      return data || []
+    },
+  })
+
+  // Mutation to add a new post
+  const addPostMutation = useMutation({
+    mutationFn: async (payload: { title: string; content: string; imageBlob: Blob | null; commentsEnabled: boolean }) => {
+      const postId = crypto.randomUUID()
+      let imageUrl: string | null = null
+
+      // Upload image to Supabase Storage if selected
+      if (payload.imageBlob) {
+        const filePath = `feeds/${postId}-${Date.now()}.png`
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(filePath, payload.imageBlob, {
+            contentType: 'image/png',
+            upsert: true,
+          })
+
+        if (uploadError) throw uploadError
+
+        const { data } = supabase.storage
+          .from('posts')
+          .getPublicUrl(filePath)
+
+        imageUrl = data.publicUrl
+      }
+
+      const { data, error } = await supabase.from('posts').insert({
+        id: postId,
+        title: payload.title,
+        content: payload.content,
+        image_url: imageUrl,
+        comments_enabled: payload.commentsEnabled,
+      })
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      toastSuccess('Post published successfully!')
+      setPostTitle('')
+      setPostContent('')
+      setCommentsEnabled(false)
+      setPostImageSrc(null)
+      setPostImageBlob(null)
+      setPostImagePreview(null)
+      setShowPublishPreview(false)
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
+    onError: (err: Error) => {
+      toastError(err.message || 'Failed to publish post')
+    },
+  })
+
+  // Mutation to grant post access to an email
+  const grantPermissionMutation = useMutation({
+    mutationFn: async (targetEmail: string) => {
+      const email = targetEmail.toLowerCase().trim()
+      const { data, error } = await supabase.from('user_permissions').upsert({
+        email,
+        can_post: true,
+        is_admin: false,
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      toastSuccess('Posting access granted successfully!')
+      setNewAccessEmail('')
+      refetchPermissions()
+    },
+    onError: (err: Error) => {
+      toastError(err.message || 'Failed to grant access')
+    },
+  })
+
+  // Mutation to revoke post access
+  const revokePermissionMutation = useMutation({
+    mutationFn: async (targetEmail: string) => {
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .delete()
+        .eq('email', targetEmail)
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      toastSuccess('Posting access revoked successfully!')
+      refetchPermissions()
+    },
+    onError: (err: Error) => {
+      toastError(err.message || 'Failed to revoke access')
+    },
+  })
+
+  const handleAddPost = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!postTitle.trim() || !postContent.trim()) {
+      toastError('Title and content are required')
+      return
+    }
+    // Open preview confirmation modal
+    setShowPublishPreview(true)
+  }
+
+  const handleConfirmPublish = () => {
+    addPostMutation.mutate({
+      title: postTitle.trim(),
+      content: postContent.trim(),
+      imageBlob: postImageBlob,
+      commentsEnabled,
+    })
+  }
+
+  const handleGrantAccess = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newAccessEmail.trim()) {
+      toastError('Email address is required')
+      return
+    }
+    grantPermissionMutation.mutate(newAccessEmail.trim())
+  }
 
   // Cropper state
   const [croppingImage, setCroppingImage] = useState<string | null>(null)
@@ -67,7 +256,7 @@ export function Profile() {
 
       const { data: likes, error: likesError } = await supabase
         .from('likes')
-        .select('id, post_id, user_id, posts(title)')
+        .select('id, post_id, user_id, created_at, posts(title)')
         .eq('user_id', user.id)
 
       if (likesError) throw likesError
@@ -86,6 +275,16 @@ export function Profile() {
       }
     },
   })
+
+  // Merge and sort activities
+  const mergedActivities: ActivityItem[] = [
+    ...(activity?.likes || []).map((l) => ({ ...l, type: 'like' as const })),
+    ...(activity?.comments || []).map((c) => ({ ...c, type: 'comment' as const })),
+  ]
+  mergedActivities.sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  )
+  const latestActivities = mergedActivities.slice(0, 2)
 
   // Mutations
   const updateProfileMutation = useMutation({
@@ -150,7 +349,7 @@ export function Profile() {
     updatePasswordMutation.mutate(newPassword)
   }
 
-  // File loading for cropper
+  // File loading for avatar cropper
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -170,7 +369,7 @@ export function Profile() {
     e.target.value = '' // Clear input
   }
 
-  // Cropper mouse event handlers
+  // Avatar cropper mouse event handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     setIsDragging(true)
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
@@ -185,7 +384,7 @@ export function Profile() {
     setIsDragging(false)
   }
 
-  // Cropper touch event handlers (mobile support)
+  // Avatar cropper touch event handlers (mobile support)
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (e.touches.length !== 1) return
     setIsDragging(true)
@@ -203,13 +402,12 @@ export function Profile() {
     setIsDragging(false)
   }
 
-  // Canvas Crop & Supabase Storage Upload
+  // Avatar Canvas Crop & Supabase Storage Upload
   const handleCropAndUpload = async () => {
     if (!croppingImage || !user) return
     setIsUploadingAvatar(true)
 
     try {
-      // Load image into HTMLImageElement
       const img = new Image()
       img.src = croppingImage
       await new Promise((resolve, reject) => {
@@ -217,7 +415,6 @@ export function Profile() {
         img.onerror = reject
       })
 
-      // Create cropped Canvas
       const canvas = document.createElement('canvas')
       canvas.width = 256
       canvas.height = 256
@@ -226,7 +423,6 @@ export function Profile() {
 
       ctx.clearRect(0, 0, 256, 256)
 
-      // Apply drag offset and zoom transformations
       ctx.save()
       ctx.translate(128 + position.x, 128 + position.y)
       ctx.scale(zoom, zoom)
@@ -235,18 +431,15 @@ export function Profile() {
       const drawW = 256
       const drawH = 256 * aspect
 
-      // Draw image centered at the translated coordinate
       ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH)
       ctx.restore()
 
-      // Convert Canvas to File Blob
       const blob = await new Promise<Blob | null>((resolve) => {
         canvas.toBlob(resolve, 'image/png')
       })
 
       if (!blob) throw new Error('Failed to generate cropped image')
 
-      // Upload file to Supabase S3 bucket (profile bucket, trying multiple paths to respect RLS policies)
       const pathsToTry = [
         `avatars/${user.id}/${Date.now()}.png`,
         `avatars/${user.id}.png`,
@@ -267,7 +460,6 @@ export function Profile() {
             })
 
           if (uploadError) {
-            // Check if it's an RLS error
             const msg = uploadError.message?.toLowerCase() || ''
             if (msg.includes('row-level security') || msg.includes('violates') || msg.includes('policy')) {
               finalError = uploadError
@@ -276,7 +468,6 @@ export function Profile() {
             throw uploadError
           }
 
-          // If success, store data and break
           finalFilePath = candidatePath
           finalError = null
           break
@@ -289,14 +480,12 @@ export function Profile() {
         throw finalError || new Error('All upload paths violated storage row-level security policies')
       }
 
-      // Retrieve public URL from bucket
       const { data } = supabase.storage
         .from('profile')
         .getPublicUrl(finalFilePath)
 
       const publicUrl = data.publicUrl
 
-      // Save public URL in Supabase user metadata
       const { error: metadataError } = await supabase.auth.updateUser({
         data: { avatar_url: publicUrl },
       })
@@ -311,6 +500,109 @@ export function Profile() {
       toastError(err instanceof Error ? err.message : 'Failed to crop and upload photo')
     } finally {
       setIsUploadingAvatar(false)
+    }
+  }
+
+  // File loading for post image cropper
+  const handlePostFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toastError('Please select a valid image file')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setPostImageSrc(reader.result as string)
+      setPostCropZoom(1)
+      setPostCropPosition({ x: 0, y: 0 })
+    }
+    reader.readAsDataURL(file)
+    e.target.value = '' // Clear input
+  }
+
+  // Post cropper mouse event handlers
+  const handlePostMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setPostIsDragging(true)
+    setPostDragStart({ x: e.clientX - postCropPosition.x, y: e.clientY - postCropPosition.y })
+  }
+
+  const handlePostMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!postIsDragging) return
+    setPostCropPosition({ x: e.clientX - postDragStart.x, y: e.clientY - postDragStart.y })
+  }
+
+  const handlePostMouseUp = () => {
+    setPostIsDragging(false)
+  }
+
+  // Post cropper touch event handlers (mobile support)
+  const handlePostTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) return
+    setPostIsDragging(true)
+    const touch = e.touches[0]
+    setPostDragStart({ x: touch.clientX - postCropPosition.x, y: touch.clientY - postCropPosition.y })
+  }
+
+  const handlePostTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!postIsDragging || e.touches.length !== 1) return
+    const touch = e.touches[0]
+    setPostCropPosition({ x: touch.clientX - postDragStart.x, y: touch.clientY - postDragStart.y })
+  }
+
+  const handlePostTouchEnd = () => {
+    setPostIsDragging(false)
+  }
+
+  // Landscape Canvas Crop (16:9 aspect ratio)
+  const handlePostCropSave = async () => {
+    if (!postImageSrc) return
+
+    try {
+      const img = new Image()
+      img.src = postImageSrc
+      await new Promise((resolve, reject) => {
+        img.onload = resolve
+        img.onerror = reject
+      })
+
+      const canvas = document.createElement('canvas')
+      canvas.width = 640
+      canvas.height = 360
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Could not initialize canvas context')
+
+      ctx.clearRect(0, 0, 640, 360)
+      ctx.save()
+
+      // Map drag offset from viewport (288) to canvas (640)
+      const scaleFactor = 640 / 288
+      ctx.translate(320 + postCropPosition.x * scaleFactor, 180 + postCropPosition.y * scaleFactor)
+      ctx.scale(postCropZoom, postCropZoom)
+
+      const aspect = img.height / img.width
+      const drawW = 640
+      const drawH = 640 * aspect
+
+      ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH)
+      ctx.restore()
+
+      // Convert canvas output to blob
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/png')
+      })
+
+      if (!blob) throw new Error('Failed to generate cropped post image')
+
+      setPostImageBlob(blob)
+      setPostImagePreview(canvas.toDataURL('image/png'))
+      setPostImageSrc(null) // Close cropper modal
+      toastSuccess('Post cover image cropped successfully!')
+    } catch (err) {
+      console.error(err)
+      toastError(err instanceof Error ? err.message : 'Failed to crop post image')
     }
   }
 
@@ -397,6 +689,70 @@ export function Profile() {
             )}
           </div>
 
+          {/* Dashboard Navigation */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h3 className="px-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Dashboard Navigation
+            </h3>
+            <nav className="mt-3 space-y-1">
+              <button
+                type="button"
+                onClick={() => setActiveTab('settings')}
+                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <Settings size={16} />
+                Profile Settings
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('activity')}
+                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'activity'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <Activity size={16} />
+                Activity Feed
+              </button>
+
+              {canPost && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('add-post')}
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                    activeTab === 'add-post'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <PlusCircle size={16} />
+                  Add Post
+                </button>
+              )}
+
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('permissions')}
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                    activeTab === 'permissions'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <ShieldCheck size={16} />
+                  Manage Permissions
+                </button>
+              )}
+            </nav>
+          </div>
+
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <h3 className="px-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
               Activity Statistics
@@ -427,160 +783,384 @@ export function Profile() {
         {/* Profile Settings & Activity Details */}
         <div className="md:col-span-2 space-y-6">
           {/* Edit settings */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-            <h2 className="text-xl font-bold text-slate-900">Profile Settings</h2>
+          {activeTab === 'settings' && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 animate-in fade-in duration-200">
+              <h2 className="text-xl font-bold text-slate-900">Profile Settings</h2>
 
-            {/* Profile Fields */}
-            <form onSubmit={handleUpdateName} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="displayName" className="block text-sm font-semibold text-slate-700">
-                    Display Name
-                  </label>
-                  <input
-                    id="displayName"
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Enter display name"
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-                  />
+              {/* Profile Fields */}
+              <form onSubmit={handleUpdateName} className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="displayName" className="block text-sm font-semibold text-slate-700">
+                      Display Name
+                    </label>
+                    <input
+                      id="displayName"
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Enter display name"
+                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="dob" className="block text-sm font-semibold text-slate-700">
+                      Date of Birth
+                    </label>
+                    <input
+                      id="dob"
+                      type="date"
+                      value={dob}
+                      onChange={(e) => setDob(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400 text-slate-700"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="dob" className="block text-sm font-semibold text-slate-700">
-                    Date of Birth
-                  </label>
-                  <input
-                    id="dob"
-                    type="date"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400 text-slate-700"
-                  />
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={
+                      isUpdatingName ||
+                      (displayName.trim() === (user.user_metadata?.display_name || '') &&
+                        dob === (user.user_metadata?.dob || ''))
+                    }
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 transition-colors cursor-pointer"
+                  >
+                    {isUpdatingName ? 'Saving…' : 'Save Changes'}
+                  </button>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={
-                    isUpdatingName ||
-                    (displayName.trim() === (user.user_metadata?.display_name || '') &&
-                      dob === (user.user_metadata?.dob || ''))
-                  }
-                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 transition-colors"
-                >
-                  {isUpdatingName ? 'Saving…' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
+              </form>
 
-            <hr className="border-slate-100" />
+              <hr className="border-slate-100" />
 
-            {/* Change Password */}
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-                <Lock size={16} className="text-slate-400" />
-                Change Password
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="newPass" className="block text-xs text-slate-500">
-                    New Password
-                  </label>
-                  <input
-                    id="newPass"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 8 characters"
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-                  />
+              {/* Change Password */}
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Lock size={16} className="text-slate-400" />
+                  Change Password
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="newPass" className="block text-xs text-slate-500">
+                      New Password
+                    </label>
+                    <input
+                      id="newPass"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min 8 characters"
+                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirmPass" className="block text-xs text-slate-500">
+                      Confirm New Password
+                    </label>
+                    <input
+                      id="confirmPass"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="confirmPass" className="block text-xs text-slate-500">
-                    Confirm New Password
-                  </label>
-                  <input
-                    id="confirmPass"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-                  />
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPassword || !newPassword}
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 transition-colors cursor-pointer"
+                  >
+                    {isUpdatingPassword ? 'Updating…' : 'Update Password'}
+                  </button>
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isUpdatingPassword || !newPassword}
-                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 transition-colors"
-                >
-                  {isUpdatingPassword ? 'Updating…' : 'Update Password'}
-                </button>
-              </div>
-            </form>
-          </div>
+              </form>
+            </div>
+          )}
 
           {/* Activity Feeds */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Your Activity Feed</h2>
+          {activeTab === 'activity' && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm animate-in fade-in duration-200">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Your Activity Feed</h2>
 
-            {isActivityLoading ? (
-              <p className="text-sm text-slate-500 animate-pulse">Loading activity...</p>
-            ) : (
-              <div className="space-y-6">
-                {/* Recent Comments */}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-3">
-                    <MessageSquare size={16} className="text-slate-400" />
-                    Recent Comments
-                  </h3>
-                  {activity?.comments.length === 0 ? (
-                    <p className="text-xs text-slate-400 pl-6">You haven&apos;t commented on any posts yet.</p>
+              {isActivityLoading ? (
+                <p className="text-sm text-slate-500 animate-pulse">Loading activity...</p>
+              ) : (
+                <div className="space-y-4">
+                  {latestActivities.length === 0 ? (
+                    <p className="text-sm text-slate-500">You haven&apos;t done any activity yet.</p>
                   ) : (
-                    <ul className="space-y-3 pl-6 border-l border-slate-100">
-                      {activity?.comments.map((comment) => (
-                        <li key={comment.id} className="relative group">
-                          <div className="absolute -left-[28.5px] top-1.5 h-2 w-2 rounded-full bg-slate-300 group-hover:bg-slate-600 transition-colors" />
-                          <p className="text-xs text-slate-400 font-medium">
-                            On <span className="text-slate-700 font-semibold">{comment.posts?.title || 'Unknown post'}</span> • {new Date(comment.created_at).toLocaleDateString()}
-                          </p>
-                          <p className="mt-1 text-sm text-slate-600 italic bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50">
-                            &ldquo;{comment.body}&rdquo;
-                          </p>
+                    <ul className="space-y-4 border-l border-slate-100 pl-6">
+                      {latestActivities.map((item) => (
+                        <li key={item.id} className="relative group">
+                          <div className="absolute -left-[28.5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-slate-300 group-hover:bg-slate-500 transition-colors shadow-sm" />
+                          {item.type === 'comment' ? (
+                            <div>
+                              <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                                <MessageSquare size={12} className="text-slate-400 shrink-0" />
+                                Commented on <span className="text-slate-700 font-semibold">{item.posts?.title || 'Unknown post'}</span> • {new Date(item.created_at).toLocaleDateString()}
+                              </p>
+                              <p className="mt-1 text-sm text-slate-600 italic bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50">
+                                &ldquo;{item.body}&rdquo;
+                              </p>
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                                <Heart size={12} className="text-rose-500 fill-rose-500 shrink-0" />
+                                Liked <span className="text-slate-700 font-semibold">{item.posts?.title || 'Unknown post'}</span> • {new Date(item.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
                         </li>
                       ))}
                     </ul>
                   )}
+
+                  <div className="pt-2 border-t border-slate-100 flex justify-end">
+                    <Link
+                      to="/activity"
+                      className="text-sm font-semibold text-slate-900 hover:text-amber-600 transition-colors flex items-center gap-1"
+                    >
+                      View All Activity &rarr;
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Add Post tab */}
+          {activeTab === 'add-post' && canPost && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm animate-in fade-in duration-200">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">Add New Post</h2>
+              <form onSubmit={handleAddPost} className="space-y-4">
+                {/* Title */}
+                <div>
+                  <label htmlFor="postTitle" className="block text-sm font-semibold text-slate-700">
+                    Post Title
+                  </label>
+                  <input
+                    id="postTitle"
+                    type="text"
+                    value={postTitle}
+                    onChange={(e) => setPostTitle(e.target.value)}
+                    placeholder="Enter the post title"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                    required
+                  />
                 </div>
 
-                <hr className="border-slate-100" />
-
-                {/* Liked Posts */}
+                {/* Optional Image Selection */}
                 <div>
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-3">
-                    <Heart size={16} className="text-slate-400" />
-                    Liked Posts
-                  </h3>
-                  {activity?.likes.length === 0 ? (
-                    <p className="text-xs text-slate-400 pl-6">You haven&apos;t liked any posts yet.</p>
+                  <span className="block text-sm font-semibold text-slate-700">
+                    Header Image (Optional)
+                  </span>
+                  
+                  {postImagePreview ? (
+                    <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 aspect-[16/9] w-full max-w-sm group">
+                      <img
+                        src={postImagePreview}
+                        alt="Post cover preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <label className="rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-white cursor-pointer transition-colors">
+                          Change
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePostFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPostImageBlob(null)
+                            setPostImagePreview(null)
+                          }}
+                          className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 cursor-pointer transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
                   ) : (
-                    <ul className="space-y-2 pl-6 border-l border-slate-100">
-                      {activity?.likes.map((like) => (
-                        <li key={like.id} className="relative group flex items-center gap-2">
-                          <div className="absolute -left-[28.5px] top-2 h-2 w-2 rounded-full bg-slate-300 group-hover:bg-rose-400 transition-colors" />
-                          <span className="text-sm text-slate-700 font-medium hover:text-slate-900 transition-colors">
-                            {like.posts?.title || 'Unknown post'}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    <label className="mt-2 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl py-6 cursor-pointer hover:border-slate-400 bg-slate-50/50 hover:bg-slate-50 transition-all group">
+                      <ImageIcon className="h-8 w-8 text-slate-400 group-hover:text-slate-600 transition-colors mb-1.5" />
+                      <span className="text-xs font-bold text-slate-500 group-hover:text-slate-700">
+                        Upload Header Image
+                      </span>
+                      <span className="text-[10px] text-slate-400 mt-0.5">
+                        Supports JPG, PNG (16:9 crop)
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePostFileChange}
+                        className="hidden"
+                      />
+                    </label>
                   )}
                 </div>
+
+                {/* Content */}
+                <div>
+                  <label htmlFor="postContent" className="block text-sm font-semibold text-slate-700">
+                    Post Content
+                  </label>
+                  <textarea
+                    id="postContent"
+                    rows={6}
+                    value={postContent}
+                    onChange={(e) => setPostContent(e.target.value)}
+                    placeholder="Write your post content here..."
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                    required
+                  />
+                </div>
+
+                {/* Comment control settings (Default: False/Disabled) */}
+                <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
+                  <input
+                    type="checkbox"
+                    id="commentsEnabled"
+                    checked={commentsEnabled}
+                    onChange={(e) => setCommentsEnabled(e.target.checked)}
+                    className="h-4.5 w-4.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 accent-slate-900 cursor-pointer"
+                  />
+                  <label htmlFor="commentsEnabled" className="text-sm font-semibold text-slate-700 cursor-pointer select-none">
+                    Enable comments on this post (comments are off by default)
+                  </label>
+                </div>
+
+                {/* Submit button */}
+                <div className="flex justify-end pt-2 border-t border-slate-100">
+                  <button
+                    type="submit"
+                    disabled={addPostMutation.isPending}
+                    className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    Publish Post
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Manage Permissions tab */}
+          {activeTab === 'permissions' && isAdmin && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6 animate-in fade-in duration-200">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Manage Access Permissions</h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  Grant or revoke posting privileges for other accounts.
+                </p>
               </div>
-            )}
-          </div>
+
+              {permissionsTableError && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700 flex items-start gap-2">
+                  <ShieldAlert size={18} className="shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold">Database Setup Required:</span> Please ensure the permissions table is created in your database. Run the SQL commands inside <code className="rounded bg-amber-100 px-1 font-mono">supabase/migrations/003_post_permissions.sql</code> in your Supabase SQL editor.
+                  </div>
+                </div>
+              )}
+
+              {/* Grant access form */}
+              {!permissionsTableError && (
+                <form onSubmit={handleGrantAccess} className="flex gap-2">
+                  <div className="flex-1">
+                    <input
+                      type="email"
+                      value={newAccessEmail}
+                      onChange={(e) => setNewAccessEmail(e.target.value)}
+                      placeholder="Enter user email address"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={grantPermissionMutation.isPending}
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer animate-pulse"
+                  >
+                    Grant Access
+                  </button>
+                </form>
+              )}
+
+              {/* Permissions list */}
+              {!permissionsTableError && (
+                <div className="overflow-hidden border border-slate-100 rounded-xl">
+                  <table className="min-w-full divide-y divide-slate-100">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          User Email
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          Can Post
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          Role
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-100 text-sm">
+                      {allPermissions && allPermissions.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-4 py-4 text-center text-slate-400">
+                            No other accounts have posting privileges yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        allPermissions?.map((perm) => (
+                          <tr key={perm.email}>
+                            <td className="px-4 py-3 font-medium text-slate-900 truncate max-w-[200px]" title={perm.email}>
+                              {perm.email}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
+                                perm.can_post ? 'bg-green-50 text-green-700 border border-green-200/50' : 'bg-slate-50 text-slate-500 border border-slate-200/50'
+                              }`}>
+                                {perm.can_post ? 'Yes' : 'No'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-500">
+                              {perm.is_admin ? 'Admin' : 'Authorized Author'}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {perm.email === 'ask@christianarmour.com' ? (
+                                <span className="text-xs text-slate-400 font-medium">System Root</span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => revokePermissionMutation.mutate(perm.email)}
+                                  disabled={revokePermissionMutation.isPending}
+                                  className="text-red-600 hover:text-red-900 font-semibold flex items-center gap-1 ml-auto cursor-pointer"
+                                  title="Revoke posting permissions"
+                                >
+                                  <Trash2 size={14} />
+                                  Revoke
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -648,7 +1228,7 @@ export function Profile() {
                 type="button"
                 onClick={() => setCroppingImage(null)}
                 disabled={isUploadingAvatar}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
@@ -656,7 +1236,7 @@ export function Profile() {
                 type="button"
                 onClick={handleCropAndUpload}
                 disabled={isUploadingAvatar}
-                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
                 {isUploadingAvatar ? (
                   <>
@@ -665,6 +1245,153 @@ export function Profile() {
                   </>
                 ) : (
                   'Save Photo'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Post Image Preview Crop Modal (16:9 aspect ratio) */}
+      {postImageSrc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Crop Post Cover Image</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Drag the photo to reposition and zoom to frame it in a landscape aspect ratio.
+              </p>
+            </div>
+
+            {/* 16:9 Cropping Viewport */}
+            <div
+              className="relative mx-auto h-[162px] w-72 overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 cursor-move touch-none select-none shadow-inner"
+              onMouseDown={handlePostMouseDown}
+              onMouseMove={handlePostMouseMove}
+              onMouseUp={handlePostMouseUp}
+              onMouseLeave={handlePostMouseUp}
+              onTouchStart={handlePostTouchStart}
+              onTouchMove={handlePostTouchMove}
+              onTouchEnd={handlePostTouchEnd}
+            >
+              <img
+                src={postImageSrc}
+                alt="Post crop preview"
+                draggable={false}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  width: '288px',
+                  height: 'auto',
+                  transform: `translate(-50%, -50%) translate(${postCropPosition.x}px, ${postCropPosition.y}px) scale(${postCropZoom})`,
+                  transformOrigin: 'center center',
+                  maxWidth: 'none',
+                }}
+              />
+              {/* Landscape overlay frame */}
+              <div className="absolute inset-0 rounded-xl border border-white/30 pointer-events-none" />
+            </div>
+
+            {/* Zoom slider */}
+            <div className="space-y-1.5">
+              <div className="flex justify-between text-xs font-semibold text-slate-500">
+                <span>Zoom</span>
+                <span>{Math.round(postCropZoom * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="3"
+                step="0.01"
+                value={postCropZoom}
+                onChange={(e) => setPostCropZoom(parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setPostImageSrc(null)}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePostCropSave}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Crop & Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Preview Confirmation Modal */}
+      {showPublishPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900">Post Preview</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                This is a live mockup of how the post will render on the blog feed.
+              </p>
+            </div>
+
+            {/* Mockup Post Card */}
+            <div className="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm overflow-hidden text-left space-y-3 pointer-events-none select-none">
+              {postImagePreview && (
+                <div className="mb-4 -mx-6 -mt-6 aspect-[16/9] w-[calc(100%+3rem)] overflow-hidden border-b border-slate-100">
+                  <img
+                    src={postImagePreview}
+                    alt={postTitle}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <time className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </time>
+              <h2 className="text-xl font-semibold text-slate-900">{postTitle}</h2>
+              <p className="leading-relaxed text-slate-600 whitespace-pre-wrap">{postContent}</p>
+              
+              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span className="flex items-center gap-1">
+                  <span>💬 Comments:</span>
+                  <span className={`font-semibold ${commentsEnabled ? 'text-green-600' : 'text-red-500'}`}>
+                    {commentsEnabled ? 'Enabled' : 'Disabled (Default)'}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowPublishPreview(false)}
+                disabled={addPostMutation.isPending}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Back to Edit
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPublish}
+                disabled={addPostMutation.isPending}
+                className="rounded-lg bg-slate-900 px-5 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+              >
+                {addPostMutation.isPending ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Publishing…
+                  </>
+                ) : (
+                  'Confirm & Publish'
                 )}
               </button>
             </div>

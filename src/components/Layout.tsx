@@ -1,15 +1,62 @@
-import { useState } from 'react'
-import { Link, Outlet } from 'react-router-dom'
-import { LogOut, Shield, Menu, X, Home, User } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { LogOut, Shield, Menu, X, Home, User, BarChart3, PlusCircle } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { SignOutConfirmationModal } from './SignOutConfirmationModal'
+import { useQuery } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+import { logView } from '../lib/analytics'
 
 export function Layout() {
   const { user, loading, signOut } = useAuth()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+  const location = useLocation()
+
+  // Log site visit on navigation
+  useEffect(() => {
+    logView({ action: 'visit' })
+  }, [location.pathname])
+
+  // Fetch current user permissions to check for Admin status
+  const { data: userPermission } = useQuery({
+    queryKey: ['user-permissions', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      if (!user?.id) return null
+      const { data, error } = await supabase
+        .from('user_permissions')
+        .select('*')
+        .eq('email', user.email)
+        .single()
+
+      if (error) {
+        return {
+          email: user.email,
+          can_post: user.email === 'ask@christianarmour.com',
+          is_admin: user.email === 'ask@christianarmour.com',
+        }
+      }
+      return data
+    },
+  })
+
+  const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isSidebarOpen])
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <Link to="/" className="flex items-center gap-2 font-semibold text-slate-900">
             <Shield size={22} className="text-amber-600" />
@@ -132,6 +179,26 @@ export function Layout() {
                     <User size={18} className="text-slate-400" />
                     Profile
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/analytics"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                    >
+                      <BarChart3 size={18} className="text-slate-400" />
+                      Analytics
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      to="/add-post"
+                      onClick={() => setIsSidebarOpen(false)}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                    >
+                      <PlusCircle size={18} className="text-slate-400" />
+                      Add Post
+                    </Link>
+                  )}
                 </nav>
               </div>
 
@@ -140,9 +207,9 @@ export function Layout() {
                   type="button"
                   onClick={() => {
                     setIsSidebarOpen(false)
-                    signOut()
+                    setShowSignOutConfirm(true)
                   }}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 hover:bg-red-100 px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 hover:bg-red-100 px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors cursor-pointer"
                 >
                   <LogOut size={16} />
                   Sign out
@@ -156,6 +223,15 @@ export function Layout() {
       <main className="mx-auto max-w-3xl px-4 py-8">
         <Outlet />
       </main>
+
+      <SignOutConfirmationModal
+        open={showSignOutConfirm}
+        onClose={() => setShowSignOutConfirm(false)}
+        onConfirm={async () => {
+          setShowSignOutConfirm(false)
+          await signOut()
+        }}
+      />
     </div>
   )
 }

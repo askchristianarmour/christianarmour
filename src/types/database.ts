@@ -3,6 +3,8 @@ export type Post = {
   title: string
   content: string
   created_at: string
+  image_url?: string | null
+  comments_enabled: boolean
 }
 
 export type Comment = {
