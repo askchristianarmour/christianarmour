@@ -1072,7 +1072,7 @@ export function Profile() {
 
               {/* Grant access form */}
               {!permissionsTableError && (
-                <form onSubmit={handleGrantAccess} className="flex gap-2">
+                <form onSubmit={handleGrantAccess} className="flex flex-col sm:flex-row gap-2">
                   <div className="flex-1">
                     <input
                       type="email"
@@ -1086,7 +1086,7 @@ export function Profile() {
                   <button
                     type="submit"
                     disabled={grantPermissionMutation.isPending}
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer animate-pulse"
+                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     Grant Access
                   </button>
@@ -1095,7 +1095,7 @@ export function Profile() {
 
               {/* Permissions list */}
               {!permissionsTableError && (
-                <div className="overflow-hidden border border-slate-100 rounded-xl">
+                <div className="overflow-x-auto border border-slate-100 rounded-xl">
                   <table className="min-w-full divide-y divide-slate-100">
                     <thead className="bg-slate-50">
                       <tr>
