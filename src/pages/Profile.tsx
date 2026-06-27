@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User as UserIcon, Lock, Heart, MessageSquare, Shield, ChevronLeft, Camera } from 'lucide-react'
+import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera } from 'lucide-react'
 
 interface ActivityLike {
   id: string
