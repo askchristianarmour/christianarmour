@@ -133,10 +133,26 @@ export function Home() {
       )}
 
       <div className="space-y-6">
-        {posts.map((post) => (
-          <PostCard key={post.id} post={post} canToggleComments={canManage} />
-        ))}
-      </div>
+          {posts.map((post, index) => (
+            <div key={post.id}>
+              <PostCard post={post} canToggleComments={canManage} />
+
+              {index === posts.length - 1 && (
+                <div className="mt-10 text-center">
+                  <p className="text-xl font-semibold text-slate-800">
+                    The end of earthly life and eternal hope
+                  </p>
+                  <p className="mt-2 text-slate-500">
+                    "For to me, to live is Christ and to die is gain."
+                  </p>
+                  <p className="mt-1 text-sm italic text-slate-400">
+                    Philippians 1:21
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
 
       {/* Sentinel element for infinite scroll */}
       <div ref={sentinelRef} className="h-10 mt-6 flex items-center justify-center">
