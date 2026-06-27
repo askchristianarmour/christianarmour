@@ -7,6 +7,7 @@ import { PasswordInput } from '../components/PasswordInput'
 import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useAuth } from '../hooks/useAuth'
 import { useRateLimit } from '../hooks/useRateLimit'
+import { useToast } from '../contexts/ToastContext'
 
 const schema = z
   .object({
@@ -23,9 +24,8 @@ type FormData = z.infer<typeof schema>
 
 export function SignUp() {
   const { signUp } = useAuth()
+  const { success: toastSuccess, error: toastError } = useToast()
   const navigate = useNavigate()
-  const [authError, setAuthError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [showFailureHints, setShowFailureHints] = useState(false)
 
   const {
@@ -44,23 +44,25 @@ export function SignUp() {
   const onSubmit = async (data: FormData) => {
     if (showFailureHints && rateLimit.isBlocked) return
 
-    setAuthError(null)
-    setSuccessMessage(null)
     setShowFailureHints(false)
 
     const { error, needsEmailConfirmation } = await signUp(data.email, data.password)
 
     if (error) {
       setShowFailureHints(true)
-      setAuthError(error)
+      toastError(error)
       return
     }
 
     if (needsEmailConfirmation) {
-      setSuccessMessage('Account created! Check your email to confirm, then sign in.')
+      navigate('/signin', {
+        state: { message: 'Account created! Check your email to confirm, then sign in.' },
+        replace: true,
+      })
       return
     }
 
+    toastSuccess('Account created and signed in successfully!')
     navigate('/')
   }
 
@@ -115,21 +117,6 @@ export function SignUp() {
             />
           )}
 
-          {showFailureHints && authError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {authError}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-              {successMessage}{' '}
-              <Link to="/signin" className="font-medium underline">
-                Sign in
-              </Link>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={isSubmitting || isBlocked}
@@ -153,3 +140,4 @@ export function SignUp() {
     </div>
   )
 }
+

@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { sendPasswordResetLink } from '../lib/password-reset'
+import { useToast } from '../contexts/ToastContext'
 
 const schema = z.object({
   email: z.email('Enter a valid email'),
@@ -14,8 +15,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export function ForgotPassword() {
-  const [authError, setAuthError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const { success: toastSuccess, error: toastError } = useToast()
   const [showFailureHints, setShowFailureHints] = useState(false)
 
   const {
@@ -34,21 +35,18 @@ export function ForgotPassword() {
   const onSubmit = async (data: FormData) => {
     if (showFailureHints && rateLimit.isBlocked) return
 
-    setAuthError(null)
-    setSuccessMessage(null)
     setShowFailureHints(false)
 
     const { error } = await sendPasswordResetLink(data.email)
 
     if (error) {
       setShowFailureHints(true)
-      setAuthError(error)
+      toastError(error)
       return
     }
 
-    setSuccessMessage(
-      `A password reset link has been sent to ${data.email}. Open the link in your email to set a new password.`,
-    )
+    toastSuccess(`A password reset link has been sent to ${data.email}. Check your email.`)
+    navigate('/signin')
   }
 
   const isBlocked = showFailureHints && rateLimit.isBlocked
@@ -86,18 +84,6 @@ export function ForgotPassword() {
             />
           )}
 
-          {showFailureHints && authError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {authError}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-              {successMessage}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={isSubmitting || isBlocked}
@@ -120,3 +106,4 @@ export function ForgotPassword() {
     </div>
   )
 }
+

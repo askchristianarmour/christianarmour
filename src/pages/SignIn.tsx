@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
@@ -7,6 +7,7 @@ import { PasswordInput } from '../components/PasswordInput'
 import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useAuth } from '../hooks/useAuth'
 import { useRateLimit } from '../hooks/useRateLimit'
+import { useToast } from '../contexts/ToastContext'
 
 const schema = z.object({
   email: z.email('Enter a valid email'),
@@ -17,11 +18,19 @@ type FormData = z.infer<typeof schema>
 
 export function SignIn() {
   const { signIn } = useAuth()
+  const { success: toastSuccess, error: toastError } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
   const successMessage = (location.state as { message?: string } | null)?.message
-  const [authError, setAuthError] = useState<string | null>(null)
   const [showFailureHints, setShowFailureHints] = useState(false)
+
+  useEffect(() => {
+    if (successMessage) {
+      toastSuccess(successMessage)
+      // Clear location state to avoid double toast on navigation/refresh
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [successMessage, toastSuccess, navigate, location.pathname])
 
   const {
     register,
@@ -39,17 +48,17 @@ export function SignIn() {
   const onSubmit = async (data: FormData) => {
     if (showFailureHints && rateLimit.isBlocked) return
 
-    setAuthError(null)
     setShowFailureHints(false)
 
     const { error } = await signIn(data.email, data.password)
 
     if (error) {
       setShowFailureHints(true)
-      setAuthError(error)
+      toastError(error)
       return
     }
 
+    toastSuccess('Signed in successfully!')
     navigate('/')
   }
 
@@ -62,12 +71,6 @@ export function SignIn() {
         <p className="mt-2 text-sm text-slate-600">
           Use your email and password to access likes and comments.
         </p>
-
-        {successMessage && (
-          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
-            {successMessage}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
           <div>
@@ -111,12 +114,6 @@ export function SignIn() {
             />
           )}
 
-          {showFailureHints && authError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {authError}
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={isSubmitting || isBlocked}
@@ -140,3 +137,4 @@ export function SignIn() {
     </div>
   )
 }
+

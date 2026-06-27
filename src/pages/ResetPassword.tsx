@@ -8,6 +8,7 @@ import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { updatePassword } from '../lib/password-reset'
 import { supabase } from '../lib/supabase'
+import { useToast } from '../contexts/ToastContext'
 
 const schema = z
   .object({
@@ -32,9 +33,9 @@ function isRecoveryUrl() {
 
 export function ResetPassword() {
   const navigate = useNavigate()
+  const { error: toastError } = useToast()
   const [checking, setChecking] = useState(true)
   const [canReset, setCanReset] = useState(false)
-  const [authError, setAuthError] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState('session')
   const [showFailureHints, setShowFailureHints] = useState(false)
 
@@ -91,14 +92,13 @@ export function ResetPassword() {
   const onSubmit = async (data: FormData) => {
     if (showFailureHints && rateLimit.isBlocked) return
 
-    setAuthError(null)
     setShowFailureHints(false)
 
     const { error } = await updatePassword(data.password, userEmail)
 
     if (error) {
       setShowFailureHints(true)
-      setAuthError(error)
+      toastError(error)
       return
     }
 
@@ -165,12 +165,6 @@ export function ResetPassword() {
               message={rateLimit.message}
               retryAfterSeconds={rateLimit.retryAfterSeconds}
             />
-          )}
-
-          {showFailureHints && authError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {authError}
-            </div>
           )}
 
           <button
