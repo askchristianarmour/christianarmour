@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { LogOut, Shield, Menu, X, Home } from 'lucide-react'
+import { LogOut, Shield, Menu, X, Home, User } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 export function Layout() {
@@ -23,10 +23,21 @@ export function Layout() {
               <button
                 type="button"
                 onClick={() => setIsSidebarOpen(true)}
-                className="flex items-center justify-center rounded-lg border border-slate-200 p-2 text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                className="flex items-center gap-2 rounded-lg border border-slate-200 p-1.5 text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                 aria-label="Open navigation menu"
               >
-                <Menu size={20} />
+                {user.user_metadata?.avatar_url ? (
+                  <img
+                    src={user.user_metadata.avatar_url}
+                    alt="User avatar"
+                    className="h-7 w-7 rounded-full object-cover border border-slate-200"
+                  />
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white uppercase shrink-0">
+                    {(user.user_metadata?.display_name || user.email || 'U')[0]}
+                  </div>
+                )}
+                <Menu size={18} />
               </button>
             ) : (
               <div className="flex items-center gap-2">
@@ -82,13 +93,26 @@ export function Layout() {
 
             <div className="mt-6 flex flex-col justify-between h-[calc(100%-60px)]">
               <div className="space-y-6">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Logged in as
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-slate-700 truncate" title={user.email}>
-                    {user.email}
-                  </p>
+                <div className="flex items-center gap-3">
+                  {user.user_metadata?.avatar_url ? (
+                    <img
+                      src={user.user_metadata.avatar_url}
+                      alt="User avatar"
+                      className="h-10 w-10 rounded-full object-cover border border-slate-200 shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white uppercase">
+                      {(user.user_metadata?.display_name || user.email || 'U')[0]}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      Logged in as
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-700 truncate" title={user.email}>
+                      {user.user_metadata?.display_name || user.email}
+                    </p>
+                  </div>
                 </div>
 
                 <nav className="flex flex-col gap-1">
@@ -99,6 +123,14 @@ export function Layout() {
                   >
                     <Home size={18} className="text-slate-400" />
                     Home
+                  </Link>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                  >
+                    <User size={18} className="text-slate-400" />
+                    Profile
                   </Link>
                 </nav>
               </div>
