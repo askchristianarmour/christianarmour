@@ -26,6 +26,7 @@ export function SignUp() {
   const navigate = useNavigate()
   const [authError, setAuthError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showFailureHints, setShowFailureHints] = useState(false)
 
   const {
     register,
@@ -41,14 +42,16 @@ export function SignUp() {
   const rateLimit = useRateLimit('signUp', email)
 
   const onSubmit = async (data: FormData) => {
-    if (rateLimit.isBlocked) return
+    if (showFailureHints && rateLimit.isBlocked) return
 
     setAuthError(null)
     setSuccessMessage(null)
+    setShowFailureHints(false)
 
     const { error, needsEmailConfirmation } = await signUp(data.email, data.password)
 
     if (error) {
+      setShowFailureHints(true)
       setAuthError(error)
       return
     }
@@ -60,6 +63,8 @@ export function SignUp() {
 
     navigate('/')
   }
+
+  const isBlocked = showFailureHints && rateLimit.isBlocked
 
   return (
     <div className="mx-auto max-w-md">
@@ -103,12 +108,14 @@ export function SignUp() {
             {...register('confirmPassword')}
           />
 
-          <RateLimitBanner
-            message={rateLimit.message}
-            retryAfterSeconds={rateLimit.retryAfterSeconds}
-          />
+          {showFailureHints && (
+            <RateLimitBanner
+              message={rateLimit.message}
+              retryAfterSeconds={rateLimit.retryAfterSeconds}
+            />
+          )}
 
-          {authError && (
+          {showFailureHints && authError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {authError}
             </div>
@@ -125,12 +132,12 @@ export function SignUp() {
 
           <button
             type="submit"
-            disabled={isSubmitting || rateLimit.isBlocked}
+            disabled={isSubmitting || isBlocked}
             className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {isSubmitting
               ? 'Creating account…'
-              : rateLimit.isBlocked
+              : isBlocked
                 ? `Wait ${rateLimit.retryAfterSeconds}s`
                 : 'Sign up'}
           </button>

@@ -220,21 +220,29 @@ export async function withRateLimit<T extends { error: string | null }>(
     return { error: check.message ?? 'Too many requests. Please try again later.' } as T
   }
 
-  recordRateLimitAttempt(action, key)
-  const result = await fn()
+  try {
+    const result = await fn()
 
-  if (result.error && isApiRateLimitError(result.error)) {
-    setServerRateLimitCooldown(action, key)
-    const afterCooldown = peekRateLimit(action, key)
-    return {
-      ...result,
-      error: afterCooldown.message ?? result.error,
+    if (result.error) {
+      recordRateLimitAttempt(action, key)
+
+      if (isApiRateLimitError(result.error)) {
+        setServerRateLimitCooldown(action, key)
+        const afterCooldown = peekRateLimit(action, key)
+        return {
+          ...result,
+          error: afterCooldown.message ?? result.error,
+        }
+      }
+    } else {
+      clearRateLimit(action, key)
     }
-  }
 
-  if (!result.error) {
-    clearRateLimit(action, key)
+    return result
+  } catch {
+    recordRateLimitAttempt(action, key)
+    return {
+      error: 'Cannot connect to server. Check your internet connection and try again.',
+    } as T
   }
-
-  return result
 }

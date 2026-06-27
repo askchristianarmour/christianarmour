@@ -1,17 +1,21 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useState } from 'react'
 import { peekRateLimit, type RateLimitAction } from '../lib/rate-limiter'
 
-function subscribe(onStoreChange: () => void) {
-  const interval = setInterval(onStoreChange, 1000)
-  return () => clearInterval(interval)
-}
-
 export function useRateLimit(action: RateLimitAction, key: string) {
-  const check = useSyncExternalStore(
-    subscribe,
-    () => peekRateLimit(action, key),
-    () => peekRateLimit(action, key),
-  )
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    if (!key.trim()) return
+
+    const interval = setInterval(() => {
+      setTick((t) => t + 1)
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [action, key])
+
+  void tick
+  const check = peekRateLimit(action, key)
 
   return {
     isBlocked: !check.allowed,

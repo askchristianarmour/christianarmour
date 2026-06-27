@@ -16,6 +16,7 @@ type FormData = z.infer<typeof schema>
 export function ForgotPassword() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showFailureHints, setShowFailureHints] = useState(false)
 
   const {
     register,
@@ -31,14 +32,16 @@ export function ForgotPassword() {
   const rateLimit = useRateLimit('forgotPassword', email)
 
   const onSubmit = async (data: FormData) => {
-    if (rateLimit.isBlocked) return
+    if (showFailureHints && rateLimit.isBlocked) return
 
     setAuthError(null)
     setSuccessMessage(null)
+    setShowFailureHints(false)
 
     const { error } = await sendPasswordResetLink(data.email)
 
     if (error) {
+      setShowFailureHints(true)
       setAuthError(error)
       return
     }
@@ -47,6 +50,8 @@ export function ForgotPassword() {
       `A password reset link has been sent to ${data.email}. Open the link in your email to set a new password.`,
     )
   }
+
+  const isBlocked = showFailureHints && rateLimit.isBlocked
 
   return (
     <div className="mx-auto max-w-md">
@@ -74,12 +79,14 @@ export function ForgotPassword() {
             )}
           </div>
 
-          <RateLimitBanner
-            message={rateLimit.message}
-            retryAfterSeconds={rateLimit.retryAfterSeconds}
-          />
+          {showFailureHints && (
+            <RateLimitBanner
+              message={rateLimit.message}
+              retryAfterSeconds={rateLimit.retryAfterSeconds}
+            />
+          )}
 
-          {authError && (
+          {showFailureHints && authError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {authError}
             </div>
@@ -93,12 +100,12 @@ export function ForgotPassword() {
 
           <button
             type="submit"
-            disabled={isSubmitting || rateLimit.isBlocked}
+            disabled={isSubmitting || isBlocked}
             className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {isSubmitting
               ? 'Sending…'
-              : rateLimit.isBlocked
+              : isBlocked
                 ? `Wait ${rateLimit.retryAfterSeconds}s`
                 : 'Send reset link'}
           </button>

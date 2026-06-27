@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { formatAuthError } from './auth'
+import { formatAuthError } from './auth-errors'
 import { withRateLimit } from './rate-limiter'
 
 function normalizeEmail(email: string) {

@@ -21,6 +21,7 @@ export function SignIn() {
   const location = useLocation()
   const successMessage = (location.state as { message?: string } | null)?.message
   const [authError, setAuthError] = useState<string | null>(null)
+  const [showFailureHints, setShowFailureHints] = useState(false)
 
   const {
     register,
@@ -36,18 +37,23 @@ export function SignIn() {
   const rateLimit = useRateLimit('signIn', email)
 
   const onSubmit = async (data: FormData) => {
-    if (rateLimit.isBlocked) return
+    if (showFailureHints && rateLimit.isBlocked) return
 
     setAuthError(null)
+    setShowFailureHints(false)
+
     const { error } = await signIn(data.email, data.password)
 
     if (error) {
+      setShowFailureHints(true)
       setAuthError(error)
       return
     }
 
     navigate('/')
   }
+
+  const isBlocked = showFailureHints && rateLimit.isBlocked
 
   return (
     <div className="mx-auto max-w-md">
@@ -98,12 +104,14 @@ export function SignIn() {
             </Link>
           </div>
 
-          <RateLimitBanner
-            message={rateLimit.message}
-            retryAfterSeconds={rateLimit.retryAfterSeconds}
-          />
+          {showFailureHints && (
+            <RateLimitBanner
+              message={rateLimit.message}
+              retryAfterSeconds={rateLimit.retryAfterSeconds}
+            />
+          )}
 
-          {authError && (
+          {showFailureHints && authError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {authError}
             </div>
@@ -111,12 +119,12 @@ export function SignIn() {
 
           <button
             type="submit"
-            disabled={isSubmitting || rateLimit.isBlocked}
+            disabled={isSubmitting || isBlocked}
             className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
           >
             {isSubmitting
               ? 'Signing in…'
-              : rateLimit.isBlocked
+              : isBlocked
                 ? `Wait ${rateLimit.retryAfterSeconds}s`
                 : 'Sign in'}
           </button>
