@@ -5,6 +5,7 @@ export type Post = {
   created_at: string
   image_url?: string | null
   comments_enabled: boolean
+  tag?: string | null
 }
 
 export type Comment = {
@@ -26,4 +27,38 @@ export type LockStatus = {
   remaining?: number
   locked_until?: string
   message?: string
+}
+
+export type Question = {
+  id: string
+  asker_name: string
+  category: string
+  body: string
+  user_id?: string | null
+  wants_credit: boolean
+  status: 'pending' | 'answered'
+  created_at: string
+}
+
+export type QuestionReply = {
+  id: string
+  question_id: string
+  author_id: string
+  body: string
+  created_at: string
+}
+
+export type QuestionWithReplies = Question & {
+  replies: QuestionReply[]
+}
+
+export type AppNotification = {
+  id: string
+  user_id: string
+  type: string
+  title: string
+  body: string
+  question_id?: string | null
+  read_at?: string | null
+  created_at: string
 }

@@ -5,6 +5,13 @@ import { supabase } from '../lib/supabase'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../contexts/ToastContext'
 import { ChevronLeft, Image as ImageIcon, ShieldAlert, FileText, CheckCircle2, AlertCircle } from 'lucide-react'
+import { CrossSpinner, PageLoader } from '../components/CrossLoader'
+import { ArticleContent } from '../components/ArticleContent'
+import { RichTextEditor } from '../components/editor/RichTextEditor'
+import { TagPicker } from '../components/TagPicker'
+import { getPlainTextFromContent } from '../lib/article-content'
+import type { ArticleTagSlug } from '../lib/tags'
+import { getTagBySlug } from '../lib/tags'
 
 export function WritePost() {
   const { user, loading: authLoading } = useAuth()
@@ -16,6 +23,7 @@ export function WritePost() {
   const [postTitle, setPostTitle] = useState('')
   const [postContent, setPostContent] = useState('')
   const [commentsEnabled, setCommentsEnabled] = useState(false)
+  const [postTag, setPostTag] = useState<ArticleTagSlug | null>(null)
 
   // Cover Image Cropping State
   const [postImageSrc, setPostImageSrc] = useState<string | null>(null)
@@ -65,7 +73,13 @@ export function WritePost() {
 
   // Mutation to add a new post
   const addPostMutation = useMutation({
-    mutationFn: async (payload: { title: string; content: string; imageBlob: Blob | null; commentsEnabled: boolean }) => {
+    mutationFn: async (payload: {
+      title: string
+      content: string
+      imageBlob: Blob | null
+      commentsEnabled: boolean
+      tag: ArticleTagSlug | null
+    }) => {
       const postId = crypto.randomUUID()
       let imageUrl: string | null = null
 
@@ -93,6 +107,7 @@ export function WritePost() {
         content: payload.content,
         image_url: imageUrl,
         comments_enabled: payload.commentsEnabled,
+        tag: payload.tag ?? null,
       })
 
       if (error) throw error
@@ -103,11 +118,14 @@ export function WritePost() {
       setPostTitle('')
       setPostContent('')
       setCommentsEnabled(false)
+      setPostTag(null)
       setPostImageSrc(null)
       setPostImageBlob(null)
       setPostImagePreview(null)
       setShowPublishPreview(false)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
       navigate('/') // Redirect to home page where post will appear in real time
     },
     onError: (err: Error) => {
@@ -223,7 +241,7 @@ export function WritePost() {
       toastError('Please enter a post title')
       return
     }
-    if (!postContent.trim()) {
+    if (!getPlainTextFromContent(postContent).trim()) {
       toastError('Please enter post content')
       return
     }
@@ -236,15 +254,12 @@ export function WritePost() {
       content: postContent.trim(),
       imageBlob: postImageBlob,
       commentsEnabled: commentsEnabled,
+      tag: postTag,
     })
   }
 
   if (authLoading || permLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-slate-500">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-amber-600" />
-      </div>
-    )
+    return <PageLoader label="Preparing editor..." minHeightClassName="min-h-[40vh]" />
   }
 
   if (!isAdmin) {
@@ -363,19 +378,16 @@ export function WritePost() {
 
           {/* Content */}
           <div>
-            <label htmlFor="postContent" className="block text-sm font-semibold text-slate-700">
-              Post Content
-            </label>
-            <textarea
-              id="postContent"
-              rows={8}
-              value={postContent}
-              onChange={(e) => setPostContent(e.target.value)}
-              placeholder="What would you like to share today?"
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400 leading-relaxed"
-              required
-            />
+            <label className="block text-sm font-semibold text-slate-700">Post Content</label>
+            <p className="mt-1 text-xs text-slate-500">
+              Select text and use <strong>Link articles</strong> to connect words to related articles.
+            </p>
+            <div className="mt-2">
+              <RichTextEditor value={postContent} onChange={setPostContent} />
+            </div>
           </div>
+
+          <TagPicker value={postTag} onChange={setPostTag} />
 
           {/* Comment control settings */}
           <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
@@ -398,7 +410,14 @@ export function WritePost() {
               disabled={addPostMutation.isPending}
               className="rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow"
             >
-              Publish Post
+              {addPostMutation.isPending ? (
+                <>
+                  <CrossSpinner size="xs" />
+                  Publishing…
+                </>
+              ) : (
+                'Publish Post'
+              )}
             </button>
           </div>
         </form>
@@ -509,13 +528,12 @@ export function WritePost() {
                   Preview Post Mode
                 </span>
                 <h4 className="text-xl font-bold text-slate-900 mt-1">{postTitle}</h4>
-                <p className="text-sm text-slate-600 mt-3 whitespace-pre-wrap leading-relaxed">
-                  {postContent}
-                </p>
+                <ArticleContent content={postContent} className="text-sm" />
               </div>
-              <div className="border-t border-slate-100 pt-3 flex items-center gap-2 text-xs font-semibold text-slate-500">
+              <div className="border-t border-slate-100 pt-3 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-500">
                 <AlertCircle size={14} className="text-amber-500" />
                 <span>Comments: {commentsEnabled ? 'Enabled' : 'Disabled'}</span>
+                <span>Tag: {postTag ? getTagBySlug(postTag)?.title : 'None'}</span>
               </div>
             </div>
 
@@ -534,7 +552,14 @@ export function WritePost() {
                 disabled={addPostMutation.isPending}
                 className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                {addPostMutation.isPending ? 'Publishing…' : 'Confirm & Publish'}
+                {addPostMutation.isPending ? (
+                  <>
+                    <CrossSpinner size="xs" />
+                    Publishing…
+                  </>
+                ) : (
+                  'Confirm & Publish'
+                )}
               </button>
             </div>
           </div>

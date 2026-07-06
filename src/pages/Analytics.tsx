@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useQuery } from '@tanstack/react-query'
+import { PageLoader } from '../components/CrossLoader'
+import { useToast } from '../contexts/ToastContext'
 import { BarChart3, Users, BookOpen, Clock, ShieldAlert, ArrowLeft, ArrowUpRight, Search } from 'lucide-react'
 
 interface AnalyticsView {
@@ -19,6 +21,7 @@ interface AnalyticsView {
 export function Analytics() {
   const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  const { error: toastError } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
 
   // 1. Fetch current user permissions to check for Admin status
@@ -68,12 +71,14 @@ export function Analytics() {
     }
   }, [user, authLoading, navigate])
 
+  useEffect(() => {
+    if (error) {
+      toastError('Failed to load analytics data')
+    }
+  }, [error, toastError])
+
   if (authLoading || permLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-slate-500">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-amber-600" />
-      </div>
-    )
+    return <PageLoader label="Loading analytics..." minHeightClassName="min-h-[40vh]" />
   }
 
   if (!isAdmin) {

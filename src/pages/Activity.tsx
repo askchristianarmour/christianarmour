@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
+import { useToast } from '../contexts/ToastContext'
 import { Heart, MessageSquare, ChevronLeft } from 'lucide-react'
 
 interface ActivityLike {
@@ -38,6 +40,7 @@ interface PaginatedActivityResponse {
 export function Activity() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+  const { error: toastError } = useToast()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   // Redirect to signin if not loaded and no user
@@ -124,14 +127,16 @@ export function Activity() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  useEffect(() => {
+    if (error) {
+      toastError('Failed to load activity log')
+    }
+  }, [error, toastError])
+
   const activities = data?.pages.flatMap((page) => page.items) ?? []
 
   if (loading || !user) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-slate-500">
-        <span className="animate-pulse">Loading activity…</span>
-      </div>
-    )
+    return <PageLoader label="Loading activity..." minHeightClassName="min-h-[40vh]" />
   }
 
   return (
@@ -154,10 +159,8 @@ export function Activity() {
       </div>
 
       {isLoading && (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-200" />
-          ))}
+        <div className="flex justify-center py-12">
+          <CrossLoader size="lg" label="Loading activity..." />
         </div>
       )}
 
@@ -216,7 +219,7 @@ export function Activity() {
       <div ref={sentinelRef} className="h-10 mt-6 flex items-center justify-center">
         {isFetchingNextPage && (
           <div className="flex items-center gap-2 text-sm text-slate-500">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
+            <CrossSpinner size="xs" />
             Loading more activity…
           </div>
         )}

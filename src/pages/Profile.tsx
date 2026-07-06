@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Trash2, Image as ImageIcon } from 'lucide-react'
+import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Trash2, Image as ImageIcon, HelpCircle } from 'lucide-react'
+import { TagPicker } from '../components/TagPicker'
+import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
+import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
+import { ArticleContent } from '../components/ArticleContent'
+import { RichTextEditor } from '../components/editor/RichTextEditor'
+import { getPlainTextFromContent } from '../lib/article-content'
+import type { ArticleTagSlug } from '../lib/tags'
+import { getTagBySlug } from '../lib/tags'
 
 interface ActivityLike {
   id: string
@@ -36,6 +44,7 @@ export function Profile() {
   const { success: toastSuccess, error: toastError } = useToast()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [searchParams] = useSearchParams()
 
   // Profile fields state
   const [displayName, setDisplayName] = useState('')
@@ -46,12 +55,15 @@ export function Profile() {
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
 
   // Tab navigation state
-  const [activeTab, setActiveTab] = useState<'settings' | 'activity' | 'add-post' | 'permissions'>('settings')
+  const [activeTab, setActiveTab] = useState<
+    'settings' | 'activity' | 'add-post' | 'permissions' | 'asked-questions'
+  >('settings')
 
   // Add post state
   const [postTitle, setPostTitle] = useState('')
   const [postContent, setPostContent] = useState('')
   const [commentsEnabled, setCommentsEnabled] = useState(false)
+  const [postTag, setPostTag] = useState<ArticleTagSlug | null>(null)
   const [showPublishPreview, setShowPublishPreview] = useState(false)
 
   // Post Header Image & Crop state
@@ -93,6 +105,12 @@ export function Profile() {
   const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
   const canPost = user?.email === 'ask@christianarmour.com' || !!userPermission?.can_post
 
+  useEffect(() => {
+    if (searchParams.get('tab') === 'asked-questions' && canPost) {
+      setActiveTab('asked-questions')
+    }
+  }, [searchParams, canPost])
+
   // Fetch all permissions for Admin View
   const { data: allPermissions, refetch: refetchPermissions, error: permissionsTableError } = useQuery({
     queryKey: ['all-permissions'],
@@ -110,7 +128,13 @@ export function Profile() {
 
   // Mutation to add a new post
   const addPostMutation = useMutation({
-    mutationFn: async (payload: { title: string; content: string; imageBlob: Blob | null; commentsEnabled: boolean }) => {
+    mutationFn: async (payload: {
+      title: string
+      content: string
+      imageBlob: Blob | null
+      commentsEnabled: boolean
+      tag: ArticleTagSlug | null
+    }) => {
       const postId = crypto.randomUUID()
       let imageUrl: string | null = null
 
@@ -139,6 +163,7 @@ export function Profile() {
         content: payload.content,
         image_url: imageUrl,
         comments_enabled: payload.commentsEnabled,
+        tag: payload.tag ?? null,
       })
 
       if (error) throw error
@@ -149,11 +174,14 @@ export function Profile() {
       setPostTitle('')
       setPostContent('')
       setCommentsEnabled(false)
+      setPostTag(null)
       setPostImageSrc(null)
       setPostImageBlob(null)
       setPostImagePreview(null)
       setShowPublishPreview(false)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to publish post')
@@ -203,7 +231,7 @@ export function Profile() {
 
   const handleAddPost = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!postTitle.trim() || !postContent.trim()) {
+    if (!postTitle.trim() || !getPlainTextFromContent(postContent).trim()) {
       toastError('Title and content are required')
       return
     }
@@ -217,6 +245,7 @@ export function Profile() {
       content: postContent.trim(),
       imageBlob: postImageBlob,
       commentsEnabled,
+      tag: postTag,
     })
   }
 
@@ -607,11 +636,7 @@ export function Profile() {
   }
 
   if (loading || !user) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm text-slate-500">
-        <span className="animate-pulse">Loading profile…</span>
-      </div>
-    )
+    return <PageLoader label="Loading profile..." minHeightClassName="min-h-[40vh]" />
   }
 
   const initial = (displayName || user.email || 'U')[0].toUpperCase()
@@ -720,6 +745,21 @@ export function Profile() {
                 <Activity size={16} />
                 Activity Feed
               </button>
+
+              {canPost && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('asked-questions')}
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                    activeTab === 'asked-questions'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <HelpCircle size={16} />
+                  Asked Questions
+                </button>
+              )}
 
               {canPost && (
                 <button
@@ -886,7 +926,9 @@ export function Profile() {
               <h2 className="text-xl font-bold text-slate-900 mb-4">Your Activity Feed</h2>
 
               {isActivityLoading ? (
-                <p className="text-sm text-slate-500 animate-pulse">Loading activity...</p>
+                <div className="flex justify-center py-8">
+                  <CrossLoader size="md" label="Loading activity..." />
+                </div>
               ) : (
                 <div className="space-y-4">
                   {latestActivities.length === 0 ? (
@@ -933,6 +975,10 @@ export function Profile() {
           )}
 
           {/* Add Post tab */}
+          {activeTab === 'asked-questions' && canPost && user && (
+            <AskedQuestionsPanel userId={user.id} />
+          )}
+
           {activeTab === 'add-post' && canPost && (
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm animate-in fade-in duration-200">
               <h2 className="text-xl font-bold text-slate-900 mb-4">Add New Post</h2>
@@ -1009,19 +1055,16 @@ export function Profile() {
 
                 {/* Content */}
                 <div>
-                  <label htmlFor="postContent" className="block text-sm font-semibold text-slate-700">
-                    Post Content
-                  </label>
-                  <textarea
-                    id="postContent"
-                    rows={6}
-                    value={postContent}
-                    onChange={(e) => setPostContent(e.target.value)}
-                    placeholder="Write your post content here..."
-                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-                    required
-                  />
+                  <label className="block text-sm font-semibold text-slate-700">Post Content</label>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Select text and use <strong>Link articles</strong> to connect words to related articles.
+                  </p>
+                  <div className="mt-2">
+                    <RichTextEditor value={postContent} onChange={setPostContent} />
+                  </div>
                 </div>
+
+                <TagPicker value={postTag} onChange={setPostTag} />
 
                 {/* Comment control settings (Default: False/Disabled) */}
                 <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
@@ -1240,7 +1283,7 @@ export function Profile() {
               >
                 {isUploadingAvatar ? (
                   <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <CrossSpinner size="xs" />
                     Uploading…
                   </>
                 ) : (
@@ -1357,14 +1400,17 @@ export function Profile() {
                 {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
               </time>
               <h2 className="text-xl font-semibold text-slate-900">{postTitle}</h2>
-              <p className="leading-relaxed text-slate-600 whitespace-pre-wrap">{postContent}</p>
+              <ArticleContent content={postContent} className="text-sm" />
               
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
+              <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 font-medium">
                 <span className="flex items-center gap-1">
                   <span>💬 Comments:</span>
                   <span className={`font-semibold ${commentsEnabled ? 'text-green-600' : 'text-red-500'}`}>
                     {commentsEnabled ? 'Enabled' : 'Disabled (Default)'}
                   </span>
+                </span>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  {postTag ? getTagBySlug(postTag)?.title : 'No tag'}
                 </span>
               </div>
             </div>
@@ -1387,7 +1433,7 @@ export function Profile() {
               >
                 {addPostMutation.isPending ? (
                   <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <CrossSpinner size="xs" />
                     Publishing…
                   </>
                 ) : (

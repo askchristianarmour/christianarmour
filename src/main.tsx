@@ -11,9 +11,14 @@ import { SignIn } from './pages/SignIn'
 import { SignUp } from './pages/SignUp'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { ResetPassword } from './pages/ResetPassword'
+import { ArticleDetail } from './pages/ArticleDetail'
+import { Articles } from './pages/Articles'
+import { TagArticles } from './pages/TagArticles'
 import { Profile } from './pages/Profile'
 import { Activity } from './pages/Activity'
 import { Analytics } from './pages/Analytics'
+import { Ask } from './pages/Ask'
+import { About } from './pages/About'
 import { WritePost } from './pages/WritePost'
 import './index.css'
 
@@ -25,19 +30,24 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/signin" element={<SignIn />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/activity" element={<Activity />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/add-post" element={<WritePost />} />
-              </Route>
-            </Routes>
+          <Routes>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/articles" element={<Articles />} />
+              <Route path="/tags/:tag" element={<TagArticles />} />
+              <Route path="/articles/:postId" element={<ArticleDetail />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/activity" element={<Activity />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/add-post" element={<WritePost />} />
+              <Route path="/ask" element={<Ask />} />
+            </Route>
+          </Routes>
           </BrowserRouter>
           <ToastContainer />
         </ToastProvider>

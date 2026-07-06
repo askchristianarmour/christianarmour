@@ -29,10 +29,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const id = Math.random().toString(36).substring(2, 9)
     setToasts((prev) => [...prev, { id, message, type }])
 
-    // Auto dismiss after 4 seconds
+    const duration = type === 'error' ? 5500 : 4200
     setTimeout(() => {
       remove(id)
-    }, 4000)
+    }, duration)
   }, [remove])
 
   const success = useCallback((message: string) => show(message, 'success'), [show])

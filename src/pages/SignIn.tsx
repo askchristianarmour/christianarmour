@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
-import { PasswordInput } from '../components/PasswordInput'
+import { AuthChrome } from '../components/auth/AuthChrome'
+import { AuthHeroPanel } from '../components/auth/AuthHeroPanel'
+import { BrandedPasswordInput } from '../components/auth/BrandedPasswordInput'
+import { CrossSpinner } from '../components/CrossLoader'
 import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useAuth } from '../hooks/useAuth'
 import { useRateLimit } from '../hooks/useRateLimit'
@@ -27,7 +30,6 @@ export function SignIn() {
   useEffect(() => {
     if (successMessage) {
       toastSuccess(successMessage)
-      // Clear location state to avoid double toast on navigation/refresh
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [successMessage, toastSuccess, navigate, location.pathname])
@@ -65,81 +67,92 @@ export function SignIn() {
   const isBlocked = showFailureHints && rateLimit.isBlocked
 
   return (
-    <div className="mx-auto max-w-md">
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Sign in</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Use your email and password to access likes and comments.
-        </p>
+    <div className="flex min-h-screen flex-col bg-white">
+      <AuthChrome />
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              {...register('email')}
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
-              placeholder="you@example.com"
+      <div className="flex flex-1 flex-col lg:flex-row">
+        <AuthHeroPanel />
+
+        <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-10 lg:py-16">
+          <div className="w-full max-w-sm">
+            <img
+              src="/signin/cross.svg"
+              alt="Christian Armour"
+              className="mx-auto h-16 w-auto sm:h-20"
             />
-            {errors.email && (
-              <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
-            )}
+
+            <h1 className="mt-8 text-center font-serif text-3xl font-semibold text-slate-900 sm:text-4xl">
+              Welcome Back
+            </h1>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+              <div>
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="Enter your email id"
+                  {...register('email')}
+                  className="w-full border-0 border-b border-slate-300 bg-transparent py-2.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#1c2b3a]"
+                />
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+                )}
+              </div>
+
+              <BrandedPasswordInput
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                error={errors.password?.message}
+                {...register('password')}
+              />
+
+              <div className="text-right">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm text-slate-500 underline-offset-2 hover:text-slate-800 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {showFailureHints && (
+                <RateLimitBanner
+                  message={rateLimit.message}
+                  retryAfterSeconds={rateLimit.retryAfterSeconds}
+                />
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting || isBlocked}
+                className="w-full rounded-sm bg-[#1c2b3a] py-3 text-sm font-medium tracking-wide text-white transition-colors hover:bg-[#152231] disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <CrossSpinner size="xs" />
+                    Signing in…
+                  </span>
+                ) : isBlocked ? (
+                  `Wait ${rateLimit.retryAfterSeconds}s`
+                ) : (
+                  'Sign in'
+                )}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-slate-500">
+              Don&apos;t have an account?{' '}
+              <Link
+                to="/signup"
+                className="font-medium text-[#1c2b3a] underline-offset-2 hover:underline"
+              >
+                Sign up
+              </Link>
+            </p>
           </div>
-
-          <PasswordInput
-            label="Password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            {...register('password')}
-          />
-
-          <div className="text-right">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-slate-600 underline hover:text-slate-900"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
-          {showFailureHints && (
-            <RateLimitBanner
-              message={rateLimit.message}
-              retryAfterSeconds={rateLimit.retryAfterSeconds}
-            />
-          )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting || isBlocked}
-            className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center min-h-[40px]"
-          >
-            {isSubmitting ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            ) : isBlocked ? (
-              `Wait ${rateLimit.retryAfterSeconds}s`
-            ) : (
-              'Sign in'
-            )}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-slate-500">
-          Don&apos;t have an account?{' '}
-          <Link to="/signup" className="font-medium text-slate-700 underline hover:text-slate-900">
-            Sign up
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   )
 }
-

@@ -1,12 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Heart, MessageCircle, Send, Lock } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Heart, MessageCircle, Lock, Settings2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
-import { AuthRequiredModal } from './AuthRequiredModal'
-import type { PostWithMeta } from '../hooks/usePosts'
-import { logView } from '../lib/analytics'
+import type { PostWithMeta } from '../lib/posts'
+import { getTagBySlug } from '../lib/tags'
+import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
+import { usePostLike } from '../hooks/usePostLike'
+import { PostCoverImage } from './PostCoverImage'
 
 type Props = {
   post: PostWithMeta
@@ -14,70 +15,9 @@ type Props = {
 }
 
 export function PostCard({ post, canToggleComments }: Props) {
-  const { user } = useAuth()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [commentText, setCommentText] = useState('')
-  const [showComments, setShowComments] = useState(false)
-
-  // Track post views (reads) in the database via session storage to prevent duplicate logging
-  useEffect(() => {
-    const sessionKey = `viewed_${post.id}`
-    const alreadyViewed = sessionStorage.getItem(sessionKey)
-    if (!alreadyViewed) {
-      sessionStorage.setItem(sessionKey, 'true')
-      logView({
-        action: 'read',
-        postId: post.id,
-        postTitle: post.title,
-      })
-    }
-  }, [post.id, post.title])
-
-  const userLiked = post.likes.some((like) => like.user_id === user?.id)
-  const likeCount = post.likes.length
-
-  const likeMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('Not authenticated')
-
-      if (userLiked) {
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', user.id)
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from('likes').insert({
-          post_id: post.id,
-          user_id: user.id,
-        })
-        if (error) throw error
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['posts'] })
-    },
-  })
-
-  const commentMutation = useMutation({
-    mutationFn: async (body: string) => {
-      if (!user) throw new Error('Not authenticated')
-
-      const { error } = await supabase.from('comments').insert({
-        post_id: post.id,
-        user_id: user.id,
-        body,
-      })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      setCommentText('')
-      queryClient.invalidateQueries({ queryKey: ['posts'] })
-    },
-  })
+  const { userLiked, likeCount, toggleLike, isPending } = usePostLike(post)
 
   const toggleCommentsMutation = useMutation({
     mutationFn: async () => {
@@ -96,26 +36,6 @@ export function PostCard({ post, canToggleComments }: Props) {
     },
   })
 
-  const handleLike = () => {
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
-    likeMutation.mutate()
-  }
-
-  const handleCommentSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!commentText.trim()) return
-
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
-
-    commentMutation.mutate(commentText.trim())
-  }
-
   const handleToggleComments = () => {
     toggleCommentsMutation.mutate()
   }
@@ -126,102 +46,103 @@ export function PostCard({ post, canToggleComments }: Props) {
     day: 'numeric',
   })
 
+  const excerpt = getExcerptFromContent(post.content, 150)
+
+  const tag = getTagBySlug(post.tag)
+
   return (
-    <>
-      <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm overflow-hidden">
-        {post.image_url && (
-          <div className="mb-4 -mx-6 -mt-6 aspect-[16/9] w-[calc(100%+3rem)] overflow-hidden border-b border-slate-100">
-            <img
-              src={post.image_url}
-              alt={post.title}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        )}
+    <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+      <Link to={`/articles/${post.id}`} className="block">
+        <PostCoverImage
+          imageUrl={post.image_url}
+          title={post.title}
+          className="aspect-[16/9]"
+        />
+      </Link>
 
-        <time className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          {formattedDate}
-        </time>
-        <h2 className="mt-2 text-xl font-semibold text-slate-900">{post.title}</h2>
-        <p className="mt-3 leading-relaxed text-slate-600">{post.content}</p>
-
-        <div className="mt-5 flex items-center gap-4 border-t border-slate-100 pt-4">
-          <button
-            type="button"
-            onClick={handleLike}
-            disabled={likeMutation.isPending}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-colors cursor-pointer ${
-              userLiked ? 'text-rose-500' : 'text-slate-500 hover:text-rose-500'
-            }`}
-          >
-            <Heart size={18} fill={userLiked ? 'currentColor' : 'none'} />
-            {likeCount} {likeCount === 1 ? 'Like' : 'Likes'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowComments((v) => !v)}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 cursor-pointer"
-          >
-            <MessageCircle size={18} />
-            {post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}
-          </button>
-
-          {canToggleComments && (
-            <button
-              type="button"
-              onClick={handleToggleComments}
-              disabled={toggleCommentsMutation.isPending}
-              className="ml-auto text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1 cursor-pointer border border-slate-200 hover:bg-slate-50 rounded-lg px-2.5 py-1.5"
+      <div className="p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">
+            Recent Article
+          </p>
+          {tag && (
+            <Link
+              to={`/articles?tag=${tag.slug}`}
+              className="rounded-full bg-[#faf5e8] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c6a14d] transition-colors hover:bg-[#f3e8c8]"
             >
-              {post.comments_enabled ? 'Disable Comments' : 'Enable Comments'}
-            </button>
+              {tag.title}
+            </Link>
           )}
         </div>
+        <Link to={`/articles/${post.id}`} className="mt-3 block">
+          <h2 className="font-serif text-3xl leading-tight text-slate-900 transition-colors hover:text-[#1c2b3a]">
+            {post.title}
+          </h2>
+        </Link>
+        <p className="mt-3 text-sm leading-7 text-slate-600">{excerpt}</p>
 
-        {showComments && (
-          <div className="mt-4 space-y-4 border-t border-slate-100 pt-4 animate-in fade-in duration-200">
-            {post.comments.length > 0 && (
-              <ul className="space-y-3">
-                {post.comments.map((comment) => (
-                  <li key={comment.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                    <p className="text-slate-700">{comment.body}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
+          <span className="inline-flex items-center gap-2">
+            <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4" />
+            {formattedDate}
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4" />
+            {getReadingMinutes(post.content)} mins read
+          </span>
+        </div>
 
-            {post.comments_enabled ? (
-              <form onSubmit={handleCommentSubmit} className="flex gap-2">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  onFocus={() => {
-                    if (!user) setShowAuthModal(true)
-                  }}
-                  placeholder={user ? 'Write a comment…' : 'Sign in to comment…'}
-                  className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-                />
-                <button
-                  type="submit"
-                  disabled={commentMutation.isPending || !commentText.trim()}
-                  className="flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
-                >
-                  <Send size={16} />
-                </button>
-              </form>
-            ) : (
-              <div className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5 text-center text-xs text-slate-400 font-semibold flex items-center justify-center gap-1.5">
-                <Lock size={12} className="text-slate-400" />
-                <span>Comments are disabled for this post.</span>
-              </div>
-            )}
+        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5">
+          <button
+            type="button"
+            onClick={toggleLike}
+            disabled={isPending}
+            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+              userLiked
+                ? 'border-rose-200 bg-rose-50 text-rose-600'
+                : 'border-slate-200 text-slate-600 hover:border-rose-200 hover:text-rose-600'
+            }`}
+          >
+            <Heart size={16} fill={userLiked ? 'currentColor' : 'none'} />
+            {likeCount}
+          </button>
+
+          <Link
+            to={`/articles/${post.id}#comments`}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+          >
+            <MessageCircle size={16} />
+            {post.comments.length}
+          </Link>
+
+          <Link
+            to={`/articles/${post.id}`}
+            className="ml-auto inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
+          >
+            Read Article
+            <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {!post.comments_enabled && (
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+            <Lock size={12} />
+            Comments disabled
           </div>
         )}
-      </article>
 
-      <AuthRequiredModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
-    </>
+        {canToggleComments && (
+          <button
+            type="button"
+            onClick={handleToggleComments}
+            disabled={toggleCommentsMutation.isPending}
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+          >
+            <Settings2 size={13} />
+            {post.comments_enabled ? 'Disable Comments' : 'Enable Comments'}
+          </button>
+        )}
+      </div>
+    </article>
   )
 }

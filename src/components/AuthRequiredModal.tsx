@@ -29,10 +29,9 @@ export function AuthRequiredModal({ open, onClose }: Props) {
           <X size={20} />
         </button>
 
-        <h2 className="text-xl font-semibold text-slate-900">Sign up to interact</h2>
+        <h2 className="text-xl font-semibold text-slate-900">Sign in to comment</h2>
         <p className="mt-2 text-sm text-slate-600">
-          You need an account to like or comment on posts. Create one or sign in if you already
-          have an account.
+          Comments require an account. Create one or sign in if you already have one.
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">

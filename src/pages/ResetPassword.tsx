@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { PasswordInput } from '../components/PasswordInput'
+import { CrossSpinner, PageLoader } from '../components/CrossLoader'
 import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { updatePassword } from '../lib/password-reset'
@@ -33,7 +34,7 @@ function isRecoveryUrl() {
 
 export function ResetPassword() {
   const navigate = useNavigate()
-  const { error: toastError } = useToast()
+  const { success: toastSuccess, error: toastError } = useToast()
   const [checking, setChecking] = useState(true)
   const [canReset, setCanReset] = useState(false)
   const [userEmail, setUserEmail] = useState('session')
@@ -102,18 +103,14 @@ export function ResetPassword() {
       return
     }
 
+    toastSuccess('Password updated successfully. Please sign in with your new password.')
     navigate('/signin', {
-      state: { message: 'Password updated successfully. Please sign in with your new password.' },
       replace: true,
     })
   }
 
   if (checking) {
-    return (
-      <div className="mx-auto max-w-md text-center text-sm text-slate-500">
-        Verifying your reset link…
-      </div>
-    )
+    return <PageLoader label="Verifying your reset link..." minHeightClassName="min-h-[40vh]" />
   }
 
   if (!canReset) {
@@ -173,10 +170,7 @@ export function ResetPassword() {
             className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 flex items-center justify-center min-h-[40px]"
           >
             {isSubmitting ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <CrossSpinner size="sm" />
             ) : showFailureHints && rateLimit.isBlocked ? (
               `Wait ${rateLimit.retryAfterSeconds}s`
             ) : (
