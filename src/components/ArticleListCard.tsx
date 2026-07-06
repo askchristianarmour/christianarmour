@@ -56,10 +56,14 @@ export function ArticleListCard({ post }: Props) {
 
           <Link
             to={`/articles/${post.id}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-[#c6a14d]/40 hover:text-[#c6a14d]"
+            className="group/arrow flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-[#faf8f4] shadow-sm transition-all hover:border-[#c6a14d]/50 hover:bg-[#faf5e8]"
             aria-label={`Read ${post.title}`}
           >
-            <img src="/home/noverticalhorizontalarrowicon.svg" alt="" className="h-4 w-4" />
+            <img
+              src="/home/noverticalhorizontalarrowiconyellow.svg"
+              alt=""
+              className="h-4 w-4 transition-transform group-hover/arrow:translate-x-0.5"
+            />
           </Link>
         </div>
       </div>

@@ -16,6 +16,15 @@ function isWrongCredentials(error: { message?: string; code?: string }) {
   )
 }
 
+function isEmailNotConfirmed(error: { message?: string; code?: string }) {
+  const message = (error.message ?? '').toLowerCase()
+  return (
+    message.includes('email not confirmed') ||
+    message.includes('email not verified') ||
+    error.code === 'email_not_confirmed'
+  )
+}
+
 export { formatAuthError } from './auth-errors'
 
 async function signInRequest(email: string, password: string) {
@@ -40,6 +49,13 @@ async function signInRequest(email: string, password: string) {
     })
 
     if (error) {
+      if (isEmailNotConfirmed(error)) {
+        return {
+          error: `Your account is not verified yet. Please check ${normalized} for the confirmation link we sent when you signed up.`,
+          needsEmailVerification: true,
+        }
+      }
+
       if (isWrongCredentials(error)) {
         const { data: failResult } = await supabase.rpc('record_failed_login', {
           p_email: normalized,

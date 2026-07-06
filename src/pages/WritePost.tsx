@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useIsAdmin } from '../hooks/useUserPermissions'
 import { supabase } from '../lib/supabase'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../contexts/ToastContext'
@@ -12,9 +13,13 @@ import { TagPicker } from '../components/TagPicker'
 import { getPlainTextFromContent } from '../lib/article-content'
 import type { ArticleTagSlug } from '../lib/tags'
 import { getTagBySlug } from '../lib/tags'
+import { fetchPostById, updatePost } from '../lib/posts'
 
 export function WritePost() {
+  const { postId: editPostId } = useParams()
+  const isEditing = !!editPostId
   const { user, loading: authLoading } = useAuth()
+  const { isAdmin, isLoading: permLoading } = useIsAdmin()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { success: toastSuccess, error: toastError } = useToast()
@@ -29,6 +34,7 @@ export function WritePost() {
   const [postImageSrc, setPostImageSrc] = useState<string | null>(null)
   const [postImageBlob, setPostImageBlob] = useState<Blob | null>(null)
   const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null)
 
   // Cropper geometry state
   const [postCropZoom, setPostCropZoom] = useState(1)
@@ -39,30 +45,23 @@ export function WritePost() {
   // Preview confirmation state
   const [showPublishPreview, setShowPublishPreview] = useState(false)
 
-  // 1. Fetch current user permissions to check for Admin status
-  const { data: userPermission, isLoading: permLoading } = useQuery({
-    queryKey: ['user-permissions', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      if (!user?.id) return null
-      const { data, error } = await supabase
-        .from('user_permissions')
-        .select('*')
-        .eq('email', user.email)
-        .single()
-
-      if (error) {
-        return {
-          email: user.email,
-          can_post: user.email === 'ask@christianarmour.com',
-          is_admin: user.email === 'ask@christianarmour.com',
-        }
-      }
-      return data
-    },
+  const { data: existingPost, isLoading: postLoading, error: postError } = useQuery({
+    queryKey: ['post', editPostId],
+    queryFn: () => fetchPostById(editPostId!),
+    enabled: isEditing && isAdmin,
   })
 
-  const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
+  useEffect(() => {
+    if (!existingPost) return
+    setPostTitle(existingPost.title)
+    setPostContent(existingPost.content)
+    setCommentsEnabled(existingPost.comments_enabled)
+    setPostTag((existingPost.tag as ArticleTagSlug | null) ?? null)
+    if (existingPost.image_url) {
+      setPostImagePreview(existingPost.image_url)
+      setExistingImageUrl(existingPost.image_url)
+    }
+  }, [existingPost])
 
   // Redirect if not logged in
   useEffect(() => {
@@ -130,6 +129,39 @@ export function WritePost() {
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to publish post')
+    },
+  })
+
+  const updatePostMutation = useMutation({
+    mutationFn: async (payload: {
+      title: string
+      content: string
+      imageBlob: Blob | null
+      commentsEnabled: boolean
+      tag: ArticleTagSlug | null
+      existingImageUrl: string | null
+    }) => {
+      if (!editPostId) throw new Error('Missing post ID')
+      await updatePost(editPostId, {
+        title: payload.title,
+        content: payload.content,
+        imageBlob: payload.imageBlob,
+        existingImageUrl: payload.existingImageUrl,
+        commentsEnabled: payload.commentsEnabled,
+        tag: payload.tag,
+      })
+    },
+    onSuccess: () => {
+      toastSuccess('Article updated successfully!')
+      setShowPublishPreview(false)
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['post', editPostId] })
+      queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
+      queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
+      navigate(`/articles/${editPostId}`)
+    },
+    onError: (err: Error) => {
+      toastError(err.message || 'Failed to update article')
     },
   })
 
@@ -249,17 +281,47 @@ export function WritePost() {
   }
 
   const handleConfirmPublish = () => {
-    addPostMutation.mutate({
+    const payload = {
       title: postTitle.trim(),
       content: postContent.trim(),
       imageBlob: postImageBlob,
       commentsEnabled: commentsEnabled,
       tag: postTag,
-    })
+    }
+
+    if (isEditing) {
+      updatePostMutation.mutate({
+        ...payload,
+        existingImageUrl,
+      })
+      return
+    }
+
+    addPostMutation.mutate(payload)
   }
 
-  if (authLoading || permLoading) {
-    return <PageLoader label="Preparing editor..." minHeightClassName="min-h-[40vh]" />
+  const isSaving = addPostMutation.isPending || updatePostMutation.isPending
+
+  if (authLoading || permLoading || (isEditing && postLoading)) {
+    return <PageLoader label={isEditing ? 'Loading article...' : 'Preparing editor...'} minHeightClassName="min-h-[40vh]" />
+  }
+
+  if (isEditing && (postError || !existingPost)) {
+    return (
+      <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+        <h2 className="text-xl font-bold text-slate-900">Article not found</h2>
+        <p className="mt-2 text-slate-600 text-sm">
+          This article may have been removed or you do not have access to edit it.
+        </p>
+        <button
+          onClick={() => navigate('/articles')}
+          className="mt-6 inline-flex items-center gap-1.5 justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <ChevronLeft size={16} />
+          Back to Articles
+        </button>
+      </div>
+    )
   }
 
   if (!isAdmin) {
@@ -268,7 +330,7 @@ export function WritePost() {
         <ShieldAlert size={48} className="mx-auto text-red-600 mb-4 animate-bounce" />
         <h2 className="text-xl font-bold text-slate-900">Access Denied</h2>
         <p className="mt-2 text-slate-600 text-sm">
-          You do not have the required administrator privileges to add new posts.
+          You do not have the required administrator privileges to {isEditing ? 'edit' : 'add'} posts.
         </p>
         <button
           onClick={() => navigate('/')}
@@ -285,21 +347,23 @@ export function WritePost() {
     <div className="mx-auto max-w-2xl animate-in fade-in duration-300">
       <div className="mb-6">
         <Link
-          to="/"
+          to={isEditing ? `/articles/${editPostId}` : '/'}
           className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
         >
           <ChevronLeft size={16} />
-          Back to Feed
+          {isEditing ? 'Back to article' : 'Back to Feed'}
         </Link>
       </div>
 
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
           <FileText className="text-amber-600" size={32} />
-          Write a New Post
+          {isEditing ? 'Edit Article' : 'Write a New Post'}
         </h1>
         <p className="mt-1 text-slate-500 text-sm">
-          Draft a new article, upload a cover header, and publish it to the community.
+          {isEditing
+            ? 'Update the title, cover image, content, or settings for this article.'
+            : 'Draft a new article, upload a cover header, and publish it to the community.'}
         </p>
       </div>
 
@@ -350,6 +414,7 @@ export function WritePost() {
                     onClick={() => {
                       setPostImageBlob(null)
                       setPostImagePreview(null)
+                      setExistingImageUrl(null)
                     }}
                     className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 cursor-pointer transition-colors"
                   >
@@ -407,14 +472,16 @@ export function WritePost() {
           <div className="flex justify-end pt-3 border-t border-slate-100">
             <button
               type="submit"
-              disabled={addPostMutation.isPending}
+              disabled={isSaving}
               className="rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm hover:shadow"
             >
-              {addPostMutation.isPending ? (
+              {isSaving ? (
                 <>
                   <CrossSpinner size="xs" />
-                  Publishing…
+                  {isEditing ? 'Saving…' : 'Publishing…'}
                 </>
+              ) : isEditing ? (
+                'Save Changes'
               ) : (
                 'Publish Post'
               )}
@@ -505,9 +572,11 @@ export function WritePost() {
             <div className="flex items-start gap-3 border-b border-slate-100 pb-4">
               <CheckCircle2 className="text-emerald-500 shrink-0" size={24} />
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Confirm & Publish Post</h3>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {isEditing ? 'Confirm & Save Changes' : 'Confirm & Publish Post'}
+                </h3>
                 <p className="mt-1 text-xs text-slate-500">
-                  Review the preview of your post before publishing.
+                  Review the preview of your {isEditing ? 'changes' : 'post'} before {isEditing ? 'saving' : 'publishing'}.
                 </p>
               </div>
             </div>
@@ -549,14 +618,16 @@ export function WritePost() {
               <button
                 type="button"
                 onClick={handleConfirmPublish}
-                disabled={addPostMutation.isPending}
+                disabled={isSaving}
                 className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                {addPostMutation.isPending ? (
+                {isSaving ? (
                   <>
                     <CrossSpinner size="xs" />
-                    Publishing…
+                    {isEditing ? 'Saving…' : 'Publishing…'}
                   </>
+                ) : isEditing ? (
+                  'Confirm & Save'
                 ) : (
                   'Confirm & Publish'
                 )}

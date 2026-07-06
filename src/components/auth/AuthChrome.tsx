@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { BarChart3, Home, LogOut, Menu, PlusCircle, User, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useQuestionNotifications } from '../../hooks/useQuestionNotifications'
+import { NotificationBell } from '../NotificationBell'
 import { useAuth } from '../../hooks/useAuth'
+import { fetchUnreadNotificationCount } from '../../lib/questions'
 import { supabase } from '../../lib/supabase'
 import { SignOutConfirmationModal } from '../SignOutConfirmationModal'
 
@@ -92,7 +93,12 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
 
   const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
   const canPost = user?.email === 'ask@christianarmour.com' || !!userPermission?.can_post
-  const { data: unreadQuestionCount = 0 } = useQuestionNotifications(user?.id, canPost)
+  const { data: unreadQuestionCount = 0 } = useQuery({
+    queryKey: ['notification-count', user?.id],
+    enabled: !!user?.id,
+    queryFn: () => fetchUnreadNotificationCount(user!.id),
+    staleTime: 30_000,
+  })
 
   const drawerOpen = menuOpen || accountOpen
 
@@ -185,7 +191,9 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
               )}
 
               {!loading && user && (
-                <button
+                <>
+                  <NotificationBell canPost={canPost} />
+                  <button
                   type="button"
                   onClick={() => setAccountOpen(true)}
                   className="hidden items-center gap-2 rounded-full border border-white/20 p-1 pr-3 text-white transition-colors hover:bg-white/10 sm:flex"
@@ -204,6 +212,7 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                   )}
                   <Menu size={16} className="opacity-80" />
                 </button>
+                </>
               )}
 
               <div className="relative hidden lg:block">

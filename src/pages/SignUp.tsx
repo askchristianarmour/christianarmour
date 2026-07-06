@@ -58,10 +58,10 @@ export function SignUp() {
     }
 
     if (needsEmailConfirmation) {
-      navigate('/signin', {
-        state: { message: 'Account created! Check your email to confirm, then sign in.' },
-        replace: true,
-      })
+      toastSuccess(
+        `A verification link has been sent to ${data.email}. Please check your inbox and spam folder, then sign in once your account is confirmed.`
+      )
+      navigate('/signin', { replace: true })
       return
     }
 

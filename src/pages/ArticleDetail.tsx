@@ -16,10 +16,13 @@ import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content
 import { fetchPostById } from '../lib/posts'
 import { absoluteUrl, SITE_NAME } from '../lib/seo'
 import { supabase } from '../lib/supabase'
+import { ArticleAdminActions } from '../components/ArticleAdminActions'
+import { useIsAdmin } from '../hooks/useUserPermissions'
 
 export function ArticleDetail() {
   const { postId = '' } = useParams()
   const { user } = useAuth()
+  const { isAdmin } = useIsAdmin()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
   const [commentText, setCommentText] = useState('')
@@ -183,6 +186,12 @@ export function ArticleDetail() {
             <ChevronLeft size={16} />
             Back to articles
           </Link>
+
+          {isAdmin && (
+            <div className="mt-4">
+              <ArticleAdminActions postId={post.id} postTitle={post.title} />
+            </div>
+          )}
 
           <article className="mt-6 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
             <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">

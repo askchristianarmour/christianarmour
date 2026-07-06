@@ -21,7 +21,7 @@ type FormData = z.infer<typeof schema>
 
 export function SignIn() {
   const { signIn } = useAuth()
-  const { success: toastSuccess, error: toastError } = useToast()
+  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
   const successMessage = (location.state as { message?: string } | null)?.message
@@ -52,11 +52,15 @@ export function SignIn() {
 
     setShowFailureHints(false)
 
-    const { error } = await signIn(data.email, data.password)
+    const { error, needsEmailVerification } = await signIn(data.email, data.password)
 
     if (error) {
       setShowFailureHints(true)
-      toastError(error)
+      if (needsEmailVerification) {
+        toastInfo(error)
+      } else {
+        toastError(error)
+      }
       return
     }
 

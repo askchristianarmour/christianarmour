@@ -976,7 +976,7 @@ export function Profile() {
 
           {/* Add Post tab */}
           {activeTab === 'asked-questions' && canPost && user && (
-            <AskedQuestionsPanel userId={user.id} />
+            <AskedQuestionsPanel userId={user.id} isAdmin={isAdmin} />
           )}
 
           {activeTab === 'add-post' && canPost && (

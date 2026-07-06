@@ -19,6 +19,7 @@ import { Profile } from './pages/Profile'
 import { Activity } from './pages/Activity'
 import { Analytics } from './pages/Analytics'
 import { Ask } from './pages/Ask'
+import { QuestionAnswerDetail } from './pages/QuestionAnswerDetail'
 import { About } from './pages/About'
 import { WritePost } from './pages/WritePost'
 import './index.css'
@@ -47,7 +48,9 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/activity" element={<Activity />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/add-post" element={<WritePost />} />
+              <Route path="/add-post/edit/:postId" element={<WritePost />} />
               <Route path="/ask" element={<Ask />} />
+              <Route path="/ask/answers/:questionId" element={<QuestionAnswerDetail />} />
             </Route>
           </Routes>
           </BrowserRouter>

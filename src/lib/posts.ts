@@ -150,3 +150,50 @@ export async function fetchPostById(postId: string): Promise<PostWithMeta | null
   const [hydratedPost] = await hydratePosts([post])
   return hydratedPost ?? null
 }
+
+export async function updatePost(
+  postId: string,
+  payload: {
+    title: string
+    content: string
+    imageBlob: Blob | null
+    existingImageUrl?: string | null
+    commentsEnabled: boolean
+    tag: string | null
+  }
+) {
+  let imageUrl = payload.existingImageUrl ?? null
+
+  if (payload.imageBlob) {
+    const filePath = `feeds/${postId}-${Date.now()}.png`
+    const { error: uploadError } = await supabase.storage
+      .from('posts')
+      .upload(filePath, payload.imageBlob, {
+        contentType: 'image/png',
+        upsert: true,
+      })
+
+    if (uploadError) throw uploadError
+
+    const { data } = supabase.storage.from('posts').getPublicUrl(filePath)
+    imageUrl = data.publicUrl
+  }
+
+  const { error } = await supabase
+    .from('posts')
+    .update({
+      title: payload.title,
+      content: payload.content,
+      image_url: imageUrl,
+      comments_enabled: payload.commentsEnabled,
+      tag: payload.tag,
+    })
+    .eq('id', postId)
+
+  if (error) throw error
+}
+
+export async function deletePost(postId: string) {
+  const { error } = await supabase.from('posts').delete().eq('id', postId)
+  if (error) throw error
+}

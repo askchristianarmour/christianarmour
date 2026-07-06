@@ -36,5 +36,9 @@ export function formatAuthError(error: AuthError | Error) {
     return 'Invalid Supabase API key. Copy the anon/public key from Supabase → Project Settings → API.'
   }
 
+  if (message.includes('email not confirmed') || message.includes('email not verified')) {
+    return 'Your account is not verified yet. Please check your email for the confirmation link we sent when you signed up.'
+  }
+
   return error.message
 }

@@ -37,6 +37,7 @@ export type Question = {
   user_id?: string | null
   wants_credit: boolean
   status: 'pending' | 'answered'
+  is_public?: boolean
   created_at: string
 }
 

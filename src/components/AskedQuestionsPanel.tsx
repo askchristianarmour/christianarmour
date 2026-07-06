@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageSquareReply } from 'lucide-react'
+import { Eye, EyeOff, MessageSquareReply } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { CrossLoader, CrossSpinner } from './CrossLoader'
 import { useToast } from '../contexts/ToastContext'
@@ -7,24 +7,29 @@ import {
   fetchPosterQuestions,
   markNotificationsRead,
   replyToQuestion,
+  setQuestionPublicVisibility,
 } from '../lib/questions'
 import { supabase } from '../lib/supabase'
 import type { QuestionWithReplies } from '../types/database'
 
 type Props = {
   userId: string
+  isAdmin?: boolean
 }
 
 function QuestionReplyCard({
   question,
   userId,
+  isAdmin = false,
   onReplied,
 }: {
   question: QuestionWithReplies
   userId: string
+  isAdmin?: boolean
   onReplied: () => void
 }) {
   const { success: toastSuccess, error: toastError } = useToast()
+  const queryClient = useQueryClient()
   const [replyText, setReplyText] = useState('')
   const existingReply = question.replies[0]
 
@@ -37,9 +42,30 @@ function QuestionReplyCard({
       toastSuccess('Reply published successfully')
       setReplyText('')
       onReplied()
+      queryClient.invalidateQueries({ queryKey: ['notification-count'] })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['answered-questions'] })
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to publish reply')
+    },
+  })
+
+  const visibilityMutation = useMutation({
+    mutationFn: async (isPublic: boolean) => {
+      await setQuestionPublicVisibility(question.id, isPublic)
+    },
+    onSuccess: (_data, isPublic) => {
+      toastSuccess(
+        isPublic
+          ? 'This Q&A is now visible on the public Ask page.'
+          : 'This Q&A has been hidden from the public Ask page.'
+      )
+      onReplied()
+      queryClient.invalidateQueries({ queryKey: ['answered-questions'] })
+    },
+    onError: (err: Error) => {
+      toastError(err.message || 'Failed to update visibility')
     },
   })
 
@@ -49,15 +75,38 @@ function QuestionReplyCard({
         <span className="rounded-full bg-[#faf5e8] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#c6a14d]">
           {question.category}
         </span>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            question.status === 'pending'
-              ? 'bg-amber-50 text-amber-700'
-              : 'bg-emerald-50 text-emerald-700'
-          }`}
-        >
-          {question.status === 'pending' ? 'Pending reply' : 'Answered'}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {question.status === 'answered' && isAdmin && (
+            <button
+              type="button"
+              onClick={() => visibilityMutation.mutate(!(question.is_public ?? false))}
+              disabled={visibilityMutation.isPending}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                question.is_public
+                  ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {visibilityMutation.isPending ? (
+                <CrossSpinner size="xs" />
+              ) : question.is_public ? (
+                <Eye size={14} />
+              ) : (
+                <EyeOff size={14} />
+              )}
+              {(question.is_public ?? false) ? 'Public' : 'Hidden'}
+            </button>
+          )}
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              question.status === 'pending'
+                ? 'bg-amber-50 text-amber-700'
+                : 'bg-emerald-50 text-emerald-700'
+            }`}
+          >
+            {question.status === 'pending' ? 'Pending reply' : 'Answered'}
+          </span>
+        </div>
       </div>
 
       <p className="mt-4 text-sm font-semibold text-slate-700">
@@ -80,6 +129,13 @@ function QuestionReplyCard({
             Your reply
           </p>
           <p className="mt-2 text-sm leading-7 text-slate-700">{existingReply.body}</p>
+          {isAdmin && question.status === 'answered' && (
+            <p className="mt-3 text-xs text-slate-500">
+              {question.is_public ?? false
+                ? 'This answer is live in Previously Asked Questions on the Ask page.'
+                : 'This answer is hidden from the public until you mark it Public.'}
+            </p>
+          )}
         </div>
       ) : (
         <form
@@ -120,7 +176,7 @@ function QuestionReplyCard({
   )
 }
 
-export function AskedQuestionsPanel({ userId }: Props) {
+export function AskedQuestionsPanel({ userId, isAdmin = false }: Props) {
   const queryClient = useQueryClient()
   const { error: toastError } = useToast()
 
@@ -201,6 +257,7 @@ export function AskedQuestionsPanel({ userId }: Props) {
               key={question.id}
               question={question}
               userId={userId}
+              isAdmin={isAdmin}
               onReplied={handleReplied}
             />
           ))}
