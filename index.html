@@ -2,9 +2,84 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Christian Armour</title>
+    <meta
+      name="description"
+      content="Christian Armour publishes serious Bible study in plain language — exegesis, theology, church history, and Christian living."
+    />
+    <meta
+      name="keywords"
+      content="Christian Armour, Bible study, exegesis, theology, church history, Scripture, Christian living, biblical articles"
+    />
+    <meta name="author" content="Christian Armour" />
+    <meta name="robots" content="index, follow" />
+    <meta name="application-name" content="Christian Armour" />
+    <meta name="apple-mobile-web-app-title" content="Christian Armour" />
+    <meta name="theme-color" content="#1f2f3d" />
+
+    <meta property="og:site_name" content="Christian Armour" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      property="og:title"
+      content="Christian Armour | Bible Study, Theology &amp; Exegesis"
+    />
+    <meta
+      property="og:description"
+      content="Serious Bible study in plain language — exegesis, theology, church history, and Christian living."
+    />
+    <meta property="og:url" content="https://christianarmour.vercel.app/" />
+    <meta property="og:image" content="https://christianarmour.vercel.app/og-image.svg" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Christian Armour | Bible Study, Theology &amp; Exegesis"
+    />
+    <meta
+      name="twitter:description"
+      content="Serious Bible study in plain language — exegesis, theology, church history, and Christian living."
+    />
+    <meta name="twitter:image" content="https://christianarmour.vercel.app/og-image.svg" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="canonical" href="https://christianarmour.vercel.app/" />
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml" />
+
+    <title>Christian Armour | Bible Study, Theology &amp; Exegesis</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://christianarmour.vercel.app/#organization",
+            "name": "Christian Armour",
+            "url": "https://christianarmour.vercel.app",
+            "logo": "https://christianarmour.vercel.app/favicon.svg",
+            "description": "Serious Bible study in plain language — exegesis, theology, church history, and Christian living."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://christianarmour.vercel.app/#website",
+            "url": "https://christianarmour.vercel.app",
+            "name": "Christian Armour",
+            "publisher": { "@id": "https://christianarmour.vercel.app/#organization" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://christianarmour.vercel.app/articles?search={search_term_string}"
+              },
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

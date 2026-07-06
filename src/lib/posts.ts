@@ -12,6 +12,8 @@ export type InfinitePostsResponse = {
   nextCursor: number | null
 }
 
+export const POSTS_PAGE_SIZE = 10
+
 async function hydratePosts(posts: Post[]): Promise<PostWithMeta[]> {
   if (posts.length === 0) return []
 
@@ -52,7 +54,7 @@ export async function fetchPostsPageBySearch(
   const term = escapeIlikePattern(search.trim())
   if (!term) return fetchPostsPage(page)
 
-  const PAGE_SIZE = 5
+  const PAGE_SIZE = POSTS_PAGE_SIZE
   const start = page * PAGE_SIZE
   const end = start + PAGE_SIZE - 1
   const pattern = `%${term}%`
@@ -82,7 +84,7 @@ export async function fetchPostsPageByTag(
   tag: ArticleTagSlug | null,
   page: number
 ): Promise<InfinitePostsResponse> {
-  const PAGE_SIZE = 5
+  const PAGE_SIZE = POSTS_PAGE_SIZE
   const start = page * PAGE_SIZE
   const end = start + PAGE_SIZE - 1
 

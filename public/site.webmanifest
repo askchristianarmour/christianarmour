@@ -1,0 +1,23 @@
+{
+  "name": "Christian Armour",
+  "short_name": "Christian Armour",
+  "description": "Exegesis, theology, history, and life — Bible study for believers who want to read Scripture deeply.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/og-image.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#1f2f3d",
+  "background_color": "#fcfaf7",
+  "display": "standalone",
+  "start_url": "/"
+}

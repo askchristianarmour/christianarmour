@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /signin
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /profile
+Disallow: /activity
+Disallow: /analytics
+Disallow: /add-post
+
+Sitemap: https://christianarmour.vercel.app/sitemap.xml

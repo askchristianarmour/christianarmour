@@ -202,7 +202,7 @@ export function Articles() {
 
             <section className="mt-6">
               {isLoading ? (
-                <LoadingGrid count={6} />
+                <LoadingGrid count={10} />
               ) : filteredPosts.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
                   <p className="font-serif text-3xl text-slate-800">No articles found</p>

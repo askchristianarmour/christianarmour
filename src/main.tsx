@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { AppSeo } from './components/AppSeo'
 import { AuthProvider } from './contexts/AuthProvider'
 import { ToastProvider } from './contexts/ToastContext'
 import { ToastContainer } from './components/ToastContainer'
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
+          <AppSeo />
           <Routes>
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />

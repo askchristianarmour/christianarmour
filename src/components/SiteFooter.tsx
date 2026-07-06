@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 
 export function SiteFooter() {
   return (
-    <footer className="mt-14 rounded-[40px] bg-[#1f2f3d] px-8 py-10 text-white sm:px-12 lg:px-16">
-      <div className="grid gap-10 lg:grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr]">
+    <div className="mt-14">
+      <footer className="rounded-[40px] bg-[#1f2f3d] px-8 py-10 text-white sm:px-12 lg:px-16">
+        <div className="grid gap-10 lg:grid-cols-[1.4fr_0.7fr_0.7fr_0.7fr]">
         <div>
           <Link to="/" className="inline-flex items-center gap-3">
             <img src="/signin/cross.svg" alt="" className="h-12 w-auto shrink-0" aria-hidden />
@@ -80,11 +81,12 @@ export function SiteFooter() {
             </li>
           </ul>
         </div>
-      </div>
+        </div>
+      </footer>
 
-      <div className="mt-10 border-t border-white/10 pt-6 text-center text-sm text-white/40">
+      <p className="mt-6 text-center text-sm text-slate-400">
         &copy; 2026 Christian Armour. All rights reserved.
-      </div>
-    </footer>
+      </p>
+    </div>
   )
 }

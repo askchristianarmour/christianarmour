@@ -260,7 +260,7 @@ export function Home() {
           </div>
 
           {isLoading ? (
-            <LoadingGrid count={3} className="min-h-[420px]" />
+            <LoadingGrid count={10} className="min-h-[420px]" />
           ) : posts.length === 0 ? (
             <p className="text-center text-slate-500">No posts yet.</p>
           ) : (
@@ -270,6 +270,15 @@ export function Home() {
               ))}
             </div>
           )}
+
+          <div ref={sentinelRef} className="mt-8 flex h-10 items-center justify-center">
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <CrossSpinner size="xs" />
+                Loading more articles...
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="mt-14 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
@@ -361,15 +370,6 @@ export function Home() {
         </section>
 
         <SiteFooter />
-
-        <div ref={sentinelRef} className="mt-8 flex h-10 items-center justify-center">
-          {isFetchingNextPage && (
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <CrossSpinner size="xs" />
-              Loading more posts...
-            </div>
-          )}
-        </div>
       </div>
     </div>
   )

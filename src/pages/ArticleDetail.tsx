@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AuthRequiredModal } from '../components/AuthRequiredModal'
 import { PageLoader } from '../components/CrossLoader'
+import { Seo } from '../components/Seo'
 import { CommentSection } from '../components/CommentSection'
 import { PostCoverImage } from '../components/PostCoverImage'
 import { useToast } from '../contexts/ToastContext'
@@ -11,8 +12,9 @@ import { useAuth } from '../hooks/useAuth'
 import { usePostLike } from '../hooks/usePostLike'
 import { logView } from '../lib/analytics'
 import { ArticleContent } from '../components/ArticleContent'
-import { getReadingMinutes } from '../lib/article-content'
+import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { fetchPostById } from '../lib/posts'
+import { absoluteUrl, SITE_NAME } from '../lib/seo'
 import { supabase } from '../lib/supabase'
 
 export function ArticleDetail() {
@@ -95,6 +97,36 @@ export function ArticleDetail() {
     return getReadingMinutes(post.content)
   }, [post])
 
+  const articleSeo = useMemo(() => {
+    if (!post) return null
+
+    const description = getExcerptFromContent(post.content, 160)
+    const image = post.image_url ? absoluteUrl(post.image_url) : absoluteUrl('/og-image.svg')
+
+    return {
+      title: `${post.title} | Christian Armour`,
+      description,
+      canonicalPath: `/articles/${post.id}`,
+      image,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: post.title,
+        description,
+        datePublished: post.created_at,
+        dateModified: post.created_at,
+        author: { '@type': 'Organization', name: SITE_NAME },
+        publisher: {
+          '@type': 'Organization',
+          name: SITE_NAME,
+          logo: { '@type': 'ImageObject', url: absoluteUrl('/favicon.svg') },
+        },
+        image,
+        mainEntityOfPage: absoluteUrl(`/articles/${post.id}`),
+      },
+    }
+  }, [post])
+
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!commentText.trim()) return
@@ -132,6 +164,16 @@ export function ArticleDetail() {
 
   return (
     <>
+      {articleSeo && (
+        <Seo
+          title={articleSeo.title}
+          description={articleSeo.description}
+          canonicalPath={articleSeo.canonicalPath}
+          image={articleSeo.image}
+          type="article"
+          jsonLd={articleSeo.jsonLd}
+        />
+      )}
       <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#faf8f4]">
         <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
           <Link
