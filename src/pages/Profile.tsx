@@ -9,8 +9,12 @@ import { TagPicker } from '../components/TagPicker'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
 import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
 import { ArticleContent } from '../components/ArticleContent'
-import { RichTextEditor } from '../components/editor/RichTextEditor'
-import { getPlainTextFromContent } from '../lib/article-content'
+import { ArticlePagesEditor } from '../components/ArticlePagesEditor'
+import {
+  createDefaultArticleContent,
+  hasArticleBody,
+  serializeArticleContent,
+} from '../lib/article-structure'
 import type { ArticleTagSlug } from '../lib/tags'
 import { getTagBySlug } from '../lib/tags'
 
@@ -61,7 +65,9 @@ export function Profile() {
 
   // Add post state
   const [postTitle, setPostTitle] = useState('')
-  const [postContent, setPostContent] = useState('')
+  const [postContent, setPostContent] = useState(() =>
+    serializeArticleContent(createDefaultArticleContent())
+  )
   const [commentsEnabled, setCommentsEnabled] = useState(false)
   const [postTag, setPostTag] = useState<ArticleTagSlug | null>(null)
   const [showPublishPreview, setShowPublishPreview] = useState(false)
@@ -172,7 +178,7 @@ export function Profile() {
     onSuccess: () => {
       toastSuccess('Post published successfully!')
       setPostTitle('')
-      setPostContent('')
+      setPostContent(serializeArticleContent(createDefaultArticleContent()))
       setCommentsEnabled(false)
       setPostTag(null)
       setPostImageSrc(null)
@@ -231,7 +237,7 @@ export function Profile() {
 
   const handleAddPost = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!postTitle.trim() || !getPlainTextFromContent(postContent).trim()) {
+    if (!postTitle.trim() || !hasArticleBody(postContent)) {
       toastError('Title and content are required')
       return
     }
@@ -1055,12 +1061,12 @@ export function Profile() {
 
                 {/* Content */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700">Post Content</label>
+                  <label className="block text-sm font-semibold text-slate-700">Article pages</label>
                   <p className="mt-1 text-xs text-slate-500">
-                    Select text and use <strong>Link articles</strong> to connect words to related articles.
+                    Organize your article into pages with descriptions, rich text, and Bible passages.
                   </p>
                   <div className="mt-2">
-                    <RichTextEditor value={postContent} onChange={setPostContent} />
+                    <ArticlePagesEditor value={postContent} onChange={setPostContent} />
                   </div>
                 </div>
 

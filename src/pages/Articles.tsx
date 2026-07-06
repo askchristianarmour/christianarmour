@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { ArticleFilterSidebar } from '../components/ArticleFilterSidebar'
 import { ArticleListCard } from '../components/ArticleListCard'
+import { ArticleSearchKeywords } from '../components/ArticleSearchKeywords'
 import { CrossSpinner, LoadingGrid } from '../components/CrossLoader'
 import { SiteFooter } from '../components/SiteFooter'
 import { useToast } from '../contexts/ToastContext'
@@ -60,6 +61,18 @@ export function Articles() {
     queryFn: fetchTotalPostCount,
   })
 
+  const handleKeywordSelect = (value: string) => {
+    setKeyword(value)
+    setSearchParams({ search: value.trim() })
+  }
+
+  const handleClearSearch = () => {
+    setKeyword('')
+    const params: Record<string, string> = {}
+    if (selectedTag) params.tag = selectedTag
+    setSearchParams(params)
+  }
+
   const handleTagChange = (tag: ArticleTagSlug | null) => {
     const params: Record<string, string> = {}
     if (tag) params.tag = tag
@@ -67,12 +80,14 @@ export function Articles() {
     setSearchParams(params)
   }
 
-  const handleKeywordChange = (value: string) => {
-    setKeyword(value)
-    const params: Record<string, string> = {}
-    if (selectedTag) params.tag = selectedTag
-    if (value.trim()) params.search = value.trim()
-    setSearchParams(params)
+  const handleKeywordSubmit = (value: string) => {
+    const trimmed = value.trim()
+    setKeyword(trimmed)
+    if (!trimmed) {
+      handleClearSearch()
+      return
+    }
+    setSearchParams({ search: trimmed })
   }
 
   const handleReset = () => {
@@ -173,7 +188,8 @@ export function Articles() {
         <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
           <ArticleFilterSidebar
             keyword={keyword}
-            onKeywordChange={handleKeywordChange}
+            onKeywordChange={setKeyword}
+            onKeywordSubmit={handleKeywordSubmit}
             selectedTag={selectedTag}
             onTagChange={handleTagChange}
             selectedBooks={selectedBooks}
@@ -185,7 +201,13 @@ export function Articles() {
           />
 
           <div>
-            <div className="rounded-[20px] border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <ArticleSearchKeywords
+              activeSearch={activeSearch}
+              onSelect={handleKeywordSelect}
+              onClear={activeSearch ? handleClearSearch : undefined}
+            />
+
+            <div className="mt-4 rounded-[20px] border border-slate-200 bg-white px-5 py-4 shadow-sm">
               <p className="text-lg text-slate-700">
                 <span className="font-semibold text-slate-900">{resultCount}</span> Articles Found
                 {!selectedTag && !keyword && selectedBooks.length === 0 && readTimeMax === 60 && (

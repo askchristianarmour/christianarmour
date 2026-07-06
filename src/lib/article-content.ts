@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import { getStructuredPlainText, isStructuredArticleContent, parseArticleContent } from './article-structure'
 
 const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'span']
 const ALLOWED_ATTR = ['data-keyword', 'class']
@@ -9,6 +10,9 @@ export function isHtmlContent(content: string) {
 
 export function getPlainTextFromContent(content: string) {
   if (!content) return ''
+  if (isStructuredArticleContent(content)) {
+    return getStructuredPlainText(parseArticleContent(content))
+  }
   if (!isHtmlContent(content)) return content
 
   if (typeof window === 'undefined') {

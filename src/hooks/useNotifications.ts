@@ -41,6 +41,7 @@ export function useNotifications(userId?: string | null, enabled = true) {
           queryClient.invalidateQueries({ queryKey: ['question-notifications', userId] })
           queryClient.invalidateQueries({ queryKey: ['poster-questions'] })
           queryClient.invalidateQueries({ queryKey: ['answered-questions'] })
+          queryClient.invalidateQueries({ queryKey: ['user-questions', userId] })
         }
       )
       .subscribe()

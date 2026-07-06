@@ -8,9 +8,13 @@ import { useToast } from '../contexts/ToastContext'
 import { ChevronLeft, Image as ImageIcon, ShieldAlert, FileText, CheckCircle2, AlertCircle } from 'lucide-react'
 import { CrossSpinner, PageLoader } from '../components/CrossLoader'
 import { ArticleContent } from '../components/ArticleContent'
-import { RichTextEditor } from '../components/editor/RichTextEditor'
+import { ArticlePagesEditor } from '../components/ArticlePagesEditor'
+import {
+  createDefaultArticleContent,
+  hasArticleBody,
+  serializeArticleContent,
+} from '../lib/article-structure'
 import { TagPicker } from '../components/TagPicker'
-import { getPlainTextFromContent } from '../lib/article-content'
 import type { ArticleTagSlug } from '../lib/tags'
 import { getTagBySlug } from '../lib/tags'
 import { fetchPostById, updatePost } from '../lib/posts'
@@ -26,7 +30,9 @@ export function WritePost() {
 
   // Form State
   const [postTitle, setPostTitle] = useState('')
-  const [postContent, setPostContent] = useState('')
+  const [postContent, setPostContent] = useState(() =>
+    serializeArticleContent(createDefaultArticleContent())
+  )
   const [commentsEnabled, setCommentsEnabled] = useState(false)
   const [postTag, setPostTag] = useState<ArticleTagSlug | null>(null)
 
@@ -115,7 +121,7 @@ export function WritePost() {
     onSuccess: () => {
       toastSuccess('Post published successfully!')
       setPostTitle('')
-      setPostContent('')
+      setPostContent(serializeArticleContent(createDefaultArticleContent()))
       setCommentsEnabled(false)
       setPostTag(null)
       setPostImageSrc(null)
@@ -273,8 +279,8 @@ export function WritePost() {
       toastError('Please enter a post title')
       return
     }
-    if (!getPlainTextFromContent(postContent).trim()) {
-      toastError('Please enter post content')
+    if (!hasArticleBody(postContent)) {
+      toastError('Please add content or scripture to at least one page')
       return
     }
     setShowPublishPreview(true)
@@ -443,12 +449,12 @@ export function WritePost() {
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700">Post Content</label>
+            <label className="block text-sm font-semibold text-slate-700">Article pages</label>
             <p className="mt-1 text-xs text-slate-500">
-              Select text and use <strong>Link articles</strong> to connect words to related articles.
+              Organize your article into pages with descriptions, rich text, and Bible passages.
             </p>
             <div className="mt-2">
-              <RichTextEditor value={postContent} onChange={setPostContent} />
+              <ArticlePagesEditor value={postContent} onChange={setPostContent} />
             </div>
           </div>
 

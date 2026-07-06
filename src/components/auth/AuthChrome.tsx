@@ -3,6 +3,8 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { BarChart3, Home, LogOut, Menu, PlusCircle, User, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { NotificationBell } from '../NotificationBell'
+import { HeaderArticleSearch } from '../HeaderArticleSearch'
+import { SidebarBrandWatermark } from '../SidebarBrandWatermark'
 import { useAuth } from '../../hooks/useAuth'
 import { fetchUnreadNotificationCount } from '../../lib/questions'
 import { supabase } from '../../lib/supabase'
@@ -215,17 +217,8 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                 </>
               )}
 
-              <div className="relative hidden lg:block">
-                <img
-                  src="/signin/serachlogo.svg"
-                  alt=""
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-70"
-                />
-                <input
-                  type="search"
-                  placeholder="Search"
-                  className="w-44 rounded-full border border-white/20 bg-white/10 py-2 pl-9 pr-4 text-sm text-white placeholder:text-white/60 outline-none focus:border-white/40 xl:w-52"
-                />
+              <div className="hidden min-w-0 sm:block">
+                <HeaderArticleSearch />
               </div>
 
               <button
@@ -277,7 +270,15 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
         }`}
         aria-hidden={!menuOpen}
       >
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <SidebarBrandWatermark />
+        <div className="relative z-10 border-b border-slate-100 px-5 py-4">
+          <HeaderArticleSearch
+            className="w-full [&_input]:w-full [&_input]:border-slate-200 [&_input]:bg-slate-50 [&_input]:text-slate-900 [&_input]:placeholder:text-slate-400"
+            onSearched={closeDrawers}
+          />
+        </div>
+
+        <div className="relative z-10 flex items-center justify-between border-b border-slate-100 px-5 py-4">
           <span className="font-serif text-lg font-semibold text-[#1c2b3a]">Menu</span>
           <button
             type="button"
@@ -289,7 +290,7 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4">
+        <nav className="relative z-10 flex-1 overflow-y-auto px-3 py-4">
           <ul className="space-y-1">
             {NAV_ITEMS.map((item) => {
               const isActive = item.key === activeNav
@@ -431,7 +432,8 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
             }`}
             aria-hidden={!accountOpen}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <SidebarBrandWatermark />
+            <div className="relative z-10 flex items-center justify-between border-b border-slate-100 pb-4">
               <span className="font-serif text-lg font-semibold text-[#1c2b3a]">Account</span>
               <button
                 type="button"
@@ -443,7 +445,7 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
               </button>
             </div>
 
-            <div className="mt-6 flex flex-1 flex-col justify-between">
+            <div className="relative z-10 mt-6 flex flex-1 flex-col justify-between">
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   {user.user_metadata?.avatar_url ? (

@@ -68,3 +68,28 @@ body {
 .article-content .keyword-link:hover {
   color: #a8863d;
 }
+
+.article-page-section + .article-page-section {
+  padding-top: 2.5rem;
+  border-top: 1px solid #e8dfc8;
+}
+
+.article-page-description {
+  border-left: 3px solid #d9c48a;
+  padding-left: 1rem;
+}
+
+.article-bible-passage {
+  position: relative;
+}
+
+.article-bible-passage::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c6a14d 0%, #8a6d2b 100%);
+}

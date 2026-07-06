@@ -5,9 +5,11 @@ import { CrossSpinner, LoadingGrid } from '../components/CrossLoader'
 import { SiteFooter } from '../components/SiteFooter'
 import { usePosts } from '../hooks/usePosts'
 import { useAuth } from '../hooks/useAuth'
+import { useReplyNotificationToasts } from '../hooks/useReplyNotificationToasts'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchTagCounts } from '../lib/posts'
 import { supabase } from '../lib/supabase'
+import { HeaderArticleSearch } from '../components/HeaderArticleSearch'
 import { ARTICLE_TAGS } from '../lib/tags'
 
 const TOPICS = [
@@ -53,6 +55,7 @@ const OLD_TESTAMENT_BOOKS = [
 
 export function Home() {
   const { user } = useAuth()
+  useReplyNotificationToasts({ enabled: true, userId: user?.id })
   const queryClient = useQueryClient()
   const {
     data,
@@ -283,29 +286,18 @@ export function Home() {
 
         <section className="mt-14 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
           <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <input
-                type="search"
-                placeholder="Search Scripture, Theology, History, or Articles..."
-                className="flex-1 rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-[#1c2b3a]"
-              />
-              <button
-                type="button"
-                className="rounded-2xl bg-[#1f2f3d] px-6 py-3 text-sm font-medium text-white"
-              >
-                Search
-              </button>
-            </div>
+            <HeaderArticleSearch variant="inline" />
 
             <h3 className="mt-5 text-lg font-semibold text-slate-900">Popular Topics</h3>
             <div className="mt-4 flex flex-wrap gap-2">
               {TOPICS.map((topic) => (
-                <span
+                <Link
                   key={topic}
-                  className="rounded-full bg-[#faf5e8] px-3 py-1.5 text-xs font-medium text-[#c6a14d]"
+                  to={`/articles?search=${encodeURIComponent(topic)}`}
+                  className="rounded-full bg-[#faf5e8] px-3 py-1.5 text-xs font-medium text-[#c6a14d] transition-colors hover:bg-[#f3e8c8] hover:text-[#a8863d]"
                 >
                   {topic}
-                </span>
+                </Link>
               ))}
             </div>
           </div>

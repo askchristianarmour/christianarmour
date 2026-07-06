@@ -6,18 +6,24 @@ import { SiteFooter } from '../components/SiteFooter'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import { QUESTION_CATEGORIES } from '../lib/question-categories'
-import { fetchAnsweredQuestions, submitQuestion } from '../lib/questions'
+import { fetchAnsweredQuestions, fetchUserQuestions, submitQuestion } from '../lib/questions'
 import { supabase } from '../lib/supabase'
 
 export function Ask() {
   const { user } = useAuth()
-  const { success: toastSuccess, error: toastError } = useToast()
+  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast()
   const queryClient = useQueryClient()
 
   const [askerName, setAskerName] = useState(user?.user_metadata?.display_name ?? '')
   const [category, setCategory] = useState<string>(QUESTION_CATEGORIES[0])
   const [questionBody, setQuestionBody] = useState('')
   const [wantsCredit, setWantsCredit] = useState(true)
+
+  const { data: userQuestions = [], isLoading: userQuestionsLoading } = useQuery({
+    queryKey: ['user-questions', user?.id],
+    queryFn: () => fetchUserQuestions(user!.id),
+    enabled: !!user?.id,
+  })
 
   const { data: answeredQuestions = [], isLoading: answeredLoading } = useQuery({
     queryKey: ['answered-questions'],
@@ -32,6 +38,7 @@ export function Ask() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'question_replies' }, () => {
         queryClient.invalidateQueries({ queryKey: ['answered-questions'] })
+        queryClient.invalidateQueries({ queryKey: ['user-questions'] })
       })
       .subscribe()
 
@@ -51,10 +58,14 @@ export function Ask() {
       })
     },
     onSuccess: () => {
-      toastSuccess('Your question was submitted. Our team will review it soon.')
+      toastSuccess('Your question was submitted successfully.')
+      toastInfo(
+        'Our team typically replies within 48 hours. You will get a notification when your question is answered.'
+      )
       setQuestionBody('')
       queryClient.invalidateQueries({ queryKey: ['poster-questions'] })
       queryClient.invalidateQueries({ queryKey: ['question-notifications'] })
+      queryClient.invalidateQueries({ queryKey: ['user-questions'] })
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to submit your question')
@@ -175,7 +186,12 @@ export function Ask() {
           </div>
         </div>
 
-        <PreviouslyAskedQuestions questions={answeredQuestions} isLoading={answeredLoading} />
+        <PreviouslyAskedQuestions
+          questions={answeredQuestions}
+          isLoading={answeredLoading}
+          userQuestions={userQuestions}
+          userQuestionsLoading={userQuestionsLoading}
+        />
 
         <SiteFooter />
       </div>

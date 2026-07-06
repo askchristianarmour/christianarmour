@@ -8,6 +8,7 @@ const NEW_TESTAMENT_BOOKS = ['Matthew', 'Mark', 'Luke', 'John']
 type Props = {
   keyword: string
   onKeywordChange: (value: string) => void
+  onKeywordSubmit: (value: string) => void
   selectedTag: ArticleTagSlug | null
   onTagChange: (tag: ArticleTagSlug | null) => void
   selectedBooks: string[]
@@ -89,6 +90,7 @@ function BookChecklist({
 export function ArticleFilterSidebar({
   keyword,
   onKeywordChange,
+  onKeywordSubmit,
   selectedTag,
   onTagChange,
   selectedBooks,
@@ -128,6 +130,12 @@ export function ArticleFilterSidebar({
             type="search"
             value={keyword}
             onChange={(e) => onKeywordChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onKeywordSubmit(keyword)
+              }
+            }}
             placeholder="Search for keywords..."
             className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-3 text-sm outline-none transition-colors focus:border-[#c6a14d]/50"
           />

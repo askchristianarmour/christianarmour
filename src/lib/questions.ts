@@ -37,6 +37,17 @@ async function attachReplies(questions: Question[]): Promise<QuestionWithReplies
   }))
 }
 
+export async function fetchUserQuestions(userId: string): Promise<QuestionWithReplies[]> {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return attachReplies((data ?? []) as Question[])
+}
+
 export async function fetchAnsweredQuestions(): Promise<QuestionWithReplies[]> {
   const { data, error } = await supabase
     .from('questions')

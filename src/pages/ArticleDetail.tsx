@@ -202,7 +202,7 @@ export function ArticleDetail() {
                 <h1 className="mt-4 font-serif text-4xl leading-tight text-slate-900 sm:text-5xl">
                   {post.title}
                 </h1>
-                <ArticleContent content={post.content} className="mt-5" />
+                <ArticleContent content={post.content} className="mt-5" showPageNav />
 
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500">
                   <span className="inline-flex items-center gap-2">
