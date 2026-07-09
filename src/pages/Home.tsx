@@ -9,20 +9,8 @@ import { useReplyNotificationToasts } from '../hooks/useReplyNotificationToasts'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchTagCounts } from '../lib/posts'
 import { supabase } from '../lib/supabase'
-import { HeaderArticleSearch } from '../components/HeaderArticleSearch'
+import { HomeSearchPanel } from '../components/HomeSearchPanel'
 import { ARTICLE_TAGS } from '../lib/tags'
-
-const TOPICS = [
-  'Genesis',
-  'Romans',
-  'Trinity',
-  'Salvation',
-  'Christology',
-  'Grace',
-  'Resurrection',
-  'Faith',
-  'Church',
-]
 
 const HERO_CONTENT = {
   label: 'Latest Article',
@@ -166,10 +154,10 @@ export function Home() {
 
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#fcfaf7]">
-      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+      <div className="relative">
+        <section className="overflow-hidden bg-white pb-20 sm:pb-24 lg:pb-28">
           <div className="grid items-stretch gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="flex flex-col justify-center px-8 py-10 sm:px-12 lg:px-14">
+            <div className="flex flex-col justify-start px-4 pb-10 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pb-14 lg:pt-12 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#c6a14d]">
                 {HERO_CONTENT.label}
               </p>
@@ -205,50 +193,58 @@ export function Home() {
               </div>
             </div>
 
-            <div className="min-h-[360px] bg-slate-100 lg:min-h-[520px]">
+            <div className="relative min-h-[360px] bg-slate-100 lg:min-h-[520px]">
               <img
                 src="/home/background.svg"
                 alt="Christian Armour hero banner"
                 className="h-full w-full object-cover"
               />
+              <div
+                className="pointer-events-none absolute inset-y-0 left-0 hidden w-28 bg-gradient-to-r from-white to-transparent lg:block xl:w-36"
+                aria-hidden
+              />
             </div>
           </div>
         </section>
 
+        <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
+          <section className="-mt-64 grid gap-5 sm:-mt-72 sm:grid-cols-2 lg:-mt-80 xl:grid-cols-4">
+            {ARTICLE_TAGS.map((category) => {
+              const count = tagCounts?.[category.slug] ?? 0
+
+              return (
+                <Link
+                  key={category.slug}
+                  to={`/articles?tag=${category.slug}`}
+                  className="group rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)]"
+                >
+                  <img src={category.icon} alt="" className="h-12 w-12" />
+                  <h2 className="mt-5 font-serif text-[2rem] leading-tight text-slate-900">
+                    {category.title}
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-slate-500">{category.description}</p>
+                  <div className="mt-5 flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-700">
+                      {count} {count === 1 ? 'Article' : 'Articles'}
+                    </span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40">
+                      <img src="/home/noverticalhorizontalarrowiconyellow.svg" alt="" className="h-4 w-4" />
+                    </span>
+                  </div>
+                </Link>
+              )
+            })}
+          </section>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         {error && (
-          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             Failed to load posts. Make sure you have run the Supabase migration in{' '}
             <code className="rounded bg-red-100 px-1">supabase/migrations/001_blog_auth.sql</code>.
           </div>
         )}
-
-        <section className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {ARTICLE_TAGS.map((category) => {
-            const count = tagCounts?.[category.slug] ?? 0
-
-            return (
-              <Link
-                key={category.slug}
-                to={`/articles?tag=${category.slug}`}
-                className="group rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
-              >
-                <img src={category.icon} alt="" className="h-12 w-12" />
-                <h2 className="mt-5 font-serif text-[2rem] leading-tight text-slate-900">
-                  {category.title}
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-slate-500">{category.description}</p>
-                <div className="mt-5 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
-                    {count} {count === 1 ? 'Article' : 'Articles'}
-                  </span>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40">
-                    <img src="/home/noverticalhorizontalarrowiconyellow.svg" alt="" className="h-4 w-4" />
-                  </span>
-                </div>
-              </Link>
-            )
-          })}
-        </section>
 
         <section id="recent-articles" className="mt-12">
           <div className="mb-6 flex items-center justify-between gap-4">
@@ -285,42 +281,37 @@ export function Home() {
         </section>
 
         <section className="mt-14 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:p-6">
-            <HeaderArticleSearch variant="inline" />
+          <HomeSearchPanel />
 
-            <h3 className="mt-5 text-lg font-semibold text-slate-900">Popular Topics</h3>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {TOPICS.map((topic) => (
+          <div className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.08),0_16px_40px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_12px_32px_rgba(15,23,42,0.1),0_20px_48px_rgba(15,23,42,0.08)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h3 className="max-w-xs font-serif text-4xl leading-tight text-slate-900">
+                  Have A Theological Question?
+                </h3>
+                <p className="mt-4 text-sm leading-7 text-slate-500">We&apos;d love to hear from you.</p>
                 <Link
-                  key={topic}
-                  to={`/articles?search=${encodeURIComponent(topic)}`}
-                  className="rounded-full bg-[#faf5e8] px-3 py-1.5 text-xs font-medium text-[#c6a14d] transition-colors hover:bg-[#f3e8c8] hover:text-[#a8863d]"
+                  to="/ask"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
                 >
-                  {topic}
+                  Ask a Question
+                  <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
                 </Link>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-            <h3 className="max-w-xs font-serif text-4xl leading-tight text-slate-900">
-              Have A Theological Question?
-            </h3>
-            <p className="mt-4 text-sm leading-7 text-slate-500">We&apos;d love to hear from you.</p>
-            <div className="mt-6 flex items-center justify-between gap-4">
-              <Link
-                to="/ask"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
-              >
-                Ask a Question
-                <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
-              </Link>
-              <img src="/home/Lifeicon.svg" alt="" className="h-16 w-16" />
+              <img
+                src="/home/questionmark.svg"
+                alt=""
+                className="h-24 w-auto shrink-0 sm:h-28 lg:h-[7.5rem]"
+                aria-hidden
+              />
             </div>
           </div>
         </section>
+      </div>
 
-        <section className="mt-14 rounded-[34px] bg-[#1f2f3d] px-6 py-10 text-white sm:px-10 lg:px-14 lg:py-14">
+      <section className="mt-14 bg-[#1f2f3d] py-10 text-white sm:py-12 lg:py-14">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#c6a14d]">
             Browse By Book
           </p>
@@ -359,8 +350,10 @@ export function Home() {
               + 24 more
             </button>
           </div>
-        </section>
+        </div>
+      </section>
 
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8 lg:pb-10">
         <SiteFooter />
       </div>
     </div>
