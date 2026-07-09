@@ -71,7 +71,11 @@ export function About() {
             <div className="relative flex min-h-[280px] items-center justify-center bg-[#faf8f4] px-8 py-12 lg:min-h-full">
               <div className="absolute inset-0 bg-[url('/home/background.svg')] bg-cover bg-center opacity-30" />
               <div className="relative flex flex-col items-center text-center">
-                <img src="/signin/cross.svg" alt="" className="h-20 w-20" aria-hidden />
+                <img
+                  src="/signin/headerlogowithcompname.svg"
+                  alt="Christian Armour"
+                  className="h-16 w-auto sm:h-20 lg:h-24"
+                />
                 <p className="mt-6 font-serif text-2xl text-[#1f2f3d]">
                   &ldquo;Stand firm then&hellip; with the belt of truth&rdquo;
                 </p>

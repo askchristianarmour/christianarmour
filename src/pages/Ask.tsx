@@ -84,8 +84,8 @@ export function Ask() {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f3f1ec]">
       <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px]">
-          <div>
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,480px)_minmax(0,1fr)] lg:gap-10">
+          <div className="max-w-[480px]">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">Ask</p>
             <h1 className="mt-3 font-serif text-5xl leading-tight text-slate-900 sm:text-6xl">
               Ask a question
@@ -98,7 +98,7 @@ export function Ask() {
 
             <form
               onSubmit={handleSubmit}
-              className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:p-8"
+              className="mt-8 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:p-6"
             >
               <div>
                 <label htmlFor="askerName" className="text-sm font-semibold text-slate-700">
@@ -141,7 +141,7 @@ export function Ask() {
                   id="questionBody"
                   value={questionBody}
                   onChange={(e) => setQuestionBody(e.target.value)}
-                  rows={6}
+                  rows={5}
                   placeholder="Write your question here..."
                   className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm leading-7 outline-none transition-colors focus:border-[#c6a14d]/50"
                   required
@@ -175,12 +175,12 @@ export function Ask() {
             </form>
           </div>
 
-          <div className="lg:sticky lg:top-24">
-            <div className="overflow-hidden rounded-[24px] shadow-[0_10px_30px_rgba(15,23,42,0.08)]">
+          <div className="lg:sticky lg:top-24 lg:self-stretch">
+            <div className="h-full min-h-[320px] overflow-hidden rounded-[24px] shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:min-h-[420px] lg:min-h-[640px]">
               <img
                 src="/ask/asktabimage.svg"
                 alt="Open Bible with John 14:6"
-                className="h-full w-full object-cover"
+                className="h-full min-h-[320px] w-full object-cover sm:min-h-[420px] lg:min-h-[640px]"
               />
             </div>
           </div>
