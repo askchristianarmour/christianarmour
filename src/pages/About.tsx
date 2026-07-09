@@ -1,229 +1,172 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import { SiteFooter } from '../components/SiteFooter'
-import { ARTICLE_TAGS } from '../lib/tags'
 
-const BELIEFS = [
-  {
-    title: 'Scripture is authoritative',
-    body: 'We hold that the Bible is the inspired, trustworthy Word of God — the final authority for faith, doctrine, and Christian living.',
-  },
-  {
-    title: 'Christ is central',
-    body: 'Every article, study, and reply on this site is oriented toward Jesus Christ: his person, his work, and his lordship over all of life.',
-  },
-  {
-    title: 'Truth deserves careful work',
-    body: 'We believe good theology is not rushed. It grows from close reading, historical awareness, and honest engagement with hard questions.',
-  },
-  {
-    title: 'The church needs equipped readers',
-    body: 'Christian Armour exists to help ordinary believers read Scripture with greater clarity — and to carry that clarity into everyday faith.',
-  },
-] as const
+type BeliefSection = {
+  id: string
+  tab: string
+  title: string
+  tagline: string
+  body: string[]
+}
 
-const APPROACH = [
+const BELIEF_SECTIONS: BeliefSection[] = [
   {
-    step: '01',
-    title: 'Read the text closely',
-    body: 'We begin with the passage itself — context, language, structure, and the author\'s intent — before drawing wider conclusions.',
+    id: 'bible',
+    tab: 'Bible',
+    title: 'The Bible',
+    tagline: 'THE INSPIRED WORD OF GOD',
+    body: [
+      'The Bible consists of 66 books and is inspired, infallible, and inerrant. The Bible is the sole authority for developing doctrines and for directing how Christians should lead their lives. The apocryphal books of the Septuagint were never considered Scripture by the Jews, and are not canonical. While studying the Old Testament, it is beneficial to use the text of the Septuagint along with the Masoretic Text, since the New Testament quotes the Septuagint in over 90% of the instances where there is a difference between the Masoretic Text and the Septuagint. While studying the New Testament, it is beneficial to use both the Majority Text / Byzantine manuscripts (e.g., NKJV) and the Alexandrian manuscripts (e.g., NASB).',
+    ],
   },
   {
-    step: '02',
-    title: 'Situate it in history',
-    body: 'Biblical books were written in real times and places. We account for culture, genre, and the world behind the text.',
+    id: 'doctrine',
+    tab: 'Doctrine',
+    title: 'Doctrine',
+    tagline: 'OUR CORE TEACHINGS',
+    body: [
+      'Doctrine is created by placing in order of importance: Didactic passages first, Narrative passages next, and Poetic passages last. The Bible should be interpreted using a Literal Grammatical-Historical method while recognizing that Hebrew, Aramaic and Greek have figures of speech, and by determining whether the passage is Prescriptive or Descriptive, Time-restricted or Eternally applicable, People or Place restricted or for all people at all places. The antiquity of a doctrine is not proof of its truth, and the novelty of a doctrine is not proof of its falsehood.',
+    ],
   },
   {
-    step: '03',
-    title: 'Connect it to the whole counsel of God',
-    body: 'Individual passages belong to a larger biblical story. We trace themes across Scripture rather than isolating verses.',
+    id: 'trinity',
+    tab: 'Trinity',
+    title: 'Trinity',
+    tagline: 'THE NATURE OF GOD',
+    body: [
+      'One God, YHWH, in Three Persons – Father, Jesus Christ the Son, and Holy Spirit. The Father is a Person of the Trinity. Jesus Christ is truly God and truly man, a Person of the Trinity. The Holy Spirit is a Person of the Trinity. The Triune God created the universe and all that is in it. YHWH is holy. Our knowledge of God primarily comes from how He has revealed Himself to us in Scripture.',
+    ],
   },
   {
-    step: '04',
-    title: 'Apply it faithfully',
-    body: 'Sound interpretation must land somewhere. We aim for application that is biblical, pastoral, and honest about what the text actually says.',
+    id: 'man',
+    tab: 'Man',
+    title: 'Man',
+    tagline: "CREATED IN GOD'S IMAGE",
+    body: [
+      "God creates each human's body, soul, and spirit, and so humans are born innocent and in the image of God. However, humans have a propensity to sin due to persistent exposure to an environment of evil and ignorance of God's laws. Adam and Eve's sin resulted in spiritual death for themselves, and a life of toil and physical death both for themselves and their progeny. God covered them with animal skins, implying an animal sacrifice for their sin and reconciliation. In an act of mercy, God removed man's access to the tree of life, thereby capping his toil and suffering on earth. Spiritual death and physical death are the two consequences for which man had no solution.",
+    ],
   },
-] as const
+  {
+    id: 'salvation',
+    tab: 'Salvation',
+    title: 'Salvation',
+    tagline: "GOD'S PLAN FOR HUMANITY",
+    body: [
+      'God the Father in His grace had determined to send the Son to reconcile mankind to Himself. In the fullness of time, Jesus Christ the Son, by His grace, was incarnated, was born of a virgin, lived a sinless life, died for us, and physically rose again from the dead, and now draws all men to Himself. The Holy Spirit convicts all men of their sin, their need for righteousness, and their coming judgment.',
+      'The evangelist is a co-worker with God when he shares the good news of what Jesus Christ did for mankind. God in His sovereignty has given every human the libertarian free will to choose Jesus Christ, because salvation is conditional on faith in Jesus Christ, and because God is just. The Holy Spirit, by His grace, regenerates those who place their faith in Jesus Christ. Though salvation can be forfeited by denying Jesus Christ and renouncing the faith, God receives those who return to Him with genuine contrition and repentance.',
+    ],
+  },
+  {
+    id: 'atonement',
+    tab: 'Atonement',
+    title: 'Atonement',
+    tagline: "CHRIST'S SACRIFICE FOR SIN",
+    body: [
+      "The Atonement is how man is reconciled to God. Christus Victor, modified Ransom (ransomed from the Old Covenant Law), and Recapitulation theories of atonement are the classic atonement theories. Jesus Christ is our sin offering, whose sacrificial death ransomed us from the condemnation of the Old Covenant Law, and consequently from sin and death; triumphed over the powers of evil; retraced and reversed Adam's disobedience through His own obedience; and revealed God's love so as to draw sinners to repentance. Neither sin nor guilt was transferred to Christ since in such a case Christ would not have been a sinless offering. While the atonement extends to all mankind, it is applied only to those who have placed their faith in Jesus Christ.",
+    ],
+  },
+  {
+    id: 'christian-life',
+    tab: 'Christ',
+    title: 'Christian Life',
+    tagline: 'LIVING FAITHFULLY IN CHRIST',
+    body: [
+      'Christians are indwelt by the Holy Spirit and must reveal the fruit of the Spirit in their lives. The Holy Spirit gives spiritual gifts as He wills. Christians ought to order their lives according to the truths found in Scripture – in both belief and practice. While works do not save our souls, it is natural for good works to come out of a life that is faithful to Jesus Christ.',
+    ],
+  },
+  {
+    id: 'ordinances',
+    tab: 'Ordinances',
+    title: 'Church Ordinances',
+    tagline: "BAPTISM AND THE LORD'S SUPPER",
+    body: [
+      "Water Baptism and the Lord's Table are two ordinances that the church must follow. Water Baptism of the believer is Biblical. The Lord's Table – Bread and Cup – is a remembrance of Jesus Christ and a proclamation of His death and His second coming.",
+    ],
+  },
+  {
+    id: 'end-times',
+    tab: 'End Times',
+    title: 'End Times',
+    tagline: "OUR HOPE IN CHRIST'S RETURN",
+    body: [
+      "Jesus Christ will return physically to rapture His people and to rule for 1,000 years on earth. Christians who are martyred for Christ will be in the presence of God immediately after death, and, along with those who did not worship the Beast, will rule with Christ for 1,000 years at His Millennium. Christians who were not martyred for Christ will be resurrected after the Millennium along with the rest of mankind and will be at the Great White Throne judgment. All those whose names are not found in the Lamb's Book of Life will be cast into the lake of fire, while those whose names are written in the Lamb's Book of Life will enter the new Jerusalem and live in God's Presence.",
+    ],
+  },
+]
 
 export function About() {
+  const [activeId, setActiveId] = useState(BELIEF_SECTIONS[0].id)
+  const active = BELIEF_SECTIONS.find((section) => section.id === activeId) ?? BELIEF_SECTIONS[0]
+
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#fcfaf7]">
-      <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        {/* Hero */}
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-          <div className="grid items-center gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="px-8 py-10 sm:px-12 lg:px-14 lg:py-14">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">About</p>
-              <h1 className="mt-4 font-serif text-5xl leading-tight text-slate-900 sm:text-6xl">
-                Christian Armour
-              </h1>
-              <p className="mt-6 max-w-xl text-base leading-8 text-slate-600">
-                A place for serious Bible study in plain language — exegesis, theology, history, and
-                life, written for readers who want to understand Scripture deeply and live it
-                faithfully.
-              </p>
-              <p className="mt-4 max-w-xl text-base leading-8 text-slate-600">
-                The name comes from Ephesians 6: standing firm in the truth of God&apos;s Word. We
-                publish articles that equip believers to think carefully, question honestly, and hold
-                fast to what Scripture teaches.
-              </p>
-            </div>
+      <section className="relative flex h-[300px] items-center justify-center overflow-hidden bg-[#1f2f3d] px-4 text-center text-white sm:px-6">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img
+            src="/article/left_armour_imagehero.svg"
+            alt=""
+            aria-hidden
+            className="absolute left-0 top-1/2 h-[70%] w-auto max-w-[28%] -translate-y-1/2 object-contain object-left opacity-90 sm:max-w-[32%] lg:max-w-[36%]"
+          />
+          <img
+            src="/article/right_armour_imagehero.svg"
+            alt=""
+            aria-hidden
+            className="absolute right-0 top-1/2 h-[70%] w-auto max-w-[28%] -translate-y-1/2 object-contain object-right opacity-90 sm:max-w-[32%] lg:max-w-[36%]"
+          />
+        </div>
 
-            <div className="relative flex min-h-[280px] items-center justify-center bg-[#faf8f4] px-8 py-12 lg:min-h-full">
-              <div className="absolute inset-0 bg-[url('/home/background.svg')] bg-cover bg-center opacity-30" />
-              <div className="relative flex flex-col items-center text-center">
-                <img
-                  src="/signin/headerlogowithcompname.svg"
-                  alt="Christian Armour"
-                  className="h-16 w-auto sm:h-20 lg:h-24"
-                />
-                <p className="mt-6 font-serif text-2xl text-[#1f2f3d]">
-                  &ldquo;Stand firm then&hellip; with the belt of truth&rdquo;
-                </p>
-                <p className="mt-2 text-sm font-medium uppercase tracking-[0.16em] text-[#c6a14d]">
-                  Ephesians 6:14
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Mission */}
-        <section className="mt-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">Our mission</p>
-          <h2 className="mt-3 max-w-3xl font-serif text-4xl leading-tight text-slate-900 sm:text-5xl">
-            Help believers read the Bible with clarity, courage, and care
-          </h2>
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
-            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#c6a14d]">For readers</p>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                Browse articles by topic or book, follow keyword links across related studies, and
-                ask questions when a passage or doctrine needs a closer look.
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#c6a14d]">For students</p>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                Go beyond surface-level summaries. Our writers work through context, original
-                meaning, and theological significance — without losing accessibility.
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)]">
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#c6a14d]">For the church</p>
-              <p className="mt-3 text-sm leading-7 text-slate-600">
-                We want Christian Armour to serve pastors, small groups, and families who need
-                trustworthy resources rooted in Scripture and attentive to history.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Four pillars */}
-        <section className="mt-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">What we cover</p>
-          <h2 className="mt-3 font-serif text-4xl text-slate-900">Four ways we study Scripture</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-            Every article on Christian Armour is tagged into one of four categories — so you can
-            browse by the kind of study you need.
+        <div className="relative mx-auto max-w-3xl">
+          <h1 className="text-center font-serif text-[48px] font-bold leading-none tracking-normal">
+            Our Beliefs
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-center font-sans text-[16px] font-normal leading-6 tracking-normal text-white/75">
+            The foundation of our faith and the truth we stand upon.
           </p>
+        </div>
+      </section>
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
-            {ARTICLE_TAGS.map((tag) => (
-              <Link
-                key={tag.slug}
-                to={`/articles?tag=${tag.slug}`}
-                className="group flex items-start gap-5 rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition-all hover:border-[#c6a14d]/40 hover:shadow-[0_10px_28px_rgba(198,161,77,0.12)]"
+      <div className="mx-auto max-w-[1240px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          {BELIEF_SECTIONS.map((section) => {
+            const isActive = section.id === activeId
+            return (
+              <button
+                key={section.id}
+                type="button"
+                onClick={() => setActiveId(section.id)}
+                className={`rounded-md px-4 py-2.5 font-serif text-base transition-colors sm:px-5 sm:text-lg ${
+                  isActive
+                    ? 'border-l-[3px] border-[#D4AF37] bg-[#f7f3ea] text-slate-900'
+                    : 'text-slate-600 hover:bg-[#f7f3ea]/70 hover:text-slate-900'
+                }`}
               >
-                <img src={tag.icon} alt="" className="h-14 w-14 shrink-0" aria-hidden />
-                <div>
-                  <h3 className="font-serif text-2xl text-slate-900 group-hover:text-[#1f2f3d]">
-                    {tag.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{tag.description}</p>
-                  <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#c6a14d]">
-                    Browse {tag.title.toLowerCase()} articles
-                    <img
-                      src="/home/noverticalhorizontalarrowiconyellow.svg"
-                      alt=""
-                      className="h-4 w-4"
-                    />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+                {section.tab}
+              </button>
+            )
+          })}
+        </div>
 
-        {/* Beliefs */}
-        <section id="beliefs" className="mt-14 rounded-[32px] bg-[#1f2f3d] px-8 py-12 text-white sm:px-12 lg:px-16 lg:py-16">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">What we believe</p>
-          <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">
-            Convictions that shape every article we publish
-          </h2>
-
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            {BELIEFS.map((belief) => (
-              <div
-                key={belief.title}
-                className="rounded-[20px] border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
-              >
-                <h3 className="font-serif text-2xl text-white">{belief.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-white/70">{belief.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Approach */}
-        <section className="mt-14">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">How we write</p>
-          <h2 className="mt-3 font-serif text-4xl text-slate-900">Our approach to Bible study</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-            Whether the topic is a single verse, a doctrine, or a moment in church history, we follow
-            the same disciplined process.
+        <section id="beliefs" className="mt-10 sm:mt-12">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+            We Believe
           </p>
-
-          <div className="mt-8 space-y-4">
-            {APPROACH.map((item) => (
-              <div
-                key={item.step}
-                className="flex flex-col gap-4 rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_6px_18px_rgba(15,23,42,0.05)] sm:flex-row sm:items-start sm:gap-8"
+          <h2 className="mt-3 font-serif text-4xl font-bold leading-none text-slate-900 sm:text-5xl">
+            {active.title}
+          </h2>
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">
+            {active.tagline}
+          </p>
+          <span className="mt-2 block h-0.5 w-16 bg-[#D4AF37]" aria-hidden />
+          <div className="mt-6 max-w-3xl space-y-5">
+            {active.body.map((paragraph) => (
+              <p
+                key={paragraph.slice(0, 48)}
+                className="font-sans text-[16px] font-normal leading-7 text-slate-800"
               >
-                <span className="font-serif text-4xl text-[#c6a14d]/60">{item.step}</span>
-                <div>
-                  <h3 className="font-serif text-2xl text-slate-900">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{item.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="mt-14 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-          <div className="grid items-center gap-8 px-8 py-10 sm:px-12 lg:grid-cols-[1fr_auto] lg:py-12">
-            <div>
-              <h2 className="font-serif text-4xl text-slate-900">Have a question we haven&apos;t answered?</h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600">
-                Submit a theological question about a passage, doctrine, or historical detail. Our
-                team reviews every submission — and your question may shape a future article.
+                {paragraph}
               </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/ask"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#182633]"
-              >
-                Ask a question
-                <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/articles"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Browse articles
-              </Link>
-            </div>
+            ))}
           </div>
         </section>
 

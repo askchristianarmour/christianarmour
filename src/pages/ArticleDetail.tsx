@@ -1,32 +1,58 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Heart, MessageCircle } from 'lucide-react'
+import { ChevronLeft, Heart, MessageCircle, Share2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ArticleAdminActions } from '../components/ArticleAdminActions'
+import { ArticleContent } from '../components/ArticleContent'
 import { AuthRequiredModal } from '../components/AuthRequiredModal'
-import { PageLoader } from '../components/CrossLoader'
-import { Seo } from '../components/Seo'
 import { CommentSection } from '../components/CommentSection'
+import { PageLoader } from '../components/CrossLoader'
 import { PostCoverImage } from '../components/PostCoverImage'
+import { Seo } from '../components/Seo'
+import { ShareArticleModal } from '../components/ShareArticleModal'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../hooks/useAuth'
 import { usePostLike } from '../hooks/usePostLike'
+import { useIsAdmin } from '../hooks/useUserPermissions'
 import { logView } from '../lib/analytics'
-import { ArticleContent } from '../components/ArticleContent'
 import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { fetchPostById } from '../lib/posts'
 import { absoluteUrl, SITE_NAME } from '../lib/seo'
 import { supabase } from '../lib/supabase'
-import { ArticleAdminActions } from '../components/ArticleAdminActions'
-import { useIsAdmin } from '../hooks/useUserPermissions'
+
+type LocationState = {
+  from?: string
+  fromLabel?: string
+}
 
 export function ArticleDetail() {
   const { postId = '' } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const locationState = (location.state as LocationState | null) ?? null
+  const backTo = locationState?.from || '/articles'
+  const backLabel =
+    locationState?.fromLabel ||
+    (backTo === '/' || backTo.startsWith('/?') ? 'Back to home' : 'Back to articles')
   const { user } = useAuth()
   const { isAdmin } = useIsAdmin()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
   const [commentText, setCommentText] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+
+  const handleBack = () => {
+    if (locationState?.from) {
+      navigate(locationState.from)
+      return
+    }
+    if (window.history.length > 1) {
+      navigate(-1)
+      return
+    }
+    navigate('/articles')
+  }
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['post', postId],
@@ -100,6 +126,14 @@ export function ArticleDetail() {
     return getReadingMinutes(post.content)
   }, [post])
 
+  const shareUrl = useMemo(() => {
+    if (!post) return ''
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/articles/${post.id}`
+    }
+    return absoluteUrl(`/articles/${post.id}`)
+  }, [post])
+
   const articleSeo = useMemo(() => {
     if (!post) return null
 
@@ -144,7 +178,7 @@ export function ArticleDetail() {
 
   if (isLoading) {
     return (
-      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#faf8f4]">
+      <div className="w-full bg-[#faf8f4]">
         <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 lg:px-8">
           <PageLoader label="Loading article..." />
         </div>
@@ -154,16 +188,22 @@ export function ArticleDetail() {
 
   if (error || !post) {
     return (
-      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#faf8f4]">
+      <div className="w-full bg-[#faf8f4]">
         <div className="mx-auto max-w-[1240px] px-4 py-12 text-center sm:px-6 lg:px-8">
           <p className="text-slate-600">This article could not be found.</p>
-          <Link to="/" className="mt-4 inline-block text-sm font-medium text-[#1c2b3a] underline">
-            Back to home
-          </Link>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mt-4 inline-block text-sm font-medium text-[#1c2b3a] underline"
+          >
+            {backLabel}
+          </button>
         </div>
       </div>
     )
   }
+
+  const categoryLabel = post.tag?.trim() || 'Article'
 
   return (
     <>
@@ -177,15 +217,16 @@ export function ArticleDetail() {
           jsonLd={articleSeo.jsonLd}
         />
       )}
-      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#faf8f4]">
-        <div className="mx-auto max-w-[1240px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-          <Link
-            to="/"
+      <div className="w-full bg-[#faf8f4]">
+        <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+          <button
+            type="button"
+            onClick={handleBack}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-[#1c2b3a]"
           >
             <ChevronLeft size={16} />
-            Back to articles
-          </Link>
+            {backLabel}
+          </button>
 
           {isAdmin && (
             <div className="mt-4">
@@ -193,63 +234,70 @@ export function ArticleDetail() {
             </div>
           )}
 
-          <article className="mt-6 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
-            <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="flex flex-col justify-center px-6 py-8 sm:px-10 lg:px-14 lg:py-12">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">
-                  Article
-                </p>
-                <h1 className="mt-4 font-serif text-4xl leading-tight text-slate-900 sm:text-5xl">
-                  {post.title}
-                </h1>
-                <ArticleContent content={post.content} className="mt-5" showPageNav />
-
-                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500">
-                  <span className="inline-flex items-center gap-2">
-                    <img src="/home/account.svg" alt="" className="h-4 w-4" />
-                    Christian Armour
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4" />
-                    {formattedDate}
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4" />
-                    {readingTime} mins read
-                  </span>
-                </div>
-
-                <div className="mt-8 flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={likeState.toggleLike}
-                    disabled={likeState.isPending}
-                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                      likeState.userLiked
-                        ? 'border-rose-200 bg-rose-50 text-rose-600'
-                        : 'border-slate-200 text-slate-600 hover:border-rose-200 hover:text-rose-600'
-                    }`}
-                  >
-                    <Heart size={16} fill={likeState.userLiked ? 'currentColor' : 'none'} />
-                    {likeState.likeCount} {likeState.likeCount === 1 ? 'Like' : 'Likes'}
-                  </button>
-
-                  <a
-                    href="#comments"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
-                  >
-                    <MessageCircle size={16} />
-                    {post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}
-                  </a>
-                </div>
-              </div>
-
+          <article className="mt-6">
+            <div className="relative overflow-hidden rounded-[20px]">
               <PostCoverImage
                 imageUrl={post.image_url}
                 title={post.title}
-                className="min-h-[320px]"
+                className="aspect-[16/9] min-h-[280px] w-full sm:min-h-[340px] lg:min-h-[420px]"
                 titleClassName="max-w-xl font-serif text-4xl leading-tight text-slate-700"
               />
+
+              <div className="absolute bottom-4 right-4 z-10 flex flex-wrap items-center justify-end gap-2 sm:bottom-5 sm:right-5 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={likeState.toggleLike}
+                  disabled={likeState.isPending}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-sm backdrop-blur-sm transition-colors ${
+                    likeState.userLiked
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-white/90 text-slate-800 hover:bg-white'
+                  }`}
+                >
+                  <Heart size={15} fill={likeState.userLiked ? 'currentColor' : 'none'} />
+                  Like
+                </button>
+
+                <a
+                  href="#comments"
+                  className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+                >
+                  <MessageCircle size={15} />
+                  Comment
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+                >
+                  <Share2 size={15} />
+                  Share
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-8 max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">
+                {categoryLabel}
+              </p>
+              <h1 className="mt-3 font-serif text-[40px] font-bold leading-none tracking-normal text-slate-900 sm:text-[48px]">
+                {post.title}
+              </h1>
+
+              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
+                <span>Christian Armour</span>
+                <span aria-hidden className="hidden text-slate-300 sm:inline">
+                  ·
+                </span>
+                <span>{formattedDate}</span>
+                <span aria-hidden className="hidden text-slate-300 sm:inline">
+                  ·
+                </span>
+                <span>{readingTime} mins read</span>
+              </div>
+
+              <ArticleContent content={post.content} className="mt-8" showPageNav />
             </div>
           </article>
 
@@ -267,6 +315,12 @@ export function ArticleDetail() {
       </div>
 
       <AuthRequiredModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <ShareArticleModal
+        open={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={post.title}
+        url={shareUrl}
+      />
     </>
   )
 }

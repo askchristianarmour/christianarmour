@@ -93,3 +93,30 @@ body {
   border-radius: 999px;
   background: linear-gradient(180deg, #c6a14d 0%, #8a6d2b 100%);
 }
+
+/* Logos Reftagger — Bible references highlighted in red */
+.rtBibleRef,
+a.rtBibleRef,
+.article-content .rtBibleRef,
+.article-bible-passage .rtBibleRef,
+.article-page-description .rtBibleRef {
+  color: #dc2626 !important;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(220, 38, 38, 0.45);
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.rtBibleRef:hover,
+a.rtBibleRef:hover {
+  color: #b91c1c !important;
+  text-decoration-color: rgba(185, 28, 28, 0.7);
+}
+
+/* Keep Reftagger popup above page chrome and avoid transform-based misplacement */
+.rtTooltip,
+#rtTooltip {
+  z-index: 99999 !important;
+  max-width: min(360px, calc(100vw - 24px));
+}

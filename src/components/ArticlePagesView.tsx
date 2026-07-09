@@ -1,6 +1,7 @@
 import { BookOpen } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useRefTagger } from '../hooks/useRefTagger'
 import {
   buildArticlesSearchUrl,
   isHtmlContent,
@@ -24,6 +25,9 @@ function PageBody({ body, onKeywordClick }: { body: string; onKeywordClick: (key
     const handleClick = (event: MouseEvent) => {
       const target = (event.target as HTMLElement).closest('[data-keyword]')
       if (!target) return
+
+      // Don't intercept Reftagger Bible reference clicks
+      if ((event.target as HTMLElement).closest('.rtBibleRef')) return
 
       event.preventDefault()
       const keyword = target.getAttribute('data-keyword')
@@ -55,6 +59,8 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
   const navigate = useNavigate()
   const structured = parseArticleContent(content)
   const pages = structured.pages
+
+  useRefTagger([content])
 
   const handleKeywordClick = (keyword: string) => {
     navigate(buildArticlesSearchUrl(keyword))

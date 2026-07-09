@@ -137,7 +137,7 @@ export function PreviouslyAskedQuestions({
       <div className="mt-10">
         <h3 className="font-serif text-2xl text-slate-900">Community answers</h3>
         <p className="mt-2 text-sm text-slate-500">
-          Publicly shared questions and replies for everyone to learn from.
+          Only answers an admin chooses to list appear here for everyone to learn from.
         </p>
 
         {isLoading ? (
@@ -147,9 +147,10 @@ export function PreviouslyAskedQuestions({
         ) : questions.length === 0 ? (
           <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-white px-6 py-14 text-center">
             <MessageCircle className="mx-auto text-[#c6a14d]" size={32} />
-            <p className="mt-4 font-serif text-3xl text-slate-800">No answered doubts yet</p>
+            <p className="mt-4 font-serif text-3xl text-slate-800">No public answers yet</p>
             <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-              Once questions are answered publicly, they will appear here for everyone to read.
+              Answered doubts are private by default. An admin can list selected answers here for
+              the community.
             </p>
           </div>
         ) : (

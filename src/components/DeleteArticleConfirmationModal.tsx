@@ -34,16 +34,16 @@ export function DeleteArticleConfirmationModal({
     }
   }, [open, isDeleting, onClose])
 
-  if (!open) return null
+  if (!open || typeof document === 'undefined') return null
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 p-4 backdrop-blur-[1px]"
       onClick={isDeleting ? undefined : onClose}
       role="presentation"
     >
       <div
-        className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+        className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-article-title"
@@ -68,26 +68,26 @@ export function DeleteArticleConfirmationModal({
               Delete this article?
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              &ldquo;{postTitle}&rdquo; will be permanently removed, including its comments and
-              likes. This cannot be undone.
+              Are you sure you want to delete &ldquo;{postTitle}&rdquo;? This will permanently remove
+              the article, its comments, and likes. This cannot be undone.
             </p>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
           <button
             type="button"
             onClick={onConfirm}
             disabled={isDeleting}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50 cursor-pointer"
+            className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isDeleting ? 'Deleting...' : 'Delete article'}
+            {isDeleting ? 'Deleting...' : 'Yes, delete article'}
           </button>
           <button
             type="button"
             onClick={onClose}
             disabled={isDeleting}
-            className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+            className="flex-1 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>

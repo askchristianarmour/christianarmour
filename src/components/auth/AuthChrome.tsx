@@ -169,7 +169,7 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                 <img
                   src="/signin/headerlogowithcompname.svg"
                   alt="Christian Armour"
-                  className="h-9 w-auto sm:h-11 lg:h-12"
+                  className="h-11 w-auto sm:h-12 lg:h-14"
                 />
               </Link>
             </div>

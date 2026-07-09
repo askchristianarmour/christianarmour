@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import type { PostWithMeta } from '../lib/posts'
 import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { getTagBySlug } from '../lib/tags'
+import { useRefTagger } from '../hooks/useRefTagger'
 import { PostCoverImage } from './PostCoverImage'
 
 type Props = {
@@ -9,6 +11,7 @@ type Props = {
 }
 
 export function ArticleListCard({ post }: Props) {
+  const location = useLocation()
   const tag = getTagBySlug(post.tag)
   const formattedDate = new Date(post.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -16,11 +19,22 @@ export function ArticleListCard({ post }: Props) {
     day: 'numeric',
   })
   const readMins = getReadingMinutes(post.content)
-  const excerpt = getExcerptFromContent(post.content, 120)
+  const excerpt = getExcerptFromContent(post.content, 160)
+
+  const articleLinkState = {
+    from: `${location.pathname}${location.search}`,
+    fromLabel: 'Back to articles',
+  }
+
+  useRefTagger([post.id, post.content])
+
+  useEffect(() => {
+    window.setTimeout(() => window.refTagger?.tag?.(), 80)
+  }, [post.id, post.content])
 
   return (
     <article className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_4px_18px_rgba(15,23,42,0.05)] transition-shadow hover:shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
-      <Link to={`/articles/${post.id}`} className="block">
+      <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage imageUrl={post.image_url} title={post.title} className="aspect-[16/10]" />
       </Link>
 
@@ -34,13 +48,20 @@ export function ArticleListCard({ post }: Props) {
           </Link>
         )}
 
-        <Link to={`/articles/${post.id}`} className="mt-2 block">
+        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-2 block">
           <h2 className="font-serif text-[1.65rem] leading-tight text-slate-900 transition-colors hover:text-[#1c2b3a]">
             {post.title}
           </h2>
         </Link>
 
         <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-500">{excerpt}</p>
+        <Link
+          to={`/articles/${post.id}`}
+          state={articleLinkState}
+          className="mt-1 inline-block text-sm font-semibold text-[#c6a14d] transition-colors hover:text-[#a8863d]"
+        >
+          Read more
+        </Link>
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
@@ -56,6 +77,7 @@ export function ArticleListCard({ post }: Props) {
 
           <Link
             to={`/articles/${post.id}`}
+            state={articleLinkState}
             className="group/arrow flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-[#faf8f4] shadow-sm transition-all hover:border-[#c6a14d]/50 hover:bg-[#faf5e8]"
             aria-label={`Read ${post.title}`}
           >

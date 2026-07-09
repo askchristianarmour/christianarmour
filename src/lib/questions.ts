@@ -14,6 +14,7 @@ export async function submitQuestion(payload: {
     body: payload.body.trim(),
     user_id: payload.userId ?? null,
     wants_credit: payload.wantsCredit ?? false,
+    is_public: false,
   })
 
   if (error) throw error

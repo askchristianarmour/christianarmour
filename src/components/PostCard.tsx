@@ -1,12 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Heart, MessageCircle, Lock, Settings2 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useToast } from '../contexts/ToastContext'
 import type { PostWithMeta } from '../lib/posts'
 import { getTagBySlug } from '../lib/tags'
 import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { usePostLike } from '../hooks/usePostLike'
+import { useRefTagger } from '../hooks/useRefTagger'
 import { PostCoverImage } from './PostCoverImage'
 
 type Props = {
@@ -15,9 +17,22 @@ type Props = {
 }
 
 export function PostCard({ post, canToggleComments }: Props) {
+  const location = useLocation()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
   const { userLiked, likeCount, toggleLike, isPending } = usePostLike(post)
+
+  const articleLinkState = {
+    from: `${location.pathname}${location.search}`,
+    fromLabel: location.pathname === '/' ? 'Back to home' : 'Back to articles',
+  }
+
+  useRefTagger([post.id, post.content])
+
+  useEffect(() => {
+    // Re-tag after excerpt mounts so Bible refs in the card become interactive
+    window.setTimeout(() => window.refTagger?.tag?.(), 80)
+  }, [post.id, post.content])
 
   const toggleCommentsMutation = useMutation({
     mutationFn: async () => {
@@ -46,13 +61,12 @@ export function PostCard({ post, canToggleComments }: Props) {
     day: 'numeric',
   })
 
-  const excerpt = getExcerptFromContent(post.content, 150)
-
+  const excerpt = getExcerptFromContent(post.content, 220)
   const tag = getTagBySlug(post.tag)
 
   return (
     <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
-      <Link to={`/articles/${post.id}`} className="block">
+      <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage
           imageUrl={post.image_url}
           title={post.title}
@@ -74,12 +88,22 @@ export function PostCard({ post, canToggleComments }: Props) {
             </Link>
           )}
         </div>
-        <Link to={`/articles/${post.id}`} className="mt-3 block">
+        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-3 block">
           <h2 className="font-serif text-3xl leading-tight text-slate-900 transition-colors hover:text-[#1c2b3a]">
             {post.title}
           </h2>
         </Link>
-        <p className="mt-3 text-sm leading-7 text-slate-600">{excerpt}</p>
+
+        <p className="mt-3 line-clamp-2 text-sm leading-7 text-slate-600">
+          {excerpt}
+        </p>
+        <Link
+          to={`/articles/${post.id}`}
+          state={articleLinkState}
+          className="mt-1 inline-block text-sm font-semibold text-[#c6a14d] transition-colors hover:text-[#a8863d]"
+        >
+          Read more
+        </Link>
 
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
           <span className="inline-flex items-center gap-2">
@@ -109,6 +133,7 @@ export function PostCard({ post, canToggleComments }: Props) {
 
           <Link
             to={`/articles/${post.id}#comments`}
+            state={articleLinkState}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
           >
             <MessageCircle size={16} />
@@ -117,6 +142,7 @@ export function PostCard({ post, canToggleComments }: Props) {
 
           <Link
             to={`/articles/${post.id}`}
+            state={articleLinkState}
             className="ml-auto inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
           >
             Read Article

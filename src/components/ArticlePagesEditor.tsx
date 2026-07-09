@@ -213,7 +213,9 @@ export function ArticlePagesEditor({ value, onChange }: Props) {
                   <label className="block text-sm font-semibold text-slate-700">Page content</label>
                   <p className="mt-1 text-xs text-slate-500">
                     Select text and use <strong>Link articles</strong> to connect words to related
-                    articles.
+                    articles. Add Bible references at the end of a line (e.g. John 3:16 or Matt
+                    21:34) — they appear in red and open a Scripture preview when readers click
+                    them.
                   </p>
                   <div className="mt-2">
                     <RichTextEditor

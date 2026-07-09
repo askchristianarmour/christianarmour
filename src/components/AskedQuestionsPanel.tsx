@@ -58,8 +58,8 @@ function QuestionReplyCard({
     onSuccess: (_data, isPublic) => {
       toastSuccess(
         isPublic
-          ? 'This Q&A is now visible on the public Ask page.'
-          : 'This Q&A has been hidden from the public Ask page.'
+          ? 'This Q&A is now listed in Previously Asked Doubts on the Ask page.'
+          : 'This Q&A was removed from Previously Asked Doubts.'
       )
       onReplied()
       queryClient.invalidateQueries({ queryKey: ['answered-questions'] })
@@ -94,7 +94,7 @@ function QuestionReplyCard({
               ) : (
                 <EyeOff size={14} />
               )}
-              {(question.is_public ?? false) ? 'Public' : 'Hidden'}
+              {(question.is_public ?? false) ? 'Listed publicly' : 'List publicly'}
             </button>
           )}
           <span
@@ -132,8 +132,13 @@ function QuestionReplyCard({
           {isAdmin && question.status === 'answered' && (
             <p className="mt-3 text-xs text-slate-500">
               {question.is_public ?? false
-                ? 'This answer is live in Previously Asked Questions on the Ask page.'
-                : 'This answer is hidden from the public until you mark it Public.'}
+                ? 'Listed in Previously Asked Doubts on the Ask page.'
+                : 'Not listed publicly yet. Click “List publicly” to show it in Previously Asked Doubts.'}
+            </p>
+          )}
+          {!isAdmin && question.status === 'answered' && (
+            <p className="mt-3 text-xs text-slate-500">
+              Replies stay private until an admin lists them in Previously Asked Doubts.
             </p>
           )}
         </div>

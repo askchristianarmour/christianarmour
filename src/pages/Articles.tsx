@@ -161,22 +161,27 @@ export function Articles() {
 
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f3f1ec]">
-      <section className="relative overflow-hidden bg-[#1f2f3d] px-4 py-14 text-center text-white sm:px-6 sm:py-16 lg:py-20">
+      <section className="relative flex h-[300px] items-center justify-center overflow-hidden bg-[#1f2f3d] px-4 text-center text-white sm:px-6">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <p className="absolute left-[-2%] top-1/2 -translate-y-1/2 font-serif text-[5rem] font-semibold uppercase tracking-[0.2em] text-white/[0.04] sm:text-[7rem] lg:text-[9rem]">
-            Christian Armour
-          </p>
           <img
-            src="/signin/cross.svg"
+            src="/article/left_armour_imagehero.svg"
             alt=""
-            className="absolute right-[8%] top-1/2 h-28 w-auto -translate-y-1/2 opacity-[0.08] sm:h-36 lg:h-44"
             aria-hidden
+            className="absolute left-0 top-1/2 h-[70%] w-auto max-w-[28%] -translate-y-1/2 object-contain object-left opacity-90 sm:max-w-[32%] lg:max-w-[36%]"
+          />
+          <img
+            src="/article/right_armour_imagehero.svg"
+            alt=""
+            aria-hidden
+            className="absolute right-0 top-1/2 h-[70%] w-auto max-w-[28%] -translate-y-1/2 object-contain object-right opacity-90 sm:max-w-[32%] lg:max-w-[36%]"
           />
         </div>
 
         <div className="relative mx-auto max-w-3xl">
-          <h1 className="font-serif text-5xl leading-tight sm:text-6xl lg:text-7xl">Articles</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
+          <h1 className="font-serif text-[48px] font-bold leading-none tracking-normal text-center">
+            Articles
+          </h1>
+          <p className="mx-auto mt-3 max-w-2xl text-center font-sans text-[16px] font-normal leading-6 tracking-normal text-white/75">
             {activeSearch
               ? `Showing articles related to “${activeSearch}”.`
               : 'Engage with academically grounded, biblically faithful articles exploring Scripture, theology, church history, and Christian life—designed to help readers grow in knowledge, wisdom, and faith.'}
