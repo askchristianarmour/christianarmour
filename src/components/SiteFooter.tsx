@@ -13,7 +13,7 @@ export function SiteFooter() {
               className="h-16 w-auto sm:h-20 lg:h-24"
             />
           </Link>
-          <p className="mt-6 w-[311px] max-w-full font-sans text-[18px] font-normal leading-none tracking-normal text-white/70">
+          <p className="mt-6 w-[311px] max-w-full font-sans text-[18px] font-normal leading-normal tracking-normal text-white/70">
             Exegesis, theology, history, and life. Reading the text closely, and the world it came
             from honestly.
           </p>
@@ -43,8 +43,9 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-sans text-[18px] font-normal leading-none tracking-normal text-white">
+          <h3 className="inline-flex w-fit flex-col font-sans text-[18px] font-normal leading-none tracking-normal text-white">
             Articles
+            <span className="mt-2 block h-0.5 w-1/2 self-start bg-[#D4AF37]" aria-hidden />
           </h3>
           <ul className="mt-4 space-y-2 font-sans text-[18px] font-normal leading-none tracking-normal text-white/70">
             <li>Old testament</li>
@@ -57,8 +58,9 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-sans text-[18px] font-normal leading-none tracking-normal text-white">
+          <h3 className="inline-flex w-fit flex-col font-sans text-[18px] font-normal leading-none tracking-normal text-white">
             About
+            <span className="mt-2 block h-0.5 w-1/2 self-start bg-[#D4AF37]" aria-hidden />
           </h3>
           <ul className="mt-4 space-y-2 font-sans text-[18px] font-normal leading-none tracking-normal text-white/70">
             <li>
@@ -75,8 +77,9 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-sans text-[18px] font-normal leading-none tracking-normal text-white">
+          <h3 className="inline-flex w-fit flex-col font-sans text-[18px] font-normal leading-none tracking-normal text-white">
             Connect
+            <span className="mt-2 block h-0.5 w-1/2 self-start bg-[#D4AF37]" aria-hidden />
           </h3>
           <ul className="mt-4 space-y-2 font-sans text-[18px] font-normal leading-none tracking-normal text-white/70">
             <li>
