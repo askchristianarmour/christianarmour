@@ -310,7 +310,7 @@ export function Home() {
         </section>
       </div>
 
-      <section className="mt-14 bg-[#1f2f3d] py-10 text-white sm:py-12 lg:py-14">
+      <section className="mt-14 bg-[#1D2B34] py-10 text-white sm:py-12 lg:py-14">
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#c6a14d]">
             Browse By Book
@@ -332,20 +332,20 @@ export function Home() {
             </button>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-5">
             {OLD_TESTAMENT_BOOKS.map(([book, code]) => (
               <button
                 key={book}
                 type="button"
-                className="rounded-2xl border border-white/35 px-5 py-6 text-center transition-colors hover:border-white/60 hover:bg-white/5"
+                className="flex h-[88px] w-[236px] shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-[#B9C1CA] bg-white/10 p-4 text-center transition-colors hover:bg-white/[0.14]"
               >
-                <p className="font-serif text-2xl text-white">{book}</p>
-                <p className="mt-2 text-sm text-white/60">{code}</p>
+                <p className="font-serif text-xl leading-none text-white sm:text-2xl">{book}</p>
+                <p className="text-sm leading-none text-white/60">{code}</p>
               </button>
             ))}
             <button
               type="button"
-              className="rounded-2xl border border-dashed border-white/35 px-5 py-6 text-left text-2xl font-serif text-white/90"
+              className="flex h-[88px] w-[236px] shrink-0 flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#B9C1CA] bg-white/10 p-4 text-center font-serif text-xl text-white/90 transition-colors hover:bg-white/[0.14] sm:text-2xl"
             >
               + 24 more
             </button>

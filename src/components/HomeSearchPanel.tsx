@@ -26,7 +26,7 @@ export function HomeSearchPanel() {
   }
 
   return (
-    <div className="rounded-[28px] bg-[#eeece7] p-5 sm:p-6">
+    <div className="rounded-[28px] border border-slate-200/60 bg-[#F7F7F7] p-5 shadow-[0_4px_20px_rgba(15,23,42,0.08),0_8px_32px_rgba(15,23,42,0.05)] sm:p-6">
       <form onSubmit={handleSubmit}>
         <div className="relative flex items-center rounded-2xl border border-white/80 bg-white py-1.5 pl-1.5 pr-1.5 shadow-[0_2px_10px_rgba(15,23,42,0.06)]">
           <div className="relative min-w-0 flex-1">
