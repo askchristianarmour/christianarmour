@@ -305,27 +305,27 @@ export function Home() {
         </section>
       </div>
 
-      <section className="mt-14 bg-[#1D2B34] py-10 text-white sm:py-12 lg:py-14">
+      <section className="mt-14 bg-[#1D2B34] py-8 text-white sm:py-12 lg:py-14">
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#c6a14d]">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c6a14d] sm:text-sm">
             Browse By Book
           </p>
-          <h2 className="mt-4 max-w-3xl font-serif text-4xl leading-tight text-white sm:text-5xl">
+          <h2 className="mt-3 max-w-3xl font-serif text-3xl leading-tight text-white sm:mt-4 sm:text-5xl">
             Exegesis, Organized Like A Concordance
           </h2>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-white/70">
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 sm:mt-4 sm:leading-7">
             Choose a testament, then a book. Every article tagged to that book appears on its
             page, exactly the way you&apos;d look something up in a print concordance.
           </p>
 
-          <div className="mt-10 flex items-center gap-10 border-b border-white/15 text-sm">
+          <div className="mt-6 flex items-center gap-6 border-b border-white/15 text-sm sm:mt-10 sm:gap-10">
             <button
               type="button"
               onClick={() => setTestament('old')}
               className={
                 testament === 'old'
-                  ? 'border-b-2 border-[#c6a14d] pb-3 font-semibold text-[#c6a14d]'
-                  : 'pb-3 font-semibold text-white/70 transition-colors hover:text-white'
+                  ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3'
+                  : 'pb-2.5 font-semibold text-white/70 transition-colors hover:text-white sm:pb-3'
               }
             >
               Old Testament
@@ -335,23 +335,25 @@ export function Home() {
               onClick={() => setTestament('new')}
               className={
                 testament === 'new'
-                  ? 'border-b-2 border-[#c6a14d] pb-3 font-semibold text-[#c6a14d]'
-                  : 'pb-3 font-semibold text-white/70 transition-colors hover:text-white'
+                  ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3'
+                  : 'pb-2.5 font-semibold text-white/70 transition-colors hover:text-white sm:pb-3'
               }
             >
               New Testament
             </button>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-5">
+          <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-8 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-5">
             {browseBooks.map((book) => (
               <Link
                 key={book.name}
                 to={buildArticlesBookPath(book.name)}
-                className="flex h-[88px] w-[236px] shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-[#B9C1CA] bg-white/10 p-4 text-center transition-colors hover:bg-white/[0.14]"
+                className="flex h-[64px] w-full flex-col items-center justify-center gap-1 rounded-md border border-[#B9C1CA] bg-white/10 px-2 py-2 text-center transition-colors hover:bg-white/[0.14] sm:h-[88px] sm:w-[236px] sm:shrink-0 sm:gap-2 sm:rounded-lg sm:border-2 sm:p-4"
               >
-                <p className="font-serif text-xl leading-none text-white sm:text-2xl">{book.name}</p>
-                <p className="text-sm leading-none text-white/60">{book.code}</p>
+                <p className="font-serif text-[15px] leading-tight text-white sm:text-2xl sm:leading-none">
+                  {book.name}
+                </p>
+                <p className="text-[11px] leading-none text-white/60 sm:text-sm">{book.code}</p>
               </Link>
             ))}
           </div>
