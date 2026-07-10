@@ -182,7 +182,7 @@ export function Articles() {
   const totalCount = selectedTag ? tagCounts?.[selectedTag] ?? resultCount : totalPostCount ?? resultCount
 
   return (
-    <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f3f1ec]">
+    <div className="relative left-1/2 w-screen -translate-x-1/2 bg-white">
       <section className="relative flex h-[300px] items-center justify-center overflow-hidden bg-[#1f2f3d] px-4 text-center text-white sm:px-6">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <img

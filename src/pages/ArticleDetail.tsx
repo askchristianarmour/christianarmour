@@ -178,7 +178,7 @@ export function ArticleDetail() {
 
   if (isLoading) {
     return (
-      <div className="w-full bg-[#faf8f4]">
+      <div className="w-full bg-white">
         <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 lg:px-8">
           <PageLoader label="Loading article..." />
         </div>
@@ -188,7 +188,7 @@ export function ArticleDetail() {
 
   if (error || !post) {
     return (
-      <div className="w-full bg-[#faf8f4]">
+      <div className="w-full bg-white">
         <div className="mx-auto max-w-[1240px] px-4 py-12 text-center sm:px-6 lg:px-8">
           <p className="text-slate-600">This article could not be found.</p>
           <button
@@ -217,7 +217,7 @@ export function ArticleDetail() {
           jsonLd={articleSeo.jsonLd}
         />
       )}
-      <div className="w-full bg-[#faf8f4]">
+      <div className="w-full bg-white">
         <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
           <button
             type="button"

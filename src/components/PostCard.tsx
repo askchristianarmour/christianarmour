@@ -65,7 +65,7 @@ export function PostCard({ post, canToggleComments }: Props) {
   const tag = getTagBySlug(post.tag)
 
   return (
-    <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+    <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)]">
       <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage
           imageUrl={post.image_url}
@@ -100,7 +100,7 @@ export function PostCard({ post, canToggleComments }: Props) {
         <Link
           to={`/articles/${post.id}`}
           state={articleLinkState}
-          className="mt-1 inline-block text-sm font-semibold text-[#c6a14d] transition-colors hover:text-[#a8863d]"
+          className="mt-1 inline-block text-sm font-semibold text-slate-400 transition-colors hover:text-slate-600"
         >
           Read more
         </Link>

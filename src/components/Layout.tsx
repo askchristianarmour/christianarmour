@@ -11,7 +11,7 @@ export function Layout() {
   }, [location.pathname])
 
   return (
-    <div className="min-h-screen bg-[#fcfaf7]">
+    <div className="min-h-screen bg-white">
       <AuthChrome />
       <main className="w-full">
         <Outlet />

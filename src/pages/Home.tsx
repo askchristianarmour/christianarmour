@@ -142,7 +142,7 @@ export function Home() {
   const posts = data?.pages.flatMap((page) => page.posts) ?? []
 
   return (
-    <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#fcfaf7]">
+    <div className="relative left-1/2 w-screen -translate-x-1/2 bg-white">
       <div className="relative">
         <section className="overflow-hidden bg-white pb-20 sm:pb-24 lg:pb-28">
           <div className="grid items-stretch gap-0 lg:grid-cols-[0.95fr_1.05fr]">

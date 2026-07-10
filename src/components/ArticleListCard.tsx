@@ -33,7 +33,7 @@ export function ArticleListCard({ post }: Props) {
   }, [post.id, post.content])
 
   return (
-    <article className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_4px_18px_rgba(15,23,42,0.05)] transition-shadow hover:shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
+    <article className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)] transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.1),0_16px_40px_rgba(15,23,42,0.16)]">
       <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage imageUrl={post.image_url} title={post.title} className="aspect-[16/10]" />
       </Link>
@@ -58,7 +58,7 @@ export function ArticleListCard({ post }: Props) {
         <Link
           to={`/articles/${post.id}`}
           state={articleLinkState}
-          className="mt-1 inline-block text-sm font-semibold text-[#c6a14d] transition-colors hover:text-[#a8863d]"
+          className="mt-1 inline-block text-sm font-semibold text-slate-400 transition-colors hover:text-slate-600"
         >
           Read more
         </Link>
