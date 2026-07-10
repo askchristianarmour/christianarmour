@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ArticleListCard } from './ArticleListCard'
 import { assignAdjacentCoverImages } from '../lib/cover-images'
+import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
 import { fetchRelatedPostsByTag } from '../lib/posts'
 import { getTagBySlug, isArticleTagSlug } from '../lib/tags'
 
@@ -19,12 +21,15 @@ export function RelatedArticles({ postId, tag }: Props) {
     queryFn: () => fetchRelatedPostsByTag(validTag!, postId, 3),
     enabled: !!validTag && !!postId,
   })
+  const { data: coverPool } = useFallbackCoverPool()
+  const coverById = useMemo(
+    () => assignAdjacentCoverImages(relatedPosts, coverPool),
+    [relatedPosts, coverPool]
+  )
 
   if (!validTag || isLoading || relatedPosts.length === 0) {
     return null
   }
-
-  const coverById = assignAdjacentCoverImages(relatedPosts)
 
   return (
     <section className="mt-12 border-t border-slate-200 pt-10">

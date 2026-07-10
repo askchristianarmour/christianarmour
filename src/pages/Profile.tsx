@@ -9,6 +9,7 @@ import { TagPicker } from '../components/TagPicker'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
 import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
 import { AdminPostsManager } from '../components/AdminPostsManager'
+import { AdminRandomCoversManager } from '../components/AdminRandomCoversManager'
 import { ArticleContent } from '../components/ArticleContent'
 import { ArticlePagesEditor } from '../components/ArticlePagesEditor'
 import {
@@ -928,6 +929,7 @@ export function Profile() {
           )}
 
           {activeTab === 'settings' && isAdmin && <AdminPostsManager />}
+          {activeTab === 'settings' && isAdmin && <AdminRandomCoversManager />}
 
           {/* Activity Feeds */}
           {activeTab === 'activity' && (

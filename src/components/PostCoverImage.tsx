@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getFallbackCoverImage, resolvePostCoverImage } from '../lib/cover-images'
+import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
 
 type Props = {
   imageUrl?: string | null
@@ -35,20 +36,21 @@ export function PostCoverImage({
   className = '',
   titleClassName,
 }: Props) {
+  const { data: coverPool } = useFallbackCoverPool()
   const primaryUrl = useMemo(
-    () => resolvePostCoverImage(imageUrl, seed),
-    [imageUrl, seed]
+    () => resolvePostCoverImage(imageUrl, seed, [], coverPool),
+    [imageUrl, seed, coverPool]
   )
   const [src, setSrc] = useState(primaryUrl)
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [usedFallback, setUsedFallback] = useState(!imageUrl?.trim())
 
   useEffect(() => {
-    const next = resolvePostCoverImage(imageUrl, seed)
+    const next = resolvePostCoverImage(imageUrl, seed, [], coverPool)
     setSrc(next)
     setStatus('loading')
     setUsedFallback(!imageUrl?.trim())
-  }, [imageUrl, seed])
+  }, [imageUrl, seed, coverPool])
 
   if (status === 'error') {
     return (
@@ -70,7 +72,7 @@ export function PostCoverImage({
         onError={() => {
           if (!usedFallback) {
             setUsedFallback(true)
-            setSrc(getFallbackCoverImage(seed ?? title))
+            setSrc(getFallbackCoverImage(seed ?? title, [], coverPool))
             setStatus('loading')
             return
           }

@@ -10,6 +10,7 @@ import { useReplyNotificationToasts } from '../hooks/useReplyNotificationToasts'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchTagCounts } from '../lib/posts'
 import { assignAdjacentCoverImages } from '../lib/cover-images'
+import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
 import { supabase } from '../lib/supabase'
 import { HomeSearchPanel } from '../components/HomeSearchPanel'
 import { ARTICLE_TAGS } from '../lib/tags'
@@ -122,7 +123,11 @@ export function Home() {
   }, [queryClient])
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? []
-  const coverById = useMemo(() => assignAdjacentCoverImages(posts), [posts])
+  const { data: coverPool } = useFallbackCoverPool()
+  const coverById = useMemo(
+    () => assignAdjacentCoverImages(posts, coverPool),
+    [posts, coverPool]
+  )
 
   if (isLoading) {
     return <HomePageSkeleton />

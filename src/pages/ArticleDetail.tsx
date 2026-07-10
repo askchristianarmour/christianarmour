@@ -14,6 +14,7 @@ import { ShareArticleModal } from '../components/ShareArticleModal'
 import { useToast } from '../contexts/ToastContext'
 import { resolvePostCoverImage } from '../lib/cover-images'
 import { useAuth } from '../hooks/useAuth'
+import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
 import { usePostLike } from '../hooks/usePostLike'
 import { useIsAdmin } from '../hooks/useUserPermissions'
 import { logView } from '../lib/analytics'
@@ -62,6 +63,7 @@ export function ArticleDetail() {
     queryFn: () => fetchPostById(postId),
     enabled: !!postId,
   })
+  const { data: coverPool } = useFallbackCoverPool()
 
   useEffect(() => {
     if (!post) return
@@ -141,7 +143,7 @@ export function ArticleDetail() {
     if (!post) return null
 
     const description = getExcerptFromContent(post.content, 160)
-    const image = absoluteUrl(resolvePostCoverImage(post.image_url, post.id))
+    const image = absoluteUrl(resolvePostCoverImage(post.image_url, post.id, [], coverPool))
 
     return {
       title: `${post.title} | Christian Armour`,
@@ -165,7 +167,7 @@ export function ArticleDetail() {
         mainEntityOfPage: absoluteUrl(`/articles/${post.id}`),
       },
     }
-  }, [post])
+  }, [post, coverPool])
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault()
