@@ -14,9 +14,11 @@ import { PostCoverImage } from './PostCoverImage'
 type Props = {
   post: PostWithMeta
   canToggleComments?: boolean
+  /** Pre-assigned cover (from adjacent-aware list assignment). */
+  coverImageUrl?: string | null
 }
 
-export function PostCard({ post, canToggleComments }: Props) {
+export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
   const location = useLocation()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
@@ -68,8 +70,9 @@ export function PostCard({ post, canToggleComments }: Props) {
     <article className="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)] sm:rounded-[24px]">
       <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage
-          imageUrl={post.image_url}
+          imageUrl={coverImageUrl ?? post.image_url}
           title={post.title}
+          seed={post.id}
           className="aspect-[16/10] sm:aspect-[16/9]"
           titleClassName="font-serif text-base leading-tight text-slate-700 sm:text-3xl"
         />

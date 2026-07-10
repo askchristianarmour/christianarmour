@@ -12,6 +12,7 @@ import { RelatedArticles } from '../components/RelatedArticles'
 import { Seo } from '../components/Seo'
 import { ShareArticleModal } from '../components/ShareArticleModal'
 import { useToast } from '../contexts/ToastContext'
+import { resolvePostCoverImage } from '../lib/cover-images'
 import { useAuth } from '../hooks/useAuth'
 import { usePostLike } from '../hooks/usePostLike'
 import { useIsAdmin } from '../hooks/useUserPermissions'
@@ -140,7 +141,7 @@ export function ArticleDetail() {
     if (!post) return null
 
     const description = getExcerptFromContent(post.content, 160)
-    const image = post.image_url ? absoluteUrl(post.image_url) : absoluteUrl('/og-image.svg')
+    const image = absoluteUrl(resolvePostCoverImage(post.image_url, post.id))
 
     return {
       title: `${post.title} | Christian Armour`,
@@ -277,6 +278,7 @@ export function ArticleDetail() {
               <PostCoverImage
                 imageUrl={post.image_url}
                 title={post.title}
+                seed={post.id}
                 className="aspect-[16/10] min-h-0 w-full sm:aspect-[16/9] sm:min-h-[340px] lg:min-h-[420px]"
                 titleClassName="max-w-xl font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
               />

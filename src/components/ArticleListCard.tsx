@@ -8,9 +8,11 @@ import { PostCoverImage } from './PostCoverImage'
 
 type Props = {
   post: PostWithMeta
+  /** Pre-assigned cover (from adjacent-aware list assignment). */
+  coverImageUrl?: string | null
 }
 
-export function ArticleListCard({ post }: Props) {
+export function ArticleListCard({ post, coverImageUrl }: Props) {
   const location = useLocation()
   const tag = getTagBySlug(post.tag)
   const formattedDate = new Date(post.created_at).toLocaleDateString('en-US', {
@@ -41,8 +43,9 @@ export function ArticleListCard({ post }: Props) {
           className="absolute inset-0 block"
         >
           <PostCoverImage
-            imageUrl={post.image_url}
+            imageUrl={coverImageUrl ?? post.image_url}
             title={post.title}
+            seed={post.id}
             className="h-full min-h-full w-full sm:min-h-[168px]"
             titleClassName="font-serif text-base leading-tight text-slate-700 sm:text-2xl"
           />

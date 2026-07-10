@@ -15,6 +15,7 @@ import { isArticleTagSlug, type ArticleTagSlug } from '../lib/tags'
 
 import { getReadingMinutes, getPlainTextFromContent } from '../lib/article-content'
 import { buildArticlesBooksParam, parseBookParam } from '../lib/bible-books'
+import { assignAdjacentCoverImages } from '../lib/cover-images'
 
 const MOBILE_ARTICLE_PREVIEW = 5
 
@@ -167,6 +168,10 @@ export function Articles() {
 
   const resultCount = filteredPosts.length
   const totalCount = selectedTag ? tagCounts?.[selectedTag] ?? resultCount : totalPostCount ?? resultCount
+  const coverById = useMemo(
+    () => assignAdjacentCoverImages(filteredPosts),
+    [filteredPosts]
+  )
 
   if (isLoading) {
     return <ArticlesPageSkeleton />
@@ -264,7 +269,7 @@ export function Articles() {
                             : 'w-full'
                         }
                       >
-                        <ArticleListCard post={post} />
+                        <ArticleListCard post={post} coverImageUrl={coverById[post.id]} />
                       </div>
                     ))}
                   </div>

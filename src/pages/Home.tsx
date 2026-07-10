@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArticlesPagination } from '../components/ArticlesPagination'
 import { PostCard } from '../components/PostCard'
@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useReplyNotificationToasts } from '../hooks/useReplyNotificationToasts'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchTagCounts } from '../lib/posts'
+import { assignAdjacentCoverImages } from '../lib/cover-images'
 import { supabase } from '../lib/supabase'
 import { HomeSearchPanel } from '../components/HomeSearchPanel'
 import { ARTICLE_TAGS } from '../lib/tags'
@@ -121,6 +122,7 @@ export function Home() {
   }, [queryClient])
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? []
+  const coverById = useMemo(() => assignAdjacentCoverImages(posts), [posts])
 
   if (isLoading) {
     return <HomePageSkeleton />
@@ -262,7 +264,11 @@ export function Home() {
                         : undefined
                     }
                   >
-                    <PostCard post={post} canToggleComments={canManage} />
+                    <PostCard
+                      post={post}
+                      canToggleComments={canManage}
+                      coverImageUrl={coverById[post.id]}
+                    />
                   </div>
                 ))}
               </div>

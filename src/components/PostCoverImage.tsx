@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getFallbackCoverImage, resolvePostCoverImage } from '../lib/cover-images'
 
 type Props = {
   imageUrl?: string | null
   title: string
+  /** Stable seed (usually post id) so the same article keeps the same fallback. */
+  seed?: string | null
   className?: string
   titleClassName?: string
 }
@@ -25,17 +28,29 @@ function CoverPlaceholder({
   )
 }
 
-export function PostCoverImage({ imageUrl, title, className = '', titleClassName }: Props) {
-  const normalizedUrl = imageUrl?.trim() || null
-  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(() =>
-    normalizedUrl ? 'loading' : 'error'
+export function PostCoverImage({
+  imageUrl,
+  title,
+  seed = null,
+  className = '',
+  titleClassName,
+}: Props) {
+  const primaryUrl = useMemo(
+    () => resolvePostCoverImage(imageUrl, seed),
+    [imageUrl, seed]
   )
+  const [src, setSrc] = useState(primaryUrl)
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [usedFallback, setUsedFallback] = useState(!imageUrl?.trim())
 
   useEffect(() => {
-    setStatus(normalizedUrl ? 'loading' : 'error')
-  }, [normalizedUrl])
+    const next = resolvePostCoverImage(imageUrl, seed)
+    setSrc(next)
+    setStatus('loading')
+    setUsedFallback(!imageUrl?.trim())
+  }, [imageUrl, seed])
 
-  if (!normalizedUrl || status === 'error') {
+  if (status === 'error') {
     return (
       <CoverPlaceholder title={title} className={className} titleClassName={titleClassName} />
     )
@@ -47,16 +62,22 @@ export function PostCoverImage({ imageUrl, title, className = '', titleClassName
         <div className="absolute inset-0 animate-pulse bg-slate-200" aria-hidden />
       )}
       <img
-        src={normalizedUrl}
+        src={src}
         alt={title}
         loading="lazy"
         decoding="async"
         onLoad={() => setStatus('loaded')}
-        onError={() => setStatus('error')}
+        onError={() => {
+          if (!usedFallback) {
+            setUsedFallback(true)
+            setSrc(getFallbackCoverImage(seed ?? title))
+            setStatus('loading')
+            return
+          }
+          setStatus('error')
+        }}
         className={`h-full w-full object-cover transition-all duration-300 ${
-          status === 'loaded'
-            ? 'opacity-100 hover:scale-105'
-            : 'opacity-0'
+          status === 'loaded' ? 'opacity-100 hover:scale-105' : 'opacity-0'
         }`}
       />
     </div>

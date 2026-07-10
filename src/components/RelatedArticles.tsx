@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ArticleListCard } from './ArticleListCard'
+import { assignAdjacentCoverImages } from '../lib/cover-images'
 import { fetchRelatedPostsByTag } from '../lib/posts'
 import { getTagBySlug, isArticleTagSlug } from '../lib/tags'
 
@@ -23,6 +24,8 @@ export function RelatedArticles({ postId, tag }: Props) {
     return null
   }
 
+  const coverById = assignAdjacentCoverImages(relatedPosts)
+
   return (
     <section className="mt-12 border-t border-slate-200 pt-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -44,7 +47,7 @@ export function RelatedArticles({ postId, tag }: Props) {
 
       <div className="mt-6 grid grid-cols-2 justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] lg:grid-cols-3">
         {relatedPosts.map((post) => (
-          <ArticleListCard key={post.id} post={post} />
+          <ArticleListCard key={post.id} post={post} coverImageUrl={coverById[post.id]} />
         ))}
       </div>
     </section>
