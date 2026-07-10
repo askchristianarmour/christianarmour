@@ -146,7 +146,7 @@ export function PostCard({ post, canToggleComments }: Props) {
             className="ml-auto inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
           >
             Read Article
-            <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
+            <img src="/home/Arrow.svg" alt="" className="h-4 w-4 -rotate-45" />
           </Link>
         </div>
 

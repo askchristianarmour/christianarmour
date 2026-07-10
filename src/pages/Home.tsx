@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PostCard } from '../components/PostCard'
 import { CrossSpinner, LoadingGrid } from '../components/CrossLoader'
@@ -11,6 +11,11 @@ import { fetchTagCounts } from '../lib/posts'
 import { supabase } from '../lib/supabase'
 import { HomeSearchPanel } from '../components/HomeSearchPanel'
 import { ARTICLE_TAGS } from '../lib/tags'
+import {
+  buildArticlesBookPath,
+  NEW_TESTAMENT_BOOKS,
+  OLD_TESTAMENT_BOOKS,
+} from '../lib/bible-books'
 
 const HERO_CONTENT = {
   label: 'Latest Article',
@@ -23,25 +28,9 @@ const HERO_CONTENT = {
   readMins: 12,
 }
 
-const OLD_TESTAMENT_BOOKS = [
-  ['Genesis', 'GEN'],
-  ['Exodus', 'EXO'],
-  ['Leviticus', 'LEV'],
-  ['Numbers', 'NUM'],
-  ['Deuteronomy', 'DEU'],
-  ['Joshua', 'JOS'],
-  ['Judges', 'JDG'],
-  ['Ruth', 'RTH'],
-  ['1 Samuel', '1SA'],
-  ['2 Samuel', '2SA'],
-  ['1 Kings', '1KI'],
-  ['2 Kings', '2KI'],
-  ['Isaiah', 'ISA'],
-  ['Jeremiah', 'JER'],
-  ['Ezekiel', 'EZE'],
-] as const
-
 export function Home() {
+  const [testament, setTestament] = useState<'old' | 'new'>('old')
+  const browseBooks = testament === 'old' ? OLD_TESTAMENT_BOOKS : NEW_TESTAMENT_BOOKS
   const { user } = useAuth()
   useReplyNotificationToasts({ enabled: true, userId: user?.id })
   const queryClient = useQueryClient()
@@ -183,13 +172,13 @@ export function Home() {
                 </span>
               </div>
               <div className="mt-8">
-                <a
-                  href="#recent-articles"
+                <Link
+                  to="/articles"
                   className="inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
                 >
                   Read Article
                   <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -324,31 +313,41 @@ export function Home() {
           </p>
 
           <div className="mt-10 flex items-center gap-10 border-b border-white/15 text-sm">
-            <button type="button" className="border-b-2 border-[#c6a14d] pb-3 font-semibold text-[#c6a14d]">
+            <button
+              type="button"
+              onClick={() => setTestament('old')}
+              className={
+                testament === 'old'
+                  ? 'border-b-2 border-[#c6a14d] pb-3 font-semibold text-[#c6a14d]'
+                  : 'pb-3 font-semibold text-white/70 transition-colors hover:text-white'
+              }
+            >
               Old Testament
             </button>
-            <button type="button" className="pb-3 font-semibold text-white/70">
+            <button
+              type="button"
+              onClick={() => setTestament('new')}
+              className={
+                testament === 'new'
+                  ? 'border-b-2 border-[#c6a14d] pb-3 font-semibold text-[#c6a14d]'
+                  : 'pb-3 font-semibold text-white/70 transition-colors hover:text-white'
+              }
+            >
               New Testament
             </button>
           </div>
 
           <div className="mt-8 flex flex-wrap gap-x-5 gap-y-5">
-            {OLD_TESTAMENT_BOOKS.map(([book, code]) => (
-              <button
-                key={book}
-                type="button"
+            {browseBooks.map((book) => (
+              <Link
+                key={book.name}
+                to={buildArticlesBookPath(book.name)}
                 className="flex h-[88px] w-[236px] shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-[#B9C1CA] bg-white/10 p-4 text-center transition-colors hover:bg-white/[0.14]"
               >
-                <p className="font-serif text-xl leading-none text-white sm:text-2xl">{book}</p>
-                <p className="text-sm leading-none text-white/60">{code}</p>
-              </button>
+                <p className="font-serif text-xl leading-none text-white sm:text-2xl">{book.name}</p>
+                <p className="text-sm leading-none text-white/60">{book.code}</p>
+              </Link>
             ))}
-            <button
-              type="button"
-              className="flex h-[88px] w-[236px] shrink-0 flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#B9C1CA] bg-white/10 p-4 text-center font-serif text-xl text-white/90 transition-colors hover:bg-white/[0.14] sm:text-2xl"
-            >
-              + 24 more
-            </button>
           </div>
         </div>
       </section>

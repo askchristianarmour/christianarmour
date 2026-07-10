@@ -1,9 +1,7 @@
 import { ChevronDown, Filter } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { NEW_TESTAMENT_BOOKS, OLD_TESTAMENT_BOOKS } from '../lib/bible-books'
 import { ARTICLE_TAGS, type ArticleTagSlug } from '../lib/tags'
-
-const OLD_TESTAMENT_BOOKS = ['Genesis', 'Exodus', 'Leviticus', 'Deuteronomy']
-const NEW_TESTAMENT_BOOKS = ['Matthew', 'Mark', 'Luke', 'John']
 
 type Props = {
   keyword: string
@@ -52,13 +50,25 @@ function BookChecklist({
   books,
   selectedBooks,
   onBooksChange,
-  moreLabel,
+  previewCount = 4,
 }: {
-  books: string[]
+  books: readonly { name: string }[]
   selectedBooks: string[]
   onBooksChange: (books: string[]) => void
-  moreLabel: string
+  previewCount?: number
 }) {
+  const bookNames = books.map((book) => book.name)
+  const hasHiddenSelection = selectedBooks.some(
+    (book) => bookNames.includes(book) && bookNames.indexOf(book) >= previewCount,
+  )
+  const [expanded, setExpanded] = useState(hasHiddenSelection)
+  const remaining = books.length - previewCount
+  const visibleBooks = expanded ? books : books.slice(0, previewCount)
+
+  useEffect(() => {
+    if (hasHiddenSelection) setExpanded(true)
+  }, [hasHiddenSelection])
+
   const toggleBook = (book: string) => {
     if (selectedBooks.includes(book)) {
       onBooksChange(selectedBooks.filter((item) => item !== book))
@@ -69,20 +79,31 @@ function BookChecklist({
 
   return (
     <>
-      {books.map((book) => (
-        <label key={book} className="flex cursor-pointer items-center gap-2.5 text-sm text-slate-600">
-          <input
-            type="checkbox"
-            checked={selectedBooks.includes(book)}
-            onChange={() => toggleBook(book)}
-            className="h-4 w-4 rounded border-slate-300 text-[#1f2f3d] focus:ring-[#c6a14d]"
-          />
-          {book}
-        </label>
-      ))}
-      <button type="button" className="text-sm font-medium text-[#c6a14d] hover:text-[#a8863d]">
-        {moreLabel}
-      </button>
+      <div className={expanded ? 'max-h-56 space-y-2 overflow-y-auto pr-1' : 'space-y-2'}>
+        {visibleBooks.map((book) => (
+          <label
+            key={book.name}
+            className="flex cursor-pointer items-center gap-2.5 text-sm text-slate-600"
+          >
+            <input
+              type="checkbox"
+              checked={selectedBooks.includes(book.name)}
+              onChange={() => toggleBook(book.name)}
+              className="h-4 w-4 rounded border-slate-300 text-[#1f2f3d] focus:ring-[#c6a14d]"
+            />
+            {book.name}
+          </label>
+        ))}
+      </div>
+      {remaining > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="text-sm font-medium text-[#c6a14d] hover:text-[#a8863d]"
+        >
+          {expanded ? 'Show less' : `+ ${remaining} more`}
+        </button>
+      )}
     </>
   )
 }
@@ -143,21 +164,19 @@ export function ArticleFilterSidebar({
       </div>
 
       <div className="mt-6 space-y-4">
-        <FilterSection title="Old Testaments">
+        <FilterSection title="Old Testament">
           <BookChecklist
             books={OLD_TESTAMENT_BOOKS}
             selectedBooks={selectedBooks}
             onBooksChange={onBooksChange}
-            moreLabel="+ 30 more"
           />
         </FilterSection>
 
-        <FilterSection title="New Testaments">
+        <FilterSection title="New Testament">
           <BookChecklist
             books={NEW_TESTAMENT_BOOKS}
             selectedBooks={selectedBooks}
             onBooksChange={onBooksChange}
-            moreLabel="+ 23 more"
           />
         </FilterSection>
 

@@ -15,7 +15,7 @@ export const BrandedPasswordInput = forwardRef<HTMLInputElement, Props>(
           <input
             ref={ref}
             type={visible ? 'text' : 'password'}
-            className={`w-full border-0 border-b border-slate-300 bg-transparent py-2.5 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#1c2b3a] ${className}`}
+            className={`has-password-toggle w-full border-0 border-b border-slate-300 bg-transparent py-2.5 pr-10 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#1c2b3a] ${className}`}
             {...props}
           />
           <button

@@ -13,6 +13,7 @@ import { supabase } from '../lib/supabase'
 import { isArticleTagSlug, type ArticleTagSlug } from '../lib/tags'
 
 import { getReadingMinutes, getPlainTextFromContent } from '../lib/article-content'
+import { buildArticlesBooksParam, parseBookParam } from '../lib/bible-books'
 
 export function Articles() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -22,16 +23,21 @@ export function Articles() {
 
   const tagParam = searchParams.get('tag')
   const urlSearch = searchParams.get('search') ?? ''
+  const urlBooks = searchParams.get('book') ?? ''
   const selectedTag = tagParam && isArticleTagSlug(tagParam) ? tagParam : null
   const activeSearch = urlSearch.trim() || null
 
   const [keyword, setKeyword] = useState(urlSearch)
-  const [selectedBooks, setSelectedBooks] = useState<string[]>([])
+  const [selectedBooks, setSelectedBooks] = useState<string[]>(() => parseBookParam(urlBooks))
   const [readTimeMax, setReadTimeMax] = useState(60)
 
   useEffect(() => {
     setKeyword(urlSearch)
   }, [urlSearch])
+
+  useEffect(() => {
+    setSelectedBooks(parseBookParam(urlBooks))
+  }, [urlBooks])
 
   const {
     data,
@@ -61,23 +67,34 @@ export function Articles() {
     queryFn: fetchTotalPostCount,
   })
 
+  const syncParams = (next: {
+    tag?: ArticleTagSlug | null
+    search?: string | null
+    books?: string[]
+  }) => {
+    const params: Record<string, string> = {}
+    const tag = next.tag === undefined ? selectedTag : next.tag
+    const search = next.search === undefined ? activeSearch : next.search
+    const books = next.books === undefined ? selectedBooks : next.books
+    if (tag) params.tag = tag
+    if (search) params.search = search
+    const bookParam = buildArticlesBooksParam(books)
+    if (bookParam) params.book = bookParam
+    setSearchParams(params)
+  }
+
   const handleKeywordSelect = (value: string) => {
     setKeyword(value)
-    setSearchParams({ search: value.trim() })
+    syncParams({ search: value.trim(), tag: null })
   }
 
   const handleClearSearch = () => {
     setKeyword('')
-    const params: Record<string, string> = {}
-    if (selectedTag) params.tag = selectedTag
-    setSearchParams(params)
+    syncParams({ search: null })
   }
 
   const handleTagChange = (tag: ArticleTagSlug | null) => {
-    const params: Record<string, string> = {}
-    if (tag) params.tag = tag
-    if (activeSearch) params.search = activeSearch
-    setSearchParams(params)
+    syncParams({ tag, search: activeSearch })
   }
 
   const handleKeywordSubmit = (value: string) => {
@@ -87,7 +104,12 @@ export function Articles() {
       handleClearSearch()
       return
     }
-    setSearchParams({ search: trimmed })
+    syncParams({ search: trimmed, tag: null })
+  }
+
+  const handleBooksChange = (books: string[]) => {
+    setSelectedBooks(books)
+    syncParams({ books })
   }
 
   const handleReset = () => {
@@ -198,7 +220,7 @@ export function Articles() {
             selectedTag={selectedTag}
             onTagChange={handleTagChange}
             selectedBooks={selectedBooks}
-            onBooksChange={setSelectedBooks}
+            onBooksChange={handleBooksChange}
             readTimeMax={readTimeMax}
             onReadTimeMaxChange={setReadTimeMax}
             tagCounts={tagCounts}

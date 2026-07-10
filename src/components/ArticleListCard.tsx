@@ -84,7 +84,7 @@ export function ArticleListCard({ post }: Props) {
             <img
               src="/home/noverticalhorizontalarrowiconyellow.svg"
               alt=""
-              className="h-4 w-4 transition-transform group-hover/arrow:translate-x-0.5"
+              className="h-4 w-4 -rotate-45 transition-transform group-hover/arrow:translate-x-0.5 group-hover/arrow:-translate-y-0.5"
             />
           </Link>
         </div>
