@@ -18,6 +18,7 @@ import { logView } from '../lib/analytics'
 import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { fetchPostById } from '../lib/posts'
 import { absoluteUrl, SITE_NAME } from '../lib/seo'
+import { getTagBySlug } from '../lib/tags'
 import { supabase } from '../lib/supabase'
 
 type LocationState = {
@@ -203,7 +204,7 @@ export function ArticleDetail() {
     )
   }
 
-  const categoryLabel = post.tag?.trim() || 'Article'
+  const categoryLabel = getTagBySlug(post.tag)?.title || post.tag?.trim() || 'Article'
 
   return (
     <>
@@ -278,7 +279,7 @@ export function ArticleDetail() {
             </div>
 
             <div className="mt-8 max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">
+              <p className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
                 {categoryLabel}
               </p>
               <h1 className="mt-3 font-serif text-[40px] font-bold leading-none tracking-normal text-slate-900 sm:text-[48px]">

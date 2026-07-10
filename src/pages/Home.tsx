@@ -19,8 +19,8 @@ import {
 
 const HERO_CONTENT = {
   label: 'Latest Article',
-  titleLead: 'Dating',
-  titleRest: 'The Crucifixion Of Jesus Christ',
+  titleLine1: 'Dating The Crucifixion',
+  titleLine2: 'Of Jesus Christ',
   description:
     'A Comprehensive Examination Of Historical Evidence, Roman Records, And Jewish Sources To Determine The Most Probable Date Of Jesus\' Crucifixion.',
   author: 'Author Name',
@@ -144,20 +144,26 @@ export function Home() {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-white">
       <div className="relative">
-        <section className="overflow-hidden bg-white pb-20 sm:pb-24 lg:pb-28">
-          <div className="grid items-stretch gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="flex flex-col justify-start px-4 pb-10 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pb-14 lg:pt-12 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#c6a14d]">
+        <section className="relative overflow-hidden bg-white">
+          <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="relative z-10 flex flex-col justify-start px-4 pb-16 pt-6 sm:px-6 sm:pb-20 sm:pt-8 lg:px-8 lg:pb-24 lg:pt-10 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
+              <p className="font-sans text-[18px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
                 {HERO_CONTENT.label}
               </p>
-              <h1 className="mt-4 font-serif text-4xl leading-tight text-slate-900 sm:text-5xl lg:text-[4rem]">
-                <span className="border-b-2 border-[#c6a14d] pb-1">{HERO_CONTENT.titleLead}</span>{' '}
-                {HERO_CONTENT.titleRest}
+              <h1 className="mt-3 max-w-xl font-serif text-4xl leading-tight text-slate-900 sm:text-5xl lg:text-[4rem]">
+                <span className="block whitespace-nowrap">{HERO_CONTENT.titleLine1}</span>
+                <span className="relative mt-1 inline-block whitespace-nowrap pb-3">
+                  {HERO_CONTENT.titleLine2}
+                  <span
+                    className="absolute bottom-0 left-0 h-0.5 w-2/12 min-w-8 bg-[#D4AF37]"
+                    aria-hidden
+                  />
+                </span>
               </h1>
-              <p className="mt-6 max-w-xl text-base leading-8 text-slate-600">
+              <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
                 {HERO_CONTENT.description}
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500">
+              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500">
                 <span className="inline-flex items-center gap-2">
                   <img src="/home/account.svg" alt="" className="h-5 w-5" />
                   {HERO_CONTENT.author}
@@ -171,7 +177,7 @@ export function Home() {
                   {HERO_CONTENT.readMins} mins read
                 </span>
               </div>
-              <div className="mt-8">
+              <div className="mt-4">
                 <Link
                   to="/articles"
                   className="inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
@@ -182,7 +188,7 @@ export function Home() {
               </div>
             </div>
 
-            <div className="relative min-h-[360px] bg-slate-100 lg:min-h-[520px]">
+            <div className="relative min-h-[220px] bg-slate-100 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[52%] lg:min-h-0">
               <img
                 src="/home/background.svg"
                 alt="Christian Armour hero banner"
@@ -197,7 +203,7 @@ export function Home() {
         </section>
 
         <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-          <section className="-mt-64 grid gap-5 sm:-mt-72 sm:grid-cols-2 lg:-mt-80 xl:grid-cols-4">
+          <section className="-mt-12 grid gap-5 sm:-mt-16 sm:grid-cols-2 lg:-mt-20 xl:grid-cols-4">
             {ARTICLE_TAGS.map((category) => {
               const count = tagCounts?.[category.slug] ?? 0
 

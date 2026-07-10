@@ -76,20 +76,20 @@ export function PostCard({ post, canToggleComments }: Props) {
 
       <div className="p-6">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">
+          <p className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
             Recent Article
           </p>
           {tag && (
             <Link
               to={`/articles?tag=${tag.slug}`}
-              className="rounded-full bg-[#faf5e8] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#c6a14d] transition-colors hover:bg-[#f3e8c8]"
+              className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e]"
             >
               {tag.title}
             </Link>
           )}
         </div>
         <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-3 block">
-          <h2 className="font-serif text-3xl leading-tight text-slate-900 transition-colors hover:text-[#1c2b3a]">
+          <h2 className="font-serif text-[28px] font-semibold leading-none tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a]">
             {post.title}
           </h2>
         </Link>
@@ -105,13 +105,13 @@ export function PostCard({ post, canToggleComments }: Props) {
           Read more
         </Link>
 
-        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
-          <span className="inline-flex items-center gap-2">
-            <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4" />
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-[18px] font-normal leading-[26px] tracking-normal text-[#5F6368]">
+          <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
+            <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4 shrink-0" />
             {formattedDate}
           </span>
-          <span className="inline-flex items-center gap-2">
-            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4" />
+          <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
+            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4 shrink-0" />
             {getReadingMinutes(post.content)} mins read
           </span>
         </div>

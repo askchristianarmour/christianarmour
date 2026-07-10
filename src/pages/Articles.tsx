@@ -260,7 +260,7 @@ export function Articles() {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 justify-items-center gap-[12.21px] sm:grid-cols-2 sm:justify-items-start xl:grid-cols-3">
                   {filteredPosts.map((post) => (
                     <ArticleListCard key={post.id} post={post} />
                   ))}

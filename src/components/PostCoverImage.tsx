@@ -18,9 +18,9 @@ function CoverPlaceholder({
 }) {
   return (
     <div
-      className={`flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,#f7f2e8_0%,#f4efe7_45%,#e8e3d8_100%)] px-8 text-center ${className}`}
+      className={`flex w-full items-center justify-center bg-[linear-gradient(135deg,#f7f2e8_0%,#f4efe7_45%,#e8e3d8_100%)] px-8 text-center ${className}`}
     >
-      <h3 className={titleClassName}>{title}</h3>
+      <h3 className={`line-clamp-3 ${titleClassName}`}>{title}</h3>
     </div>
   )
 }

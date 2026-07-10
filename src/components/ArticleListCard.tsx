@@ -19,7 +19,7 @@ export function ArticleListCard({ post }: Props) {
     day: 'numeric',
   })
   const readMins = getReadingMinutes(post.content)
-  const excerpt = getExcerptFromContent(post.content, 160)
+  const excerpt = getExcerptFromContent(post.content, 120)
 
   const articleLinkState = {
     from: `${location.pathname}${location.search}`,
@@ -33,44 +33,46 @@ export function ArticleListCard({ post }: Props) {
   }, [post.id, post.content])
 
   return (
-    <article className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)] transition-shadow hover:shadow-[0_4px_12px_rgba(15,23,42,0.1),0_16px_40px_rgba(15,23,42,0.16)]">
-      <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
-        <PostCoverImage imageUrl={post.image_url} title={post.title} className="aspect-[16/10]" />
+    <article className="flex h-[388.51px] w-full max-w-[312.95px] shrink-0 flex-col overflow-hidden rounded-[12.21px] bg-white shadow-[0_3.05px_3.05px_rgba(0,0,0,0.15)]">
+      <Link
+        to={`/articles/${post.id}`}
+        state={articleLinkState}
+        className="block h-[168px] w-full shrink-0 overflow-hidden"
+      >
+        <PostCoverImage
+          imageUrl={post.image_url}
+          title={post.title}
+          className="h-full w-full"
+          titleClassName="font-serif text-2xl leading-tight text-slate-700"
+        />
       </Link>
 
-      <div className="p-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-[12.21px] p-[12.21px]">
         {tag && (
           <Link
             to={`/articles?tag=${tag.slug}`}
-            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#c6a14d] hover:text-[#a8863d]"
+            className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] hover:text-[#c49a2e]"
           >
             {tag.title}
           </Link>
         )}
 
-        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-2 block">
-          <h2 className="font-serif text-[1.65rem] leading-tight text-slate-900 transition-colors hover:text-[#1c2b3a]">
+        <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
+          <h2 className="line-clamp-2 font-serif text-[28px] font-semibold leading-none tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a]">
             {post.title}
           </h2>
         </Link>
 
-        <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-500">{excerpt}</p>
-        <Link
-          to={`/articles/${post.id}`}
-          state={articleLinkState}
-          className="mt-1 inline-block text-sm font-semibold text-slate-400 transition-colors hover:text-slate-600"
-        >
-          Read more
-        </Link>
+        <p className="line-clamp-2 text-sm leading-5 text-slate-500">{excerpt}</p>
 
-        <div className="mt-5 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-            <span className="inline-flex items-center gap-1.5">
-              <img src="/home/Calendar,Schedule.svg" alt="" className="h-3.5 w-3.5" />
+        <div className="mt-auto flex items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-sans text-[18px] font-normal leading-[26px] tracking-normal text-[#5F6368]">
+            <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
+              <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4 shrink-0" />
               {formattedDate}
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3.5 w-3.5" />
+            <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
+              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4 shrink-0" />
               {readMins} mins read
             </span>
           </div>
