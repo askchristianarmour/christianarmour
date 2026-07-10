@@ -143,27 +143,41 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
           Read more
         </Link>
 
+        {/* Compact mobile: date + time only */}
+        {compact && (
+          <div className="mt-2 flex items-center gap-1.5 overflow-hidden font-sans text-[10px] font-normal leading-none tracking-normal text-[#5F6368] sm:hidden">
+            <span className="inline-flex min-w-0 items-center gap-1">
+              <img src="/home/Calendar,Schedule.svg" alt="" className="h-3 w-3 shrink-0" />
+              <span className="truncate">{shortDate}</span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3 w-3 shrink-0" />
+              {readMins} mins
+            </span>
+          </div>
+        )}
+
+        {/* Full meta (single-col mobile + sm+) */}
         <div
           className={`font-sans font-normal tracking-normal text-[#5F6368] sm:mt-5 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:text-[18px] sm:leading-[26px] ${
             compact
-              ? 'mt-2 flex items-center gap-2 text-[10px] leading-none'
+              ? 'mt-3 hidden text-[11px] leading-4 sm:mt-5 sm:flex'
               : 'mt-3 flex flex-col gap-1 text-[11px] leading-4'
           }`}
         >
-          <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap sm:h-[26px] sm:gap-2">
+          <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
             <img
               src="/home/Calendar,Schedule.svg"
               alt=""
-              className="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
+              className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5"
             />
-            <span className={`truncate ${compact ? 'sm:hidden' : 'hidden'}`}>{shortDate}</span>
-            <span className={`truncate ${compact ? 'hidden sm:inline' : ''}`}>{longDate}</span>
+            <span className="truncate">{longDate}</span>
           </span>
-          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap sm:h-[26px] sm:gap-2">
+          <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
             <img
               src="/home/Alarm, Clock, Time.svg"
               alt=""
-              className="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
+              className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5"
             />
             {readMins} mins
           </span>
@@ -171,7 +185,7 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
 
         <div
           className={`flex items-center border-t border-slate-100 sm:mt-6 sm:flex-wrap sm:gap-3 sm:pt-5 ${
-            compact ? 'mt-2.5 gap-1 pt-2.5' : 'mt-3 flex-wrap gap-2 pt-3'
+            compact ? 'mt-2 gap-2 border-0 pt-0 sm:mt-6 sm:border-t sm:pt-5' : 'mt-3 flex-wrap gap-2 pt-3'
           }`}
         >
           <button
@@ -185,7 +199,7 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
                 : 'text-slate-500 hover:text-rose-600 sm:border-slate-200 sm:text-slate-600 sm:hover:border-rose-200'
             } ${
               compact
-                ? 'gap-0.5 rounded-md px-1 py-1 text-[10px]'
+                ? 'gap-0.5 p-0 text-[10px] sm:gap-2 sm:rounded-full sm:border sm:px-4 sm:py-2 sm:text-sm'
                 : 'gap-1.5 rounded-full border px-2.5 py-1.5 text-xs'
             } ${
               !compact && userLiked
@@ -206,7 +220,7 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
             aria-label="Comments"
             className={`inline-flex items-center font-medium text-slate-500 transition-colors hover:text-slate-800 sm:gap-2 sm:rounded-full sm:border sm:border-slate-200 sm:px-4 sm:py-2 sm:text-sm sm:text-slate-600 sm:hover:border-slate-300 sm:hover:text-slate-900 ${
               compact
-                ? 'gap-0.5 rounded-md px-1 py-1 text-[10px]'
+                ? 'gap-0.5 p-0 text-[10px]'
                 : 'gap-1.5 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600'
             }`}
           >
@@ -215,24 +229,11 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
             {post.comments.length}
           </Link>
 
-          {/* Compact mobile CTA */}
-          {compact && (
-            <Link
-              to={`/articles/${post.id}`}
-              state={articleLinkState}
-              className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1f2f3d] text-white transition-colors hover:bg-[#182633] sm:hidden"
-              aria-label={`Read ${post.title}`}
-            >
-              <img src="/home/Arrow.svg" alt="" className="h-3 w-3 -rotate-45 brightness-0 invert" />
-            </Link>
-          )}
-
-          {/* Full CTA (always on sm+; also on mobile when not compact) */}
           <Link
             to={`/articles/${post.id}`}
             state={articleLinkState}
             className={`ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#1f2f3d] px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#182633] sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm ${
-              compact ? 'hidden sm:inline-flex' : ''
+              compact ? 'px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm' : ''
             }`}
           >
             <span className="sm:hidden">Read</span>
