@@ -146,49 +146,49 @@ export function Home() {
       <div className="relative">
         <section className="relative overflow-hidden bg-white">
           <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="relative z-10 flex flex-col justify-start px-4 pb-24 pt-6 sm:px-6 sm:pb-28 sm:pt-8 lg:px-8 lg:pb-32 lg:pt-10 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
-              <p className="font-sans text-[18px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
+            <div className="relative z-10 flex flex-col justify-start px-4 pb-16 pt-5 sm:px-6 sm:pb-28 sm:pt-8 lg:px-8 lg:pb-32 lg:pt-10 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
+              <p className="font-sans text-[13px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[18px]">
                 {HERO_CONTENT.label}
               </p>
-              <h1 className="mt-3 max-w-xl font-serif text-4xl leading-tight text-slate-900 sm:text-5xl lg:text-[4rem]">
-                <span className="block whitespace-nowrap">{HERO_CONTENT.titleLine1}</span>
-                <span className="relative mt-1 inline-block whitespace-nowrap pb-3">
+              <h1 className="mt-2.5 max-w-xl font-serif text-[1.75rem] leading-[1.15] text-slate-900 sm:mt-3 sm:text-5xl sm:leading-tight lg:text-[4rem]">
+                <span className="block sm:whitespace-nowrap">{HERO_CONTENT.titleLine1}</span>
+                <span className="relative mt-1 inline-block pb-2 sm:whitespace-nowrap sm:pb-3">
                   {HERO_CONTENT.titleLine2}
                   <span
-                    className="absolute bottom-0 left-0 h-0.5 w-2/12 min-w-8 bg-[#D4AF37]"
+                    className="absolute bottom-0 left-0 h-0.5 w-2/12 min-w-6 bg-[#D4AF37] sm:min-w-8"
                     aria-hidden
                   />
                 </span>
               </h1>
-              <p className="mt-4 max-w-xl text-base leading-7 text-slate-600">
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
                 {HERO_CONTENT.description}
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-500">
-                <span className="inline-flex items-center gap-2">
-                  <img src="/home/account.svg" alt="" className="h-5 w-5" />
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 sm:mt-4 sm:gap-x-6 sm:gap-y-3 sm:text-sm">
+                <span className="inline-flex items-center gap-1.5 sm:gap-2">
+                  <img src="/home/account.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
                   {HERO_CONTENT.author}
                 </span>
-                <span className="inline-flex items-center gap-2">
-                  <img src="/home/Calendar,Schedule.svg" alt="" className="h-5 w-5" />
+                <span className="inline-flex items-center gap-1.5 sm:gap-2">
+                  <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
                   {HERO_CONTENT.date}
                 </span>
-                <span className="inline-flex items-center gap-2">
-                  <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-5 w-5" />
+                <span className="inline-flex items-center gap-1.5 sm:gap-2">
+                  <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
                   {HERO_CONTENT.readMins} mins read
                 </span>
               </div>
-              <div className="mt-4">
+              <div className="mt-4 sm:mt-4">
                 <Link
                   to="/articles"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#1f2f3d] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#182633] sm:rounded-xl sm:px-5 sm:py-3"
                 >
                   Read Article
-                  <img src="/home/Arrow.svg" alt="" className="h-4 w-4" />
+                  <img src="/home/Arrow.svg" alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Link>
               </div>
             </div>
 
-            <div className="relative min-h-[220px] bg-slate-100 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[52%] lg:min-h-0">
+            <div className="relative order-first min-h-[180px] bg-slate-100 sm:order-none sm:min-h-[220px] lg:absolute lg:inset-y-0 lg:right-0 lg:w-[52%] lg:min-h-0">
               <img
                 src="/home/background.svg"
                 alt="Christian Armour hero banner"
@@ -203,7 +203,7 @@ export function Home() {
         </section>
 
         <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-          <section className="-mt-12 grid gap-5 sm:-mt-16 sm:grid-cols-2 lg:-mt-20 xl:grid-cols-4">
+          <section className="-mt-8 grid gap-3 sm:-mt-16 sm:grid-cols-2 sm:gap-5 lg:-mt-20 xl:grid-cols-4">
             {ARTICLE_TAGS.map((category) => {
               const count = tagCounts?.[category.slug] ?? 0
 
@@ -211,19 +211,21 @@ export function Home() {
                 <Link
                   key={category.slug}
                   to={`/articles?tag=${category.slug}`}
-                  className="group rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)]"
+                  className="group rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)] sm:rounded-[26px] sm:p-6"
                 >
-                  <img src={category.icon} alt="" className="h-12 w-12" />
-                  <h2 className="mt-5 font-serif text-[2rem] leading-tight text-slate-900">
+                  <img src={category.icon} alt="" className="h-9 w-9 sm:h-12 sm:w-12" />
+                  <h2 className="mt-3 font-serif text-2xl leading-tight text-slate-900 sm:mt-5 sm:text-[2rem]">
                     {category.title}
                   </h2>
-                  <p className="mt-3 text-sm leading-7 text-slate-500">{category.description}</p>
-                  <div className="mt-5 flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-700">
+                  <p className="mt-2 text-xs leading-5 text-slate-500 sm:mt-3 sm:text-sm sm:leading-7">
+                    {category.description}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between sm:mt-5">
+                    <span className="text-xs font-medium text-slate-700 sm:text-sm">
                       {count} {count === 1 ? 'Article' : 'Articles'}
                     </span>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40">
-                      <img src="/home/noverticalhorizontalarrowiconyellow.svg" alt="" className="h-4 w-4" />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40 sm:h-9 sm:w-9">
+                      <img src="/home/noverticalhorizontalarrowiconyellow.svg" alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </span>
                   </div>
                 </Link>

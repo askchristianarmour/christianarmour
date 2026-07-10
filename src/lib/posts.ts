@@ -114,6 +114,25 @@ export async function fetchPostsPageByTag(
   }
 }
 
+export async function fetchRelatedPostsByTag(
+  tag: ArticleTagSlug,
+  excludePostId: string,
+  limit = 3
+): Promise<PostWithMeta[]> {
+  const { data: posts, error } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('tag', tag)
+    .neq('id', excludePostId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  if (!posts || posts.length === 0) return []
+
+  return hydratePosts(posts)
+}
+
 export async function fetchTotalPostCount(): Promise<number> {
   const { count, error } = await supabase
     .from('posts')

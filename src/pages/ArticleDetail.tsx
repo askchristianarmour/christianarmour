@@ -8,6 +8,7 @@ import { AuthRequiredModal } from '../components/AuthRequiredModal'
 import { CommentSection } from '../components/CommentSection'
 import { PageLoader } from '../components/CrossLoader'
 import { PostCoverImage } from '../components/PostCoverImage'
+import { RelatedArticles } from '../components/RelatedArticles'
 import { Seo } from '../components/Seo'
 import { ShareArticleModal } from '../components/ShareArticleModal'
 import { useToast } from '../contexts/ToastContext'
@@ -301,6 +302,8 @@ export function ArticleDetail() {
               <ArticleContent content={post.content} className="mt-8" showPageNav />
             </div>
           </article>
+
+          <RelatedArticles postId={post.id} tag={post.tag} />
 
           <CommentSection
             comments={post.comments}

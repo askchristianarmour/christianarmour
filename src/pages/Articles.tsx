@@ -212,7 +212,7 @@ export function Articles() {
       </section>
 
       <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <div className="grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="grid items-start gap-4 sm:gap-8 lg:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)]">
           <ArticleFilterSidebar
             keyword={keyword}
             onKeywordChange={setKeyword}
