@@ -146,7 +146,7 @@ export function Home() {
       <div className="relative">
         <section className="relative overflow-hidden bg-white">
           <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="relative z-10 flex flex-col justify-start px-4 pb-16 pt-6 sm:px-6 sm:pb-20 sm:pt-8 lg:px-8 lg:pb-24 lg:pt-10 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
+            <div className="relative z-10 flex flex-col justify-start px-4 pb-24 pt-6 sm:px-6 sm:pb-28 sm:pt-8 lg:px-8 lg:pb-32 lg:pt-10 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
               <p className="font-sans text-[18px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
                 {HERO_CONTENT.label}
               </p>
