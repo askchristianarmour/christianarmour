@@ -170,6 +170,54 @@ export async function fetchPostById(postId: string): Promise<PostWithMeta | null
   return hydratedPost ?? null
 }
 
+export type PostSummary = {
+  id: string
+  title: string
+  tag: string | null
+  created_at: string
+}
+
+export async function fetchPostSummaries(
+  search = '',
+  options?: { limit?: number; excludeId?: string | null }
+): Promise<PostSummary[]> {
+  const limit = options?.limit ?? 40
+  let query = supabase
+    .from('posts')
+    .select('id, title, tag, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (options?.excludeId) {
+    query = query.neq('id', options.excludeId)
+  }
+
+  const term = search.trim()
+  if (term) {
+    const pattern = `%${escapeIlikePattern(term)}%`
+    query = query.ilike('title', pattern)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []) as PostSummary[]
+}
+
+export async function fetchPostSummariesByIds(ids: string[]): Promise<PostSummary[]> {
+  const uniqueIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))]
+  if (uniqueIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title, tag, created_at')
+    .in('id', uniqueIds)
+
+  if (error) throw error
+
+  const byId = new Map((data ?? []).map((post) => [post.id, post as PostSummary]))
+  return uniqueIds.map((id) => byId.get(id)).filter((post): post is PostSummary => Boolean(post))
+}
+
 export async function updatePost(
   postId: string,
   payload: {

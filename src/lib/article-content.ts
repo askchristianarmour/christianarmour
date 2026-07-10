@@ -2,7 +2,7 @@ import DOMPurify from 'dompurify'
 import { getStructuredPlainText, isStructuredArticleContent, parseArticleContent } from './article-structure'
 
 const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'span']
-const ALLOWED_ATTR = ['data-keyword', 'class']
+const ALLOWED_ATTR = ['data-keyword', 'data-article-ids', 'class']
 
 export function isHtmlContent(content: string) {
   return /<[a-z][\s\S]*>/i.test(content)
@@ -43,4 +43,16 @@ export function sanitizeArticleHtml(html: string) {
 
 export function buildArticlesSearchUrl(keyword: string) {
   return `/articles?search=${encodeURIComponent(keyword.trim())}`
+}
+
+export function buildArticlePath(articleId: string) {
+  return `/articles/${articleId}`
+}
+
+export function parseLinkedArticleIds(value: string | null | undefined): string[] {
+  if (!value) return []
+  return value
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean)
 }

@@ -1,10 +1,17 @@
 import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+  LinkedArticleHoverToast,
+  type LinkedHoverTarget,
+} from './LinkedArticleHoverToast'
+import { LinkedArticlesModal } from './LinkedArticlesModal'
 import { useRefTagger } from '../hooks/useRefTagger'
 import {
+  buildArticlePath,
   buildArticlesSearchUrl,
   isHtmlContent,
+  parseLinkedArticleIds,
   sanitizeArticleHtml,
 } from '../lib/article-content'
 import { parseArticleContent, type ArticlePage } from '../lib/article-structure'
@@ -15,29 +22,88 @@ type Props = {
   showPageNav?: boolean
 }
 
-function PageBody({ body, onKeywordClick }: { body: string; onKeywordClick: (keyword: string) => void }) {
+type ArticleLinkTarget = {
+  articleIds: string[]
+  keyword: string | null
+}
+
+function PageBody({
+  body,
+  onArticleLinkClick,
+  onArticleLinkHover,
+}: {
+  body: string
+  onArticleLinkClick: (target: ArticleLinkTarget) => void
+  onArticleLinkHover: (target: LinkedHoverTarget | null) => void
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const hideTimerRef = useRef<number | null>(null)
 
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
 
+    const clearHideTimer = () => {
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current)
+        hideTimerRef.current = null
+      }
+    }
+
     const handleClick = (event: MouseEvent) => {
-      const target = (event.target as HTMLElement).closest('[data-keyword]')
+      const target = (event.target as HTMLElement).closest(
+        '[data-article-ids], [data-keyword]'
+      ) as HTMLElement | null
       if (!target) return
 
       if ((event.target as HTMLElement).closest('.rtBibleRef')) return
 
       event.preventDefault()
-      const keyword = target.getAttribute('data-keyword')
-      if (!keyword) return
+      onArticleLinkHover(null)
+      onArticleLinkClick({
+        articleIds: parseLinkedArticleIds(target.getAttribute('data-article-ids')),
+        keyword: target.getAttribute('data-keyword'),
+      })
+    }
 
-      onKeywordClick(keyword)
+    const handlePointerOver = (event: Event) => {
+      const pointerEvent = event as globalThis.PointerEvent
+      const target = (pointerEvent.target as HTMLElement).closest(
+        '[data-article-ids], [data-keyword]'
+      ) as HTMLElement | null
+      if (!target) return
+      if ((pointerEvent.target as HTMLElement).closest('.rtBibleRef')) return
+
+      clearHideTimer()
+      onArticleLinkHover({
+        articleIds: parseLinkedArticleIds(target.getAttribute('data-article-ids')),
+        keyword: target.getAttribute('data-keyword'),
+        rect: target.getBoundingClientRect(),
+      })
+    }
+
+    const handlePointerOut = (event: Event) => {
+      const pointerEvent = event as globalThis.PointerEvent
+      const related = pointerEvent.relatedTarget as HTMLElement | null
+      const stillInsideLink = related?.closest?.('[data-article-ids], [data-keyword]')
+      if (stillInsideLink && container.contains(stillInsideLink)) return
+
+      clearHideTimer()
+      hideTimerRef.current = window.setTimeout(() => {
+        onArticleLinkHover(null)
+      }, 80)
     }
 
     container.addEventListener('click', handleClick)
-    return () => container.removeEventListener('click', handleClick)
-  }, [body, onKeywordClick])
+    container.addEventListener('pointerover', handlePointerOver)
+    container.addEventListener('pointerout', handlePointerOut)
+    return () => {
+      clearHideTimer()
+      container.removeEventListener('click', handleClick)
+      container.removeEventListener('pointerover', handlePointerOver)
+      container.removeEventListener('pointerout', handlePointerOut)
+    }
+  }, [body, onArticleLinkClick, onArticleLinkHover])
 
   if (!isHtmlContent(body)) {
     return (
@@ -57,12 +123,14 @@ function PageBody({ body, onKeywordClick }: { body: string; onKeywordClick: (key
 function ArticlePagePanel({
   page,
   index,
-  onKeywordClick,
+  onArticleLinkClick,
+  onArticleLinkHover,
   inert = false,
 }: {
   page: ArticlePage
   index: number
-  onKeywordClick: (keyword: string) => void
+  onArticleLinkClick: (target: ArticleLinkTarget) => void
+  onArticleLinkHover: (target: LinkedHoverTarget | null) => void
   inert?: boolean
 }) {
   return (
@@ -86,7 +154,11 @@ function ArticlePagePanel({
 
       {getPlainBody(page.body) && (
         <div className="mt-5">
-          <PageBody body={page.body} onKeywordClick={onKeywordClick} />
+          <PageBody
+            body={page.body}
+            onArticleLinkClick={onArticleLinkClick}
+            onArticleLinkHover={onArticleLinkHover}
+          />
         </div>
       )}
 
@@ -165,6 +237,9 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
   const turnTimerRef = useRef<number | null>(null)
   const swipeRef = useRef<{ x: number; y: number; pointerId: number } | null>(null)
 
+  const [linkedArticleIds, setLinkedArticleIds] = useState<string[] | null>(null)
+  const [hoverTarget, setHoverTarget] = useState<LinkedHoverTarget | null>(null)
+
   useRefTagger([content, pageIndex, turningLeaf?.page.id])
 
   useEffect(() => {
@@ -188,8 +263,18 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
     return () => window.removeEventListener('hashchange', onHashChange)
   }, [content])
 
-  const handleKeywordClick = (keyword: string) => {
-    navigate(buildArticlesSearchUrl(keyword))
+  const handleArticleLinkClick = (target: ArticleLinkTarget) => {
+    if (target.articleIds.length === 1) {
+      navigate(buildArticlePath(target.articleIds[0]))
+      return
+    }
+    if (target.articleIds.length > 1) {
+      setLinkedArticleIds(target.articleIds)
+      return
+    }
+    if (target.keyword?.trim()) {
+      navigate(buildArticlesSearchUrl(target.keyword))
+    }
   }
 
   const goToPage = (nextIndex: number, direction: 'next' | 'prev') => {
@@ -327,7 +412,8 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
               <ArticlePagePanel
                 page={currentPage}
                 index={pageIndex}
-                onKeywordClick={handleKeywordClick}
+                onArticleLinkClick={handleArticleLinkClick}
+                onArticleLinkHover={setHoverTarget}
               />
             </div>
 
@@ -348,7 +434,8 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
                 <ArticlePagePanel
                   page={turningLeaf.page}
                   index={turningLeaf.index}
-                  onKeywordClick={handleKeywordClick}
+                  onArticleLinkClick={handleArticleLinkClick}
+                  onArticleLinkHover={() => {}}
                   inert
                 />
               </div>
@@ -384,6 +471,15 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
           </button>
         </div>
       )}
+
+      {linkedArticleIds && linkedArticleIds.length > 0 && (
+        <LinkedArticlesModal
+          articleIds={linkedArticleIds}
+          onClose={() => setLinkedArticleIds(null)}
+        />
+      )}
+
+      <LinkedArticleHoverToast target={hoverTarget} />
     </div>
   )
 }

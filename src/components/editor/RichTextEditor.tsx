@@ -9,15 +9,17 @@ import {
   Heading2,
   Unlink,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../../contexts/ToastContext'
-import { KeywordLink } from './KeywordLinkExtension'
+import { ArticleLinkPickerModal } from './ArticleLinkPickerModal'
+import { KeywordLink, parseArticleIdsAttr } from './KeywordLinkExtension'
 
 type Props = {
   value: string
   onChange: (html: string) => void
   placeholder?: string
   minHeightClassName?: string
+  excludePostId?: string | null
 }
 
 export function RichTextEditor({
@@ -25,10 +27,13 @@ export function RichTextEditor({
   onChange,
   placeholder = 'Write your article...',
   minHeightClassName = 'min-h-[280px]',
+  excludePostId = null,
 }: Props) {
   const { info: toastInfo } = useToast()
-  const [keywordInput, setKeywordInput] = useState('')
-  const [showKeywordModal, setShowKeywordModal] = useState(false)
+  const [selectedText, setSelectedText] = useState('')
+  const [initialSelectedIds, setInitialSelectedIds] = useState<string[]>([])
+  const [showArticlePicker, setShowArticlePicker] = useState(false)
+  const savedSelectionRef = useRef<{ from: number; to: number } | null>(null)
 
   const editor = useEditor({
     extensions: [StarterKit, KeywordLink],
@@ -51,26 +56,39 @@ export function RichTextEditor({
     }
   }, [editor, value])
 
-  const openKeywordModal = () => {
+  const openArticlePicker = () => {
     if (!editor) return
-    const selected = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to,
-      ' '
-    )
+    const { from, to } = editor.state.selection
+    const selected = editor.state.doc.textBetween(from, to, ' ')
     if (!selected.trim()) {
-      toastInfo('Select the word or phrase you want to link to related articles.')
+      toastInfo('Select the word or phrase you want to link to articles.')
       return
     }
-    setKeywordInput(selected.trim())
-    setShowKeywordModal(true)
+
+    const attrs = editor.getAttributes('keywordLink')
+    savedSelectionRef.current = { from, to }
+    setSelectedText(selected.trim())
+    setInitialSelectedIds(parseArticleIdsAttr(attrs.articleIds))
+    setShowArticlePicker(true)
   }
 
-  const applyKeywordLink = () => {
-    if (!editor || !keywordInput.trim()) return
-    editor.chain().focus().setKeywordLink(keywordInput.trim()).run()
-    setShowKeywordModal(false)
-    setKeywordInput('')
+  const applyArticleLink = (articleIds: string[]) => {
+    if (!editor || articleIds.length === 0) return
+    const selection = savedSelectionRef.current
+    const chain = editor.chain().focus()
+    if (selection) {
+      chain.setTextSelection(selection)
+    }
+    chain
+      .setKeywordLink({
+        articleIds,
+        keyword: selectedText || null,
+      })
+      .run()
+    savedSelectionRef.current = null
+    setShowArticlePicker(false)
+    setSelectedText('')
+    setInitialSelectedIds([])
   }
 
   if (!editor) return null
@@ -117,9 +135,9 @@ export function RichTextEditor({
         <span className="mx-1 h-6 w-px bg-slate-200" />
 
         <ToolbarButton
-          onClick={openKeywordModal}
+          onClick={openArticlePicker}
           active={editor.isActive('keywordLink')}
-          label="Link to related articles"
+          label="Link to articles"
           className="gap-1.5 px-3 text-xs font-semibold text-[#a8863d]"
         >
           <Link2 size={15} />
@@ -136,37 +154,17 @@ export function RichTextEditor({
 
       <EditorContent editor={editor} data-placeholder={placeholder} />
 
-      {showKeywordModal && (
-        <div className="border-t border-slate-100 bg-[#faf8f4] px-4 py-4">
-          <p className="text-sm font-semibold text-slate-800">Link to related articles</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Readers who click this text will see all articles containing this keyword.
-          </p>
-          <input
-            type="text"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-            className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-[#c6a14d]/50"
-            placeholder="Search keyword, e.g. covenant"
-          />
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setShowKeywordModal(false)}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={applyKeywordLink}
-              className="rounded-lg bg-[#1f2f3d] px-3 py-1.5 text-sm font-medium text-white"
-            >
-              Apply link
-            </button>
-          </div>
-        </div>
-      )}
+      <ArticleLinkPickerModal
+        open={showArticlePicker}
+        selectedText={selectedText}
+        initialSelectedIds={initialSelectedIds}
+        excludePostId={excludePostId}
+        onClose={() => {
+          setShowArticlePicker(false)
+          savedSelectionRef.current = null
+        }}
+        onApply={applyArticleLink}
+      />
     </div>
   )
 }

@@ -454,7 +454,11 @@ export function WritePost() {
               Organize your article into pages with descriptions, rich text, and Bible passages.
             </p>
             <div className="mt-2">
-              <ArticlePagesEditor value={postContent} onChange={setPostContent} />
+              <ArticlePagesEditor
+                value={postContent}
+                onChange={setPostContent}
+                excludePostId={editPostId}
+              />
             </div>
           </div>
 

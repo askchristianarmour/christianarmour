@@ -16,9 +16,10 @@ import {
 type Props = {
   value: string
   onChange: (serialized: string) => void
+  excludePostId?: string | null
 }
 
-export function ArticlePagesEditor({ value, onChange }: Props) {
+export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Props) {
   const [structured, setStructured] = useState<StructuredArticleContent>(() =>
     value ? parseArticleContent(value) : createDefaultArticleContent()
   )
@@ -212,7 +213,8 @@ export function ArticlePagesEditor({ value, onChange }: Props) {
                 <div>
                   <label className="block text-sm font-semibold text-slate-700">Page content</label>
                   <p className="mt-1 text-xs text-slate-500">
-                    Select text and use <strong>Link articles</strong> to connect words to related
+                    Select text and use <strong>Link articles</strong> to connect that phrase to
+                    specific existing articles. Readers who click it open only those linked
                     articles. Add Bible references at the end of a line (e.g. John 3:16 or Matt
                     21:34) — they appear in red and open a Scripture preview when readers click
                     them.
@@ -222,6 +224,7 @@ export function ArticlePagesEditor({ value, onChange }: Props) {
                       value={page.body}
                       onChange={(html) => updatePage(page.id, { body: html })}
                       minHeightClassName="min-h-[220px]"
+                      excludePostId={excludePostId}
                     />
                   </div>
                 </div>
