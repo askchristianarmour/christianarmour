@@ -30,10 +30,12 @@ const HERO_CONTENT = {
 }
 
 const MOBILE_BOOK_PREVIEW = 9
+const MOBILE_ARTICLE_PREVIEW = 5
 
 export function Home() {
   const [testament, setTestament] = useState<'old' | 'new'>('old')
   const [booksExpanded, setBooksExpanded] = useState(false)
+  const [mobileArticlesExpanded, setMobileArticlesExpanded] = useState(false)
   const browseBooks = testament === 'old' ? OLD_TESTAMENT_BOOKS : NEW_TESTAMENT_BOOKS
   const hasMoreBooks = browseBooks.length > MOBILE_BOOK_PREVIEW
   const { user } = useAuth()
@@ -244,17 +246,50 @@ export function Home() {
             <p className="text-center text-slate-500">No posts yet.</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-6 md:gap-8 xl:grid-cols-3">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} canToggleComments={canManage} />
+              <div
+                className={`grid gap-3 sm:gap-6 md:gap-8 xl:grid-cols-3 ${
+                  mobileArticlesExpanded ? 'grid-cols-2' : 'grid-cols-1'
+                } sm:grid-cols-2`}
+              >
+                {posts.map((post, index) => (
+                  <div
+                    key={post.id}
+                    className={
+                      index >= MOBILE_ARTICLE_PREVIEW && !mobileArticlesExpanded
+                        ? 'hidden sm:block'
+                        : undefined
+                    }
+                  >
+                    <PostCard post={post} canToggleComments={canManage} />
+                  </div>
                 ))}
               </div>
-              <ArticlesPagination
-                loadedCount={posts.length}
-                hasNextPage={Boolean(hasNextPage)}
-                isFetchingNextPage={isFetchingNextPage}
-                onLoadMore={() => void fetchNextPage()}
-              />
+
+              {!mobileArticlesExpanded &&
+                (posts.length > MOBILE_ARTICLE_PREVIEW || hasNextPage) && (
+                  <div className="mt-8 flex justify-center sm:hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileArticlesExpanded(true)
+                        if (hasNextPage) void fetchNextPage()
+                      }}
+                      disabled={isFetchingNextPage}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      View more
+                    </button>
+                  </div>
+                )}
+
+              <div className={mobileArticlesExpanded ? 'block' : 'hidden sm:block'}>
+                <ArticlesPagination
+                  loadedCount={posts.length}
+                  hasNextPage={Boolean(hasNextPage)}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onLoadMore={() => void fetchNextPage()}
+                />
+              </div>
             </>
           )}
         </section>

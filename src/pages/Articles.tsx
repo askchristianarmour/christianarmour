@@ -16,6 +16,8 @@ import { isArticleTagSlug, type ArticleTagSlug } from '../lib/tags'
 import { getReadingMinutes, getPlainTextFromContent } from '../lib/article-content'
 import { buildArticlesBooksParam, parseBookParam } from '../lib/bible-books'
 
+const MOBILE_ARTICLE_PREVIEW = 5
+
 export function Articles() {
   const [searchParams, setSearchParams] = useSearchParams()
   const queryClient = useQueryClient()
@@ -30,6 +32,7 @@ export function Articles() {
   const [keyword, setKeyword] = useState(urlSearch)
   const [selectedBooks, setSelectedBooks] = useState<string[]>(() => parseBookParam(urlBooks))
   const [readTimeMax, setReadTimeMax] = useState(60)
+  const [mobileArticlesExpanded, setMobileArticlesExpanded] = useState(false)
 
   useEffect(() => {
     setKeyword(urlSearch)
@@ -38,6 +41,10 @@ export function Articles() {
   useEffect(() => {
     setSelectedBooks(parseBookParam(urlBooks))
   }, [urlBooks])
+
+  useEffect(() => {
+    setMobileArticlesExpanded(false)
+  }, [selectedTag, activeSearch, urlBooks, readTimeMax])
 
   const {
     data,
@@ -241,17 +248,50 @@ export function Articles() {
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] xl:grid-cols-3">
-                    {filteredPosts.map((post) => (
-                      <ArticleListCard key={post.id} post={post} />
+                  <div
+                    className={`grid justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] xl:grid-cols-3 ${
+                      mobileArticlesExpanded ? 'grid-cols-2' : 'grid-cols-1'
+                    } sm:grid-cols-2`}
+                  >
+                    {filteredPosts.map((post, index) => (
+                      <div
+                        key={post.id}
+                        className={
+                          index >= MOBILE_ARTICLE_PREVIEW && !mobileArticlesExpanded
+                            ? 'hidden w-full sm:block'
+                            : 'w-full'
+                        }
+                      >
+                        <ArticleListCard post={post} />
+                      </div>
                     ))}
                   </div>
-                  <ArticlesPagination
-                    loadedCount={filteredPosts.length}
-                    hasNextPage={Boolean(hasNextPage)}
-                    isFetchingNextPage={isFetchingNextPage}
-                    onLoadMore={() => void fetchNextPage()}
-                  />
+
+                  {!mobileArticlesExpanded &&
+                    (filteredPosts.length > MOBILE_ARTICLE_PREVIEW || hasNextPage) && (
+                      <div className="mt-8 flex justify-center sm:hidden">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileArticlesExpanded(true)
+                            if (hasNextPage) void fetchNextPage()
+                          }}
+                          disabled={isFetchingNextPage}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          View more
+                        </button>
+                      </div>
+                    )}
+
+                  <div className={mobileArticlesExpanded ? 'block' : 'hidden sm:block'}>
+                    <ArticlesPagination
+                      loadedCount={filteredPosts.length}
+                      hasNextPage={Boolean(hasNextPage)}
+                      isFetchingNextPage={isFetchingNextPage}
+                      onLoadMore={() => void fetchNextPage()}
+                    />
+                  </div>
                 </>
               )}
             </section>
