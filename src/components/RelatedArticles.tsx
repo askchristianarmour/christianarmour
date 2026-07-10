@@ -42,7 +42,7 @@ export function RelatedArticles({ postId, tag }: Props) {
         </Link>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 justify-items-center gap-[12.21px] sm:grid-cols-2 sm:justify-items-start lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] lg:grid-cols-3">
         {relatedPosts.map((post) => (
           <ArticleListCard key={post.id} post={post} />
         ))}

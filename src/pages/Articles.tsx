@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { ArticleFilterSidebar } from '../components/ArticleFilterSidebar'
 import { ArticleListCard } from '../components/ArticleListCard'
 import { ArticleSearchKeywords } from '../components/ArticleSearchKeywords'
-import { CrossSpinner, LoadingGrid } from '../components/CrossLoader'
+import { ArticlesPagination } from '../components/ArticlesPagination'
+import { LoadingGrid } from '../components/CrossLoader'
 import { SiteFooter } from '../components/SiteFooter'
 import { useToast } from '../contexts/ToastContext'
 import { useFilteredPosts } from '../hooks/useFilteredPosts'
@@ -18,7 +19,6 @@ import { buildArticlesBooksParam, parseBookParam } from '../lib/bible-books'
 export function Articles() {
   const [searchParams, setSearchParams] = useSearchParams()
   const queryClient = useQueryClient()
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
   const { error: toastError } = useToast()
 
   const tagParam = searchParams.get('tag')
@@ -136,26 +136,6 @@ export function Articles() {
     }
   }, [queryClient])
 
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    const currentSentinel = sentinelRef.current
-    if (currentSentinel) observer.observe(currentSentinel)
-
-    return () => {
-      if (currentSentinel) observer.unobserve(currentSentinel)
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, selectedTag, activeSearch])
-
   const posts = data?.pages.flatMap((page) => page.posts) ?? []
 
   const filteredPosts = useMemo(() => {
@@ -260,19 +240,19 @@ export function Articles() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 justify-items-center gap-[12.21px] sm:grid-cols-2 sm:justify-items-start xl:grid-cols-3">
-                  {filteredPosts.map((post) => (
-                    <ArticleListCard key={post.id} post={post} />
-                  ))}
-                </div>
-              )}
-
-              <div ref={sentinelRef} className="h-10" />
-              {isFetchingNextPage && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-slate-500">
-                  <CrossSpinner size="xs" />
-                  Loading more articles...
-                </div>
+                <>
+                  <div className="grid grid-cols-2 justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] xl:grid-cols-3">
+                    {filteredPosts.map((post) => (
+                      <ArticleListCard key={post.id} post={post} />
+                    ))}
+                  </div>
+                  <ArticlesPagination
+                    loadedCount={filteredPosts.length}
+                    hasNextPage={Boolean(hasNextPage)}
+                    isFetchingNextPage={isFetchingNextPage}
+                    onLoadMore={() => void fetchNextPage()}
+                  />
+                </>
               )}
             </section>
           </div>

@@ -65,88 +65,92 @@ export function PostCard({ post, canToggleComments }: Props) {
   const tag = getTagBySlug(post.tag)
 
   return (
-    <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)]">
+    <article className="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)] sm:rounded-[24px]">
       <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage
           imageUrl={post.image_url}
           title={post.title}
-          className="aspect-[16/9]"
+          className="aspect-[16/10] sm:aspect-[16/9]"
+          titleClassName="font-serif text-base leading-tight text-slate-700 sm:text-3xl"
         />
       </Link>
 
-      <div className="p-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
+      <div className="p-3 sm:p-6">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <p className="font-sans text-[10px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[12.21px]">
             Recent Article
           </p>
           {tag && (
             <Link
               to={`/articles?tag=${tag.slug}`}
-              className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e]"
+              className="font-sans text-[10px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e] sm:text-[12.21px]"
             >
               {tag.title}
             </Link>
           )}
         </div>
-        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-3 block">
-          <h2 className="font-serif text-[28px] font-semibold leading-none tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a]">
+        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-2 block sm:mt-3">
+          <h2 className="line-clamp-2 font-serif text-base font-semibold leading-tight tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none">
             {post.title}
           </h2>
         </Link>
 
-        <p className="mt-3 line-clamp-2 text-sm leading-7 text-slate-600">
+        <p className="mt-2 hidden line-clamp-2 text-sm leading-7 text-slate-600 sm:mt-3 sm:block">
           {excerpt}
         </p>
         <Link
           to={`/articles/${post.id}`}
           state={articleLinkState}
-          className="mt-1 inline-block text-sm font-semibold text-slate-400 transition-colors hover:text-slate-600"
+          className="mt-1 hidden text-sm font-semibold text-slate-400 transition-colors hover:text-slate-600 sm:inline-block"
         >
           Read more
         </Link>
 
-        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-[18px] font-normal leading-[26px] tracking-normal text-[#5F6368]">
-          <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
-            <img src="/home/Calendar,Schedule.svg" alt="" className="h-5 w-5 shrink-0" />
-            {formattedDate}
+        <div className="mt-3 flex flex-col gap-1 font-sans text-[11px] font-normal leading-4 tracking-normal text-[#5F6368] sm:mt-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:text-[18px] sm:leading-[26px]">
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
+            <img src="/home/Calendar,Schedule.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
+            <span className="truncate">{formattedDate}</span>
           </span>
-          <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
-            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-5 w-5 shrink-0" />
-            {getReadingMinutes(post.content)} mins read
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
+            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
+            {getReadingMinutes(post.content)} mins
           </span>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 sm:mt-6 sm:gap-3 sm:pt-5">
           <button
             type="button"
             onClick={toggleLike}
             disabled={isPending}
-            className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
               userLiked
                 ? 'border-rose-200 bg-rose-50 text-rose-600'
                 : 'border-slate-200 text-slate-600 hover:border-rose-200 hover:text-rose-600'
             }`}
           >
-            <Heart size={16} fill={userLiked ? 'currentColor' : 'none'} />
+            <Heart size={14} className="sm:hidden" fill={userLiked ? 'currentColor' : 'none'} />
+            <Heart size={16} className="hidden sm:block" fill={userLiked ? 'currentColor' : 'none'} />
             {likeCount}
           </button>
 
           <Link
             to={`/articles/${post.id}#comments`}
             state={articleLinkState}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
           >
-            <MessageCircle size={16} />
+            <MessageCircle size={14} className="sm:hidden" />
+            <MessageCircle size={16} className="hidden sm:block" />
             {post.comments.length}
           </Link>
 
           <Link
             to={`/articles/${post.id}`}
             state={articleLinkState}
-            className="ml-auto inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#1f2f3d] px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#182633] sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
           >
-            Read Article
-            <img src="/home/Arrow.svg" alt="" className="h-4 w-4 -rotate-45" />
+            <span className="sm:hidden">Read</span>
+            <span className="hidden sm:inline">Read Article</span>
+            <img src="/home/Arrow.svg" alt="" className="h-3 w-3 -rotate-45 sm:h-4 sm:w-4" />
           </Link>
         </div>
 

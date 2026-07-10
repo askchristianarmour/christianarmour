@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArticlesPagination } from '../components/ArticlesPagination'
 import { PostCard } from '../components/PostCard'
-import { CrossSpinner, LoadingGrid } from '../components/CrossLoader'
+import { LoadingGrid } from '../components/CrossLoader'
 import { SiteFooter } from '../components/SiteFooter'
 import { usePosts } from '../hooks/usePosts'
 import { useAuth } from '../hooks/useAuth'
@@ -28,9 +29,13 @@ const HERO_CONTENT = {
   readMins: 12,
 }
 
+const MOBILE_BOOK_PREVIEW = 9
+
 export function Home() {
   const [testament, setTestament] = useState<'old' | 'new'>('old')
+  const [booksExpanded, setBooksExpanded] = useState(false)
   const browseBooks = testament === 'old' ? OLD_TESTAMENT_BOOKS : NEW_TESTAMENT_BOOKS
+  const hasMoreBooks = browseBooks.length > MOBILE_BOOK_PREVIEW
   const { user } = useAuth()
   useReplyNotificationToasts({ enabled: true, userId: user?.id })
   const queryClient = useQueryClient()
@@ -42,8 +47,6 @@ export function Home() {
     isLoading,
     error,
   } = usePosts()
-
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   const { data: tagCounts } = useQuery({
     queryKey: ['tag-counts'],
@@ -115,30 +118,6 @@ export function Home() {
     }
   }, [queryClient])
 
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    const currentSentinel = sentinelRef.current
-    if (currentSentinel) {
-      observer.observe(currentSentinel)
-    }
-
-    return () => {
-      if (currentSentinel) {
-        observer.unobserve(currentSentinel)
-      }
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
-
   const posts = data?.pages.flatMap((page) => page.posts) ?? []
 
   return (
@@ -195,7 +174,7 @@ export function Home() {
                 className="h-full w-full object-cover"
               />
               <div
-                className="pointer-events-none absolute inset-y-0 left-0 hidden w-28 bg-gradient-to-r from-white to-transparent lg:block xl:w-36"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/70 to-transparent sm:h-28 lg:h-32"
                 aria-hidden
               />
             </div>
@@ -264,21 +243,20 @@ export function Home() {
           ) : posts.length === 0 ? (
             <p className="text-center text-slate-500">No posts yet.</p>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {posts.map((post) => (
-                <PostCard key={post.id} post={post} canToggleComments={canManage} />
-              ))}
-            </div>
-          )}
-
-          <div ref={sentinelRef} className="mt-8 flex h-10 items-center justify-center">
-            {isFetchingNextPage && (
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <CrossSpinner size="xs" />
-                Loading more articles...
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:gap-6 md:gap-8 xl:grid-cols-3">
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post} canToggleComments={canManage} />
+                ))}
               </div>
-            )}
-          </div>
+              <ArticlesPagination
+                loadedCount={posts.length}
+                hasNextPage={Boolean(hasNextPage)}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={() => void fetchNextPage()}
+              />
+            </>
+          )}
         </section>
 
         <section className="mt-14 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
@@ -327,7 +305,10 @@ export function Home() {
           <div className="mt-6 flex items-center gap-6 border-b border-white/15 text-sm sm:mt-10 sm:gap-10">
             <button
               type="button"
-              onClick={() => setTestament('old')}
+              onClick={() => {
+                setTestament('old')
+                setBooksExpanded(false)
+              }}
               className={
                 testament === 'old'
                   ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3'
@@ -338,7 +319,10 @@ export function Home() {
             </button>
             <button
               type="button"
-              onClick={() => setTestament('new')}
+              onClick={() => {
+                setTestament('new')
+                setBooksExpanded(false)
+              }}
               className={
                 testament === 'new'
                   ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3'
@@ -350,11 +334,15 @@ export function Home() {
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-8 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-5">
-            {browseBooks.map((book) => (
+            {browseBooks.map((book, index) => (
               <Link
                 key={book.name}
                 to={buildArticlesBookPath(book.name)}
-                className="flex h-[64px] w-full flex-col items-center justify-center gap-1 rounded-md border border-[#B9C1CA] bg-white/10 px-2 py-2 text-center transition-colors hover:bg-white/[0.14] sm:h-[88px] sm:w-[236px] sm:shrink-0 sm:gap-2 sm:rounded-lg sm:border-2 sm:p-4"
+                className={`h-[64px] w-full flex-col items-center justify-center gap-1 rounded-md border border-[#B9C1CA] bg-white/10 px-2 py-2 text-center transition-colors hover:bg-white/[0.14] sm:h-[88px] sm:w-[236px] sm:shrink-0 sm:gap-2 sm:rounded-lg sm:border-2 sm:p-4 ${
+                  index >= MOBILE_BOOK_PREVIEW && !booksExpanded
+                    ? 'hidden sm:flex'
+                    : 'flex'
+                }`}
               >
                 <p className="font-serif text-[15px] leading-tight text-white sm:text-2xl sm:leading-none">
                   {book.name}
@@ -363,6 +351,19 @@ export function Home() {
               </Link>
             ))}
           </div>
+
+          {hasMoreBooks && !booksExpanded && (
+            <div className="mt-4 flex justify-center sm:hidden">
+              <button
+                type="button"
+                onClick={() => setBooksExpanded(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/[0.16]"
+              >
+                More books
+                <span className="text-white/60">({browseBooks.length - MOBILE_BOOK_PREVIEW})</span>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

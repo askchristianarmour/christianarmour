@@ -33,8 +33,8 @@ export function ArticleListCard({ post }: Props) {
   }, [post.id, post.content])
 
   return (
-    <article className="flex h-[388.51px] w-full max-w-[312.95px] shrink-0 flex-col overflow-hidden rounded-[12.21px] bg-white shadow-[0_3.05px_3.05px_rgba(0,0,0,0.15)]">
-      <div className="relative h-[168px] w-full shrink-0 overflow-hidden bg-[#f4efe7]">
+    <article className="flex h-auto min-h-0 w-full max-w-none flex-col overflow-hidden rounded-[12px] bg-white shadow-[0_3.05px_3.05px_rgba(0,0,0,0.15)] sm:h-[388.51px] sm:max-w-[312.95px] sm:shrink-0 sm:rounded-[12.21px]">
+      <div className="relative aspect-[16/10] w-full shrink-0 overflow-hidden bg-[#f4efe7] sm:aspect-auto sm:h-[168px]">
         <Link
           to={`/articles/${post.id}`}
           state={articleLinkState}
@@ -43,54 +43,56 @@ export function ArticleListCard({ post }: Props) {
           <PostCoverImage
             imageUrl={post.image_url}
             title={post.title}
-            className="h-full min-h-[168px] w-full"
-            titleClassName="font-serif text-2xl leading-tight text-slate-700"
+            className="h-full min-h-full w-full sm:min-h-[168px]"
+            titleClassName="font-serif text-base leading-tight text-slate-700 sm:text-2xl"
           />
         </Link>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-3 py-4">
+      <div className="flex min-h-0 flex-1 flex-col px-2.5 py-3 sm:px-3 sm:py-4">
         {tag ? (
           <Link
             to={`/articles?tag=${tag.slug}`}
-            className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] hover:text-[#c49a2e]"
+            className="font-sans text-[10px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] hover:text-[#c49a2e] sm:text-[12.21px]"
           >
             {tag.title}
           </Link>
         ) : (
-          <span className="h-[12.21px]" aria-hidden />
+          <span className="hidden h-[12.21px] sm:block" aria-hidden />
         )}
 
-        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-3 block">
-          <h2 className="line-clamp-2 font-serif text-[28px] font-semibold leading-none tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a]">
+        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-2 block sm:mt-3">
+          <h2 className="line-clamp-2 font-serif text-base font-semibold leading-tight tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none">
             {post.title}
           </h2>
         </Link>
 
-        <p className="mt-3 line-clamp-2 flex-1 text-sm leading-5 text-slate-500">{excerpt}</p>
+        <p className="mt-2 hidden line-clamp-2 flex-1 text-sm leading-5 text-slate-500 sm:mt-3 sm:block">
+          {excerpt}
+        </p>
 
-        <div className="mt-4 flex min-h-5 items-center gap-[12.21px]">
-          <div className="flex min-w-0 flex-1 items-center gap-[12.21px] overflow-hidden font-sans text-[13px] font-normal leading-5 tracking-normal text-[#5F6368]">
-            <span className="inline-flex min-w-0 items-center gap-1.5">
-              <img src="/home/Calendar,Schedule.svg" alt="" className="h-5 w-5 shrink-0" />
+        <div className="mt-3 flex min-h-5 items-center gap-2 sm:mt-4 sm:gap-[12.21px]">
+          <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden font-sans text-[11px] font-normal leading-4 tracking-normal text-[#5F6368] sm:flex-row sm:items-center sm:gap-[12.21px] sm:text-[13px] sm:leading-5">
+            <span className="inline-flex min-w-0 items-center gap-1 sm:gap-1.5">
+              <img src="/home/Calendar,Schedule.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
               <span className="truncate">{formattedDate}</span>
             </span>
-            <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-5 w-5 shrink-0" />
-              {readMins} mins read
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
+              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
+              {readMins} mins
             </span>
           </div>
 
           <Link
             to={`/articles/${post.id}`}
             state={articleLinkState}
-            className="group/arrow mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-[#faf8f4] transition-all hover:border-[#D4AF37]/50 hover:bg-[#faf5e8]"
+            className="group/arrow flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-[#faf8f4] transition-all hover:border-[#D4AF37]/50 hover:bg-[#faf5e8] sm:mr-2 sm:h-8 sm:w-8"
             aria-label={`Read ${post.title}`}
           >
             <img
               src="/home/noverticalhorizontalarrowiconyellow.svg"
               alt=""
-              className="h-3.5 w-3.5 -rotate-45 transition-transform group-hover/arrow:translate-x-0.5 group-hover/arrow:-translate-y-0.5"
+              className="h-3 w-3 -rotate-45 transition-transform group-hover/arrow:translate-x-0.5 group-hover/arrow:-translate-y-0.5 sm:h-3.5 sm:w-3.5"
             />
           </Link>
         </div>
