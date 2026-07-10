@@ -78,7 +78,7 @@ export function SignIn() {
     <div className="flex min-h-screen flex-col bg-white">
       <AuthChrome />
 
-      <div className="flex flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <AuthHeroPanel />
 
         <AuthFormPanel>

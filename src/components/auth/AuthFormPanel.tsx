@@ -8,7 +8,7 @@ type Props = {
 /** Form column with soft holistic / faith graphics behind the content. */
 export function AuthFormPanel({ children }: Props) {
   return (
-    <div className="relative flex flex-1 items-center justify-center overflow-hidden px-6 py-10 sm:px-10 lg:py-16">
+    <div className="relative flex min-h-0 w-full flex-1 basis-1/2 items-center justify-center overflow-hidden px-6 py-10 sm:px-10 lg:py-16">
       {/* Holistic background graphics */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-[#D4AF37]/[0.07] blur-3xl" />
