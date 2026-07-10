@@ -52,11 +52,11 @@ export function ArticleListCard({ post, coverImageUrl }: Props) {
         </Link>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-2.5 py-3 sm:px-3 sm:py-4">
+      <div className="flex min-h-0 flex-1 flex-col px-2.5 py-2.5 sm:px-3 sm:py-4">
         {tag ? (
           <Link
             to={`/articles?tag=${tag.slug}`}
-            className="font-sans text-[10px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] hover:text-[#c49a2e] sm:text-[12.21px]"
+            className="font-sans text-[9px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] hover:text-[#c49a2e] sm:text-[12.21px]"
           >
             {tag.title}
           </Link>
@@ -64,8 +64,8 @@ export function ArticleListCard({ post, coverImageUrl }: Props) {
           <span className="hidden h-[12.21px] sm:block" aria-hidden />
         )}
 
-        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-2 block sm:mt-3">
-          <h2 className="line-clamp-2 font-serif text-base font-semibold leading-tight tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none">
+        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-1.5 block sm:mt-3">
+          <h2 className="line-clamp-2 font-serif text-[13px] font-semibold leading-snug tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none">
             {post.title}
           </h2>
         </Link>
@@ -74,14 +74,14 @@ export function ArticleListCard({ post, coverImageUrl }: Props) {
           {excerpt}
         </p>
 
-        <div className="mt-3 flex min-h-5 items-center gap-2 sm:mt-4 sm:gap-[12.21px]">
-          <div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden font-sans text-[11px] font-normal leading-4 tracking-normal text-[#5F6368] sm:flex-row sm:items-center sm:gap-[12.21px] sm:text-[13px] sm:leading-5">
+        <div className="mt-2.5 flex min-h-5 items-center gap-1.5 sm:mt-4 sm:gap-[12.21px]">
+          <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden font-sans text-[10px] font-normal leading-none tracking-normal text-[#5F6368] sm:gap-[12.21px] sm:text-[13px] sm:leading-5">
             <span className="inline-flex min-w-0 items-center gap-1 sm:gap-1.5">
-              <img src="/home/Calendar,Schedule.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
+              <img src="/home/Calendar,Schedule.svg" alt="" className="h-3 w-3 shrink-0 sm:h-5 sm:w-5" />
               <span className="truncate">{formattedDate}</span>
             </span>
             <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap sm:gap-1.5">
-              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
+              <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3 w-3 shrink-0 sm:h-5 sm:w-5" />
               {readMins} mins
             </span>
           </div>
@@ -89,13 +89,13 @@ export function ArticleListCard({ post, coverImageUrl }: Props) {
           <Link
             to={`/articles/${post.id}`}
             state={articleLinkState}
-            className="group/arrow flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-[#faf8f4] transition-all hover:border-[#D4AF37]/50 hover:bg-[#faf5e8] sm:mr-2 sm:h-8 sm:w-8"
+            className="group/arrow flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-[#faf8f4] transition-all hover:border-[#D4AF37]/50 hover:bg-[#faf5e8] sm:mr-2 sm:h-8 sm:w-8"
             aria-label={`Read ${post.title}`}
           >
             <img
               src="/home/noverticalhorizontalarrowiconyellow.svg"
               alt=""
-              className="h-3 w-3 -rotate-45 transition-transform group-hover/arrow:translate-x-0.5 group-hover/arrow:-translate-y-0.5 sm:h-3.5 sm:w-3.5"
+              className="h-2.5 w-2.5 -rotate-45 transition-transform group-hover/arrow:translate-x-0.5 group-hover/arrow:-translate-y-0.5 sm:h-3.5 sm:w-3.5"
             />
           </Link>
         </div>

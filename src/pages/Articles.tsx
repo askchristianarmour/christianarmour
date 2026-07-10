@@ -258,8 +258,10 @@ export function Articles() {
               ) : (
                 <>
                   <div
-                    className={`grid justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] xl:grid-cols-3 ${
-                      mobileArticlesExpanded ? 'grid-cols-2' : 'grid-cols-1'
+                    className={`grid justify-items-stretch sm:justify-items-start xl:grid-cols-3 ${
+                      mobileArticlesExpanded
+                        ? 'grid-cols-2 gap-3 sm:gap-[12.21px]'
+                        : 'grid-cols-1 gap-3 sm:gap-[12.21px]'
                     } sm:grid-cols-2`}
                   >
                     {filteredPosts.map((post, index) => (

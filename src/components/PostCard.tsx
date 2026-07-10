@@ -16,9 +16,11 @@ type Props = {
   canToggleComments?: boolean
   /** Pre-assigned cover (from adjacent-aware list assignment). */
   coverImageUrl?: string | null
+  /** Denser layout for narrow 2-column mobile grids (max-sm only). */
+  compact?: boolean
 }
 
-export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
+export function PostCard({ post, canToggleComments, coverImageUrl, compact = false }: Props) {
   const location = useLocation()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
@@ -32,7 +34,6 @@ export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
   useRefTagger([post.id, post.content])
 
   useEffect(() => {
-    // Re-tag after excerpt mounts so Bible refs in the card become interactive
     window.setTimeout(() => window.refTagger?.tag?.(), 80)
   }, [post.id, post.content])
 
@@ -57,43 +58,76 @@ export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
     toggleCommentsMutation.mutate()
   }
 
-  const formattedDate = new Date(post.created_at).toLocaleDateString('en-US', {
+  const longDate = new Date(post.created_at).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
+    day: 'numeric',
+  })
+  const shortDate = new Date(post.created_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
     day: 'numeric',
   })
 
   const excerpt = getExcerptFromContent(post.content, 220)
   const tag = getTagBySlug(post.tag)
+  const readMins = getReadingMinutes(post.content)
 
   return (
-    <article className="overflow-hidden rounded-[16px] border border-slate-200 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)] sm:rounded-[24px]">
+    <article
+      className={`overflow-hidden border border-slate-200 bg-white sm:rounded-[24px] sm:shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)] ${
+        compact
+          ? 'rounded-[12px] shadow-[0_2px_6px_rgba(15,23,42,0.06)]'
+          : 'rounded-[16px] shadow-[0_2px_8px_rgba(15,23,42,0.08),0_12px_32px_rgba(15,23,42,0.14)]'
+      }`}
+    >
       <Link to={`/articles/${post.id}`} state={articleLinkState} className="block">
         <PostCoverImage
           imageUrl={coverImageUrl ?? post.image_url}
           title={post.title}
           seed={post.id}
-          className="aspect-[16/10] sm:aspect-[16/9]"
-          titleClassName="font-serif text-base leading-tight text-slate-700 sm:text-3xl"
+          className={compact ? 'aspect-[16/11] sm:aspect-[16/9]' : 'aspect-[16/10] sm:aspect-[16/9]'}
+          titleClassName="font-serif text-sm leading-tight text-slate-700 sm:text-3xl"
         />
       </Link>
 
-      <div className="p-3 sm:p-6">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <p className="font-sans text-[10px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[12.21px]">
+      <div className={`sm:p-6 ${compact ? 'p-2.5' : 'p-3'}`}>
+        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+          <p
+            className={`font-sans font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[12.21px] ${
+              compact ? 'hidden sm:block sm:text-[12.21px]' : 'text-[10px]'
+            }`}
+          >
             Recent Article
           </p>
-          {tag && (
+          {tag ? (
             <Link
               to={`/articles?tag=${tag.slug}`}
-              className="font-sans text-[10px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e] sm:text-[12.21px]"
+              className={`font-sans font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e] sm:text-[12.21px] ${
+                compact ? 'text-[9px]' : 'text-[10px]'
+              }`}
             >
               {tag.title}
             </Link>
+          ) : (
+            compact && (
+              <p className="font-sans text-[9px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:hidden">
+                Article
+              </p>
+            )
           )}
         </div>
-        <Link to={`/articles/${post.id}`} state={articleLinkState} className="mt-2 block sm:mt-3">
-          <h2 className="line-clamp-2 font-serif text-base font-semibold leading-tight tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none">
+
+        <Link
+          to={`/articles/${post.id}`}
+          state={articleLinkState}
+          className={`block sm:mt-3 ${compact ? 'mt-1.5' : 'mt-2'}`}
+        >
+          <h2
+            className={`line-clamp-2 font-serif font-semibold tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none ${
+              compact ? 'text-[13px] leading-snug' : 'text-base leading-tight'
+            }`}
+          >
             {post.title}
           </h2>
         </Link>
@@ -109,29 +143,59 @@ export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
           Read more
         </Link>
 
-        <div className="mt-3 flex flex-col gap-1 font-sans text-[11px] font-normal leading-4 tracking-normal text-[#5F6368] sm:mt-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:text-[18px] sm:leading-[26px]">
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
-            <img src="/home/Calendar,Schedule.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
-            <span className="truncate">{formattedDate}</span>
+        <div
+          className={`font-sans font-normal tracking-normal text-[#5F6368] sm:mt-5 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:text-[18px] sm:leading-[26px] ${
+            compact
+              ? 'mt-2 flex items-center gap-2 text-[10px] leading-none'
+              : 'mt-3 flex flex-col gap-1 text-[11px] leading-4'
+          }`}
+        >
+          <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap sm:h-[26px] sm:gap-2">
+            <img
+              src="/home/Calendar,Schedule.svg"
+              alt=""
+              className="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
+            />
+            <span className={`truncate ${compact ? 'sm:hidden' : 'hidden'}`}>{shortDate}</span>
+            <span className={`truncate ${compact ? 'hidden sm:inline' : ''}`}>{longDate}</span>
           </span>
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
-            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5" />
-            {getReadingMinutes(post.content)} mins
+          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap sm:h-[26px] sm:gap-2">
+            <img
+              src="/home/Alarm, Clock, Time.svg"
+              alt=""
+              className="h-3 w-3 shrink-0 sm:h-5 sm:w-5"
+            />
+            {readMins} mins
           </span>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 sm:mt-6 sm:gap-3 sm:pt-5">
+        <div
+          className={`flex items-center border-t border-slate-100 sm:mt-6 sm:flex-wrap sm:gap-3 sm:pt-5 ${
+            compact ? 'mt-2.5 gap-1 pt-2.5' : 'mt-3 flex-wrap gap-2 pt-3'
+          }`}
+        >
           <button
             type="button"
             onClick={toggleLike}
             disabled={isPending}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
+            aria-label={userLiked ? 'Unlike' : 'Like'}
+            className={`inline-flex items-center font-medium transition-colors sm:gap-2 sm:rounded-full sm:border sm:px-4 sm:py-2 sm:text-sm ${
               userLiked
-                ? 'border-rose-200 bg-rose-50 text-rose-600'
-                : 'border-slate-200 text-slate-600 hover:border-rose-200 hover:text-rose-600'
+                ? 'text-rose-600 sm:border-rose-200 sm:bg-rose-50'
+                : 'text-slate-500 hover:text-rose-600 sm:border-slate-200 sm:text-slate-600 sm:hover:border-rose-200'
+            } ${
+              compact
+                ? 'gap-0.5 rounded-md px-1 py-1 text-[10px]'
+                : 'gap-1.5 rounded-full border px-2.5 py-1.5 text-xs'
+            } ${
+              !compact && userLiked
+                ? 'border-rose-200 bg-rose-50'
+                : !compact
+                  ? 'border-slate-200'
+                  : ''
             }`}
           >
-            <Heart size={14} className="sm:hidden" fill={userLiked ? 'currentColor' : 'none'} />
+            <Heart size={compact ? 12 : 14} className="sm:hidden" fill={userLiked ? 'currentColor' : 'none'} />
             <Heart size={16} className="hidden sm:block" fill={userLiked ? 'currentColor' : 'none'} />
             {likeCount}
           </button>
@@ -139,17 +203,37 @@ export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
           <Link
             to={`/articles/${post.id}#comments`}
             state={articleLinkState}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+            aria-label="Comments"
+            className={`inline-flex items-center font-medium text-slate-500 transition-colors hover:text-slate-800 sm:gap-2 sm:rounded-full sm:border sm:border-slate-200 sm:px-4 sm:py-2 sm:text-sm sm:text-slate-600 sm:hover:border-slate-300 sm:hover:text-slate-900 ${
+              compact
+                ? 'gap-0.5 rounded-md px-1 py-1 text-[10px]'
+                : 'gap-1.5 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600'
+            }`}
           >
-            <MessageCircle size={14} className="sm:hidden" />
+            <MessageCircle size={compact ? 12 : 14} className="sm:hidden" />
             <MessageCircle size={16} className="hidden sm:block" />
             {post.comments.length}
           </Link>
 
+          {/* Compact mobile CTA */}
+          {compact && (
+            <Link
+              to={`/articles/${post.id}`}
+              state={articleLinkState}
+              className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1f2f3d] text-white transition-colors hover:bg-[#182633] sm:hidden"
+              aria-label={`Read ${post.title}`}
+            >
+              <img src="/home/Arrow.svg" alt="" className="h-3 w-3 -rotate-45 brightness-0 invert" />
+            </Link>
+          )}
+
+          {/* Full CTA (always on sm+; also on mobile when not compact) */}
           <Link
             to={`/articles/${post.id}`}
             state={articleLinkState}
-            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#1f2f3d] px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#182633] sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm"
+            className={`ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#1f2f3d] px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#182633] sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm ${
+              compact ? 'hidden sm:inline-flex' : ''
+            }`}
           >
             <span className="sm:hidden">Read</span>
             <span className="hidden sm:inline">Read Article</span>
@@ -158,7 +242,11 @@ export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
         </div>
 
         {!post.comments_enabled && (
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+          <div
+            className={`mt-4 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500 ${
+              compact ? 'hidden sm:inline-flex' : ''
+            }`}
+          >
             <Lock size={12} />
             Comments disabled
           </div>
@@ -169,7 +257,9 @@ export function PostCard({ post, canToggleComments, coverImageUrl }: Props) {
             type="button"
             onClick={handleToggleComments}
             disabled={toggleCommentsMutation.isPending}
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+            className={`mt-4 inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 ${
+              compact ? 'hidden sm:inline-flex' : ''
+            }`}
           >
             <Settings2 size={13} />
             {post.comments_enabled ? 'Disable Comments' : 'Enable Comments'}

@@ -256,8 +256,10 @@ export function Home() {
           ) : (
             <>
               <div
-                className={`grid gap-3 sm:gap-6 md:gap-8 xl:grid-cols-3 ${
-                  mobileArticlesExpanded ? 'grid-cols-2' : 'grid-cols-1'
+                className={`grid xl:grid-cols-3 ${
+                  mobileArticlesExpanded
+                    ? 'grid-cols-2 gap-3 sm:gap-6 md:gap-8'
+                    : 'grid-cols-1 gap-3 sm:gap-6 md:gap-8'
                 } sm:grid-cols-2`}
               >
                 {posts.map((post, index) => (
@@ -273,6 +275,7 @@ export function Home() {
                       post={post}
                       canToggleComments={canManage}
                       coverImageUrl={coverById[post.id]}
+                      compact={mobileArticlesExpanded}
                     />
                   </div>
                 ))}
