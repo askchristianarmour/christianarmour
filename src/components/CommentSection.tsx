@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js'
-import { Lock, MessageCircle, Send, Sparkles } from 'lucide-react'
+import { Lock, MessageCircle, Send, Sparkles, Users } from 'lucide-react'
 import { useMemo } from 'react'
 import { CrossSpinner } from './CrossLoader'
 import type { Comment } from '../types/database'
@@ -228,22 +228,33 @@ export function CommentSection({
               {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
             </span>
             {uniqueCommenters > 0 && (
-              <span className="rounded-full bg-[#1f2f3d] px-4 py-2 text-sm font-medium text-white">
+              <button
+                type="button"
+                onClick={() => {
+                  document
+                    .getElementById('comment-thread')
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+                className="inline-flex items-center gap-2 rounded-full bg-[#1f2f3d] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#182633]"
+              >
+                <Users size={14} />
                 {uniqueCommenters} {uniqueCommenters === 1 ? 'voice' : 'voices'}
-              </span>
+              </button>
             )}
           </div>
         </div>
 
         {commentsEnabled ? (
-          <CommentComposer
-            user={user}
-            commentText={commentText}
-            onCommentTextChange={onCommentTextChange}
-            onSubmit={onSubmit}
-            onRequireAuth={onRequireAuth}
-            isSubmitting={isSubmitting}
-          />
+          <div id="comment-composer">
+            <CommentComposer
+              user={user}
+              commentText={commentText}
+              onCommentTextChange={onCommentTextChange}
+              onSubmit={onSubmit}
+              onRequireAuth={onRequireAuth}
+              isSubmitting={isSubmitting}
+            />
+          </div>
         ) : (
           <div className="mt-8 flex items-start gap-4 rounded-[24px] border border-dashed border-slate-200 bg-slate-50/80 px-5 py-5">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm">
@@ -258,7 +269,7 @@ export function CommentSection({
           </div>
         )}
 
-        <div className="mt-10">
+        <div id="comment-thread" className="mt-10 scroll-mt-28">
           {comments.length > 0 && (
             <div className="mb-5 flex items-center gap-3">
               <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
