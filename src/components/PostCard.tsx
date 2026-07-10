@@ -107,11 +107,11 @@ export function PostCard({ post, canToggleComments }: Props) {
 
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-[18px] font-normal leading-[26px] tracking-normal text-[#5F6368]">
           <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
-            <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4 shrink-0" />
+            <img src="/home/Calendar,Schedule.svg" alt="" className="h-5 w-5 shrink-0" />
             {formattedDate}
           </span>
           <span className="inline-flex h-[26px] items-center gap-2 whitespace-nowrap">
-            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4 shrink-0" />
+            <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-5 w-5 shrink-0" />
             {getReadingMinutes(post.content)} mins read
           </span>
         </div>
