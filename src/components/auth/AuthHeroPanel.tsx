@@ -1,10 +1,14 @@
+import { AuthLoadedImage } from './AuthLoadedImage'
+
 export function AuthHeroPanel() {
   return (
-    <div className="relative hidden min-h-[480px] flex-1 overflow-hidden lg:flex lg:min-h-0">
-      <img
+    <div className="relative hidden min-h-[480px] flex-1 overflow-hidden bg-[#1c2b3a] lg:flex lg:min-h-0">
+      <AuthLoadedImage
         src="/signin/backroundleft.svg"
         alt=""
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0"
+        imgClassName="absolute inset-0 h-full w-full object-cover"
+        spinnerSize="md"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 

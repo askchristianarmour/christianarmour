@@ -6,7 +6,7 @@ import { ArticleAdminActions } from '../components/ArticleAdminActions'
 import { ArticleContent } from '../components/ArticleContent'
 import { AuthRequiredModal } from '../components/AuthRequiredModal'
 import { CommentSection } from '../components/CommentSection'
-import { PageLoader } from '../components/CrossLoader'
+import { ArticleDetailSkeleton } from '../components/Skeleton'
 import { PostCoverImage } from '../components/PostCoverImage'
 import { RelatedArticles } from '../components/RelatedArticles'
 import { Seo } from '../components/Seo'
@@ -181,9 +181,7 @@ export function ArticleDetail() {
   if (isLoading) {
     return (
       <div className="w-full bg-white">
-        <div className="mx-auto max-w-[1240px] px-4 py-12 sm:px-6 lg:px-8">
-          <PageLoader label="Loading article..." />
-        </div>
+        <ArticleDetailSkeleton />
       </div>
     )
   }
@@ -219,8 +217,46 @@ export function ArticleDetail() {
           jsonLd={articleSeo.jsonLd}
         />
       )}
-      <div className="w-full bg-white">
-        <div className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+      <div className="relative w-full overflow-hidden bg-[#fdfcfa]">
+        {/* Seamless transparent professional graphics */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,175,55,0.06),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_rgba(31,47,61,0.04),_transparent_50%)]" />
+
+          <div className="absolute -left-32 top-24 h-[28rem] w-[28rem] rounded-full border border-[#D4AF37]/10" />
+          <div className="absolute -left-20 top-36 h-[22rem] w-[22rem] rounded-full border border-[#1f2f3d]/[0.05]" />
+          <div className="absolute -right-40 top-[38%] h-[32rem] w-[32rem] rounded-full border border-[#D4AF37]/[0.08]" />
+          <div className="absolute -right-24 top-[42%] h-[24rem] w-[24rem] rounded-full border border-[#1f2f3d]/[0.04]" />
+
+          <div className="absolute left-1/2 top-[18%] h-64 w-64 -translate-x-1/2 rounded-full bg-[#D4AF37]/[0.05] blur-3xl" />
+          <div className="absolute bottom-[12%] left-[18%] h-72 w-72 rounded-full bg-[#1f2f3d]/[0.035] blur-3xl" />
+
+          <img
+            src="/signin/cross.svg"
+            alt=""
+            className="absolute left-[8%] top-[22%] hidden h-40 w-auto opacity-[0.035] lg:block xl:left-[12%] xl:h-48"
+          />
+          <img
+            src="/signin/cross.svg"
+            alt=""
+            className="absolute bottom-[18%] right-[10%] hidden h-36 w-auto opacity-[0.03] lg:block xl:right-[14%]"
+          />
+
+          <img
+            src="/article/left_armour_imagehero.svg"
+            alt=""
+            className="absolute -left-4 top-[28%] h-[min(52vh,420px)] w-auto opacity-[0.045] sm:opacity-[0.055] lg:-left-2 lg:opacity-[0.07]"
+          />
+          <img
+            src="/article/right_armour_imagehero.svg"
+            alt=""
+            className="absolute -right-4 top-[48%] h-[min(48vh,380px)] w-auto opacity-[0.045] sm:opacity-[0.055] lg:-right-2 lg:opacity-[0.07]"
+          />
+
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1f2f3d]/[0.08] to-transparent" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-[1100px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
           <button
             type="button"
             onClick={handleBack}

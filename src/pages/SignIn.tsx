@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { AuthChrome } from '../components/auth/AuthChrome'
+import { AuthFormLogo, AuthFormPanel } from '../components/auth/AuthFormPanel'
 import { AuthHeroPanel } from '../components/auth/AuthHeroPanel'
 import { BrandedPasswordInput } from '../components/auth/BrandedPasswordInput'
 import { CrossSpinner } from '../components/CrossLoader'
@@ -80,13 +81,8 @@ export function SignIn() {
       <div className="flex flex-1 flex-col lg:flex-row">
         <AuthHeroPanel />
 
-        <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-10 lg:py-16">
-          <div className="w-full max-w-sm">
-            <img
-              src="/signin/cross.svg"
-              alt="Christian Armour"
-              className="mx-auto h-16 w-auto sm:h-20"
-            />
+        <AuthFormPanel>
+          <AuthFormLogo />
 
             <h1 className="mt-8 text-center font-serif text-3xl font-semibold text-slate-900 sm:text-4xl">
               Welcome Back
@@ -159,8 +155,7 @@ export function SignIn() {
                 Sign up
               </Link>
             </p>
-          </div>
-        </div>
+        </AuthFormPanel>
       </div>
     </div>
   )

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArticlesPagination } from '../components/ArticlesPagination'
 import { PostCard } from '../components/PostCard'
-import { LoadingGrid } from '../components/CrossLoader'
+import { HomePageSkeleton } from '../components/Skeleton'
 import { SiteFooter } from '../components/SiteFooter'
 import { usePosts } from '../hooks/usePosts'
 import { useAuth } from '../hooks/useAuth'
@@ -122,6 +122,10 @@ export function Home() {
 
   const posts = data?.pages.flatMap((page) => page.posts) ?? []
 
+  if (isLoading) {
+    return <HomePageSkeleton />
+  }
+
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-white">
       <div className="relative">
@@ -240,9 +244,7 @@ export function Home() {
             </Link>
           </div>
 
-          {isLoading ? (
-            <LoadingGrid count={10} className="min-h-[420px]" />
-          ) : posts.length === 0 ? (
+          {posts.length === 0 ? (
             <p className="text-center text-slate-500">No posts yet.</p>
           ) : (
             <>

@@ -5,7 +5,7 @@ import { ArticleFilterSidebar } from '../components/ArticleFilterSidebar'
 import { ArticleListCard } from '../components/ArticleListCard'
 import { ArticleSearchKeywords } from '../components/ArticleSearchKeywords'
 import { ArticlesPagination } from '../components/ArticlesPagination'
-import { LoadingGrid } from '../components/CrossLoader'
+import { ArticlesPageSkeleton } from '../components/Skeleton'
 import { SiteFooter } from '../components/SiteFooter'
 import { useToast } from '../contexts/ToastContext'
 import { useFilteredPosts } from '../hooks/useFilteredPosts'
@@ -168,6 +168,10 @@ export function Articles() {
   const resultCount = filteredPosts.length
   const totalCount = selectedTag ? tagCounts?.[selectedTag] ?? resultCount : totalPostCount ?? resultCount
 
+  if (isLoading) {
+    return <ArticlesPageSkeleton />
+  }
+
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-white">
       <section className="relative flex h-[300px] items-center justify-center overflow-hidden bg-[#1f2f3d] px-4 text-center text-white sm:px-6">
@@ -237,9 +241,7 @@ export function Articles() {
             )}
 
             <section className="mt-6">
-              {isLoading ? (
-                <LoadingGrid count={10} />
-              ) : filteredPosts.length === 0 ? (
+              {filteredPosts.length === 0 ? (
                 <div className="rounded-[24px] border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
                   <p className="font-serif text-3xl text-slate-800">No articles found</p>
                   <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
