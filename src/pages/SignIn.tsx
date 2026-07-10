@@ -11,6 +11,7 @@ import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useAuth } from '../hooks/useAuth'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { useToast } from '../contexts/ToastContext'
+import { withTrimStart } from '../lib/form-input'
 
 const schema = z.object({
   email: z.email('Enter a valid email'),
@@ -44,6 +45,8 @@ export function SignIn() {
     defaultValues: { email: '', password: '' },
   })
 
+  const emailField = register('email')
+  const passwordField = register('password')
   const email = watch('email')
   const rateLimit = useRateLimit('signIn', email)
 
@@ -96,7 +99,8 @@ export function SignIn() {
                   type="email"
                   autoComplete="email"
                   placeholder="Enter your email id"
-                  {...register('email')}
+                  {...emailField}
+                  onChange={withTrimStart(emailField.onChange)}
                   className="w-full border-0 border-b border-slate-300 bg-transparent py-2.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#1c2b3a]"
                 />
                 {errors.email && (
@@ -108,7 +112,8 @@ export function SignIn() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 error={errors.password?.message}
-                {...register('password')}
+                {...passwordField}
+                onChange={withTrimStart(passwordField.onChange)}
               />
 
               <div className="text-right">

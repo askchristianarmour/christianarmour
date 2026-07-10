@@ -11,6 +11,7 @@ import { RateLimitBanner } from '../components/RateLimitBanner'
 import { useAuth } from '../hooks/useAuth'
 import { useRateLimit } from '../hooks/useRateLimit'
 import { useToast } from '../contexts/ToastContext'
+import { withTrimStart } from '../lib/form-input'
 
 const schema = z
   .object({
@@ -41,6 +42,9 @@ export function SignUp() {
     defaultValues: { email: '', password: '', confirmPassword: '' },
   })
 
+  const emailField = register('email')
+  const passwordField = register('password')
+  const confirmPasswordField = register('confirmPassword')
   const email = watch('email')
   const rateLimit = useRateLimit('signUp', email)
 
@@ -97,7 +101,8 @@ export function SignUp() {
                   type="email"
                   autoComplete="email"
                   placeholder="Enter your email id"
-                  {...register('email')}
+                  {...emailField}
+                  onChange={withTrimStart(emailField.onChange)}
                   className="w-full border-0 border-b border-slate-300 bg-transparent py-2.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#1c2b3a]"
                 />
                 {errors.email && (
@@ -109,14 +114,16 @@ export function SignUp() {
                 placeholder="Enter your password"
                 autoComplete="new-password"
                 error={errors.password?.message}
-                {...register('password')}
+                {...passwordField}
+                onChange={withTrimStart(passwordField.onChange)}
               />
 
               <BrandedPasswordInput
                 placeholder="Confirm your password"
                 autoComplete="new-password"
                 error={errors.confirmPassword?.message}
-                {...register('confirmPassword')}
+                {...confirmPasswordField}
+                onChange={withTrimStart(confirmPasswordField.onChange)}
               />
 
               {showFailureHints && (
