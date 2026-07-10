@@ -203,7 +203,7 @@ export function Home() {
         </section>
 
         <div className="relative z-10 mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-8">
-          <section className="-mt-8 grid gap-3 sm:-mt-16 sm:grid-cols-2 sm:gap-5 lg:-mt-20 xl:grid-cols-4">
+          <section className="-mt-8 grid grid-cols-2 gap-2.5 sm:-mt-16 sm:grid-cols-2 sm:gap-5 lg:-mt-20 xl:grid-cols-4">
             {ARTICLE_TAGS.map((category) => {
               const count = tagCounts?.[category.slug] ?? 0
 
@@ -211,21 +211,25 @@ export function Home() {
                 <Link
                   key={category.slug}
                   to={`/articles?tag=${category.slug}`}
-                  className="group rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)] sm:rounded-[26px] sm:p-6"
+                  className="group flex flex-col rounded-[14px] border border-slate-200 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)] sm:rounded-[26px] sm:p-6"
                 >
-                  <img src={category.icon} alt="" className="h-9 w-9 sm:h-12 sm:w-12" />
-                  <h2 className="mt-3 font-serif text-2xl leading-tight text-slate-900 sm:mt-5 sm:text-[2rem]">
+                  <img src={category.icon} alt="" className="h-8 w-8 sm:h-12 sm:w-12" />
+                  <h2 className="mt-2.5 font-serif text-lg leading-tight text-slate-900 sm:mt-5 sm:text-[2rem]">
                     {category.title}
                   </h2>
-                  <p className="mt-2 text-xs leading-5 text-slate-500 sm:mt-3 sm:text-sm sm:leading-7">
+                  <p className="mt-1.5 line-clamp-3 flex-1 text-[11px] leading-4 text-slate-500 sm:mt-3 sm:line-clamp-none sm:text-sm sm:leading-7">
                     {category.description}
                   </p>
-                  <div className="mt-3 flex items-center justify-between sm:mt-5">
-                    <span className="text-xs font-medium text-slate-700 sm:text-sm">
+                  <div className="mt-2.5 flex items-center justify-between gap-1 sm:mt-5">
+                    <span className="text-[11px] font-medium text-slate-700 sm:text-sm">
                       {count} {count === 1 ? 'Article' : 'Articles'}
                     </span>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40 sm:h-9 sm:w-9">
-                      <img src="/home/noverticalhorizontalarrowiconyellow.svg" alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40 sm:h-9 sm:w-9">
+                      <img
+                        src="/home/noverticalhorizontalarrowiconyellow.svg"
+                        alt=""
+                        className="h-3 w-3 sm:h-4 sm:w-4"
+                      />
                     </span>
                   </div>
                 </Link>
