@@ -6,6 +6,7 @@ type Props = {
   open: boolean
   postTitle: string
   isDeleting?: boolean
+  bulkCount?: number
   onClose: () => void
   onConfirm: () => void
 }
@@ -14,6 +15,7 @@ export function DeleteArticleConfirmationModal({
   open,
   postTitle,
   isDeleting = false,
+  bulkCount,
   onClose,
   onConfirm,
 }: Props) {
@@ -65,11 +67,21 @@ export function DeleteArticleConfirmationModal({
           </div>
           <div>
             <h2 id="delete-article-title" className="text-xl font-semibold text-slate-900">
-              Delete this article?
+              {bulkCount && bulkCount > 1 ? `Delete ${bulkCount} articles?` : 'Delete this article?'}
             </h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Are you sure you want to delete &ldquo;{postTitle}&rdquo;? This will permanently remove
-              the article, its comments, and likes. This cannot be undone.
+              {bulkCount && bulkCount > 1 ? (
+                <>
+                  Are you sure you want to permanently delete these{' '}
+                  <span className="font-semibold text-slate-800">{bulkCount}</span> articles? Comments
+                  and likes will also be removed. This cannot be undone.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to delete &ldquo;{postTitle}&rdquo;? This will permanently
+                  remove the article, its comments, and likes. This cannot be undone.
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -81,7 +93,7 @@ export function DeleteArticleConfirmationModal({
             disabled={isDeleting}
             className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isDeleting ? 'Deleting...' : 'Yes, delete article'}
+            {isDeleting ? 'Deleting...' : bulkCount && bulkCount > 1 ? 'Yes, delete articles' : 'Yes, delete article'}
           </button>
           <button
             type="button"

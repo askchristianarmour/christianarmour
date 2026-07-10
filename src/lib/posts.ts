@@ -264,3 +264,39 @@ export async function deletePost(postId: string) {
   const { error } = await supabase.from('posts').delete().eq('id', postId)
   if (error) throw error
 }
+
+export async function deletePosts(postIds: string[]) {
+  const uniqueIds = [...new Set(postIds.map((id) => id.trim()).filter(Boolean))]
+  if (uniqueIds.length === 0) return
+
+  const { error } = await supabase.from('posts').delete().in('id', uniqueIds)
+  if (error) throw error
+}
+
+export type AdminPostRow = {
+  id: string
+  title: string
+  tag: string | null
+  created_at: string
+  comments_enabled: boolean
+  image_url: string | null
+}
+
+export async function fetchAdminPostList(): Promise<AdminPostRow[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title, tag, created_at, comments_enabled, image_url')
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []) as AdminPostRow[]
+}
+
+export async function setPostCommentsEnabled(postId: string, enabled: boolean) {
+  const { error } = await supabase
+    .from('posts')
+    .update({ comments_enabled: enabled })
+    .eq('id', postId)
+
+  if (error) throw error
+}

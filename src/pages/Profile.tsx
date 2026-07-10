@@ -8,6 +8,7 @@ import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Acti
 import { TagPicker } from '../components/TagPicker'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
 import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
+import { AdminPostsManager } from '../components/AdminPostsManager'
 import { ArticleContent } from '../components/ArticleContent'
 import { ArticlePagesEditor } from '../components/ArticlePagesEditor'
 import {
@@ -925,6 +926,8 @@ export function Profile() {
               </form>
             </div>
           )}
+
+          {activeTab === 'settings' && isAdmin && <AdminPostsManager />}
 
           {/* Activity Feeds */}
           {activeTab === 'activity' && (
