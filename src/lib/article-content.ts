@@ -1,8 +1,36 @@
 import DOMPurify from 'dompurify'
 import { getStructuredPlainText, isStructuredArticleContent, parseArticleContent } from './article-structure'
 
-const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'span']
-const ALLOWED_ATTR = ['data-keyword', 'data-article-ids', 'class']
+const ALLOWED_TAGS = [
+  'p',
+  'br',
+  'strong',
+  'em',
+  'u',
+  'h2',
+  'h3',
+  'ul',
+  'ol',
+  'li',
+  'span',
+  'table',
+  'thead',
+  'tbody',
+  'tr',
+  'th',
+  'td',
+  'colgroup',
+  'col',
+]
+const ALLOWED_ATTR = [
+  'data-keyword',
+  'data-article-ids',
+  'class',
+  'colspan',
+  'rowspan',
+  'colwidth',
+  'style',
+]
 
 export function isHtmlContent(content: string) {
   return /<[a-z][\s\S]*>/i.test(content)

@@ -70,6 +70,84 @@ body {
   color: #a8863d;
 }
 
+/* TipTap / article tables — content-sized columns, readable on mobile */
+.prose-editor .tableWrapper,
+.article-content .tableWrapper {
+  margin: 1rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose-editor table,
+.article-content table,
+.prose-editor .article-table,
+.article-content .article-table {
+  width: max-content;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 0.925rem;
+  line-height: 1.5;
+}
+
+.prose-editor th,
+.prose-editor td,
+.article-content th,
+.article-content td {
+  min-width: 5.5rem;
+  max-width: 28rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  vertical-align: top;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.prose-editor th,
+.article-content th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #0f172a;
+  text-align: left;
+}
+
+.prose-editor tr:nth-child(even) td,
+.article-content tr:nth-child(even) td {
+  background: #fcfcfd;
+}
+
+.prose-editor .selectedCell::after,
+.prose-editor .selectedCell:after {
+  background: rgba(198, 161, 77, 0.18);
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.prose-editor td,
+.prose-editor th {
+  position: relative;
+}
+
+.prose-editor .column-resize-handle {
+  background-color: #c6a14d;
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 3px;
+}
+
+.prose-editor.resize-cursor {
+  cursor: col-resize;
+}
+
 .article-page-section + .article-page-section {
   padding-top: 2.5rem;
   border-top: 1px solid #e8dfc8;

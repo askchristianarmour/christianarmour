@@ -1,5 +1,9 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
 import {
   Bold,
   Italic,
@@ -8,6 +12,12 @@ import {
   Link2,
   Heading2,
   Unlink,
+  Table as TableIcon,
+  BetweenHorizonalStart,
+  BetweenVerticalStart,
+  Trash2,
+  Rows3,
+  Columns3,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../../contexts/ToastContext'
@@ -36,7 +46,19 @@ export function RichTextEditor({
   const savedSelectionRef = useRef<{ from: number; to: number } | null>(null)
 
   const editor = useEditor({
-    extensions: [StarterKit, KeywordLink],
+    extensions: [
+      StarterKit,
+      KeywordLink,
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'article-table',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+    ],
     content: value || '<p></p>',
     editorProps: {
       attributes: {
@@ -93,6 +115,8 @@ export function RichTextEditor({
 
   if (!editor) return null
 
+  const inTable = editor.isActive('table')
+
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex flex-wrap items-center gap-1 border-b border-slate-100 bg-slate-50/80 px-2 py-2">
@@ -131,6 +155,61 @@ export function RichTextEditor({
         >
           <ListOrdered size={16} />
         </ToolbarButton>
+
+        <span className="mx-1 h-6 w-px bg-slate-200" />
+
+        <ToolbarButton
+          onClick={() =>
+            editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+          }
+          active={inTable}
+          label="Insert table"
+          className="gap-1.5 px-3 text-xs font-semibold"
+        >
+          <TableIcon size={15} />
+          Table
+        </ToolbarButton>
+
+        {inTable && (
+          <>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              active={false}
+              label="Add column"
+            >
+              <BetweenVerticalStart size={16} />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              active={false}
+              label="Add row"
+            >
+              <BetweenHorizonalStart size={16} />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              active={false}
+              label="Delete column"
+            >
+              <Columns3 size={16} />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              active={false}
+              label="Delete row"
+            >
+              <Rows3 size={16} />
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              active={false}
+              label="Delete table"
+              className="text-red-600 hover:bg-red-50"
+            >
+              <Trash2 size={16} />
+            </ToolbarButton>
+          </>
+        )}
 
         <span className="mx-1 h-6 w-px bg-slate-200" />
 
@@ -187,6 +266,7 @@ function ToolbarButton({
       type="button"
       onClick={onClick}
       aria-label={label}
+      title={label}
       className={`inline-flex items-center rounded-lg px-2.5 py-2 transition-colors ${
         active ? 'bg-[#1f2f3d] text-white' : 'text-slate-600 hover:bg-white'
       } ${className}`}

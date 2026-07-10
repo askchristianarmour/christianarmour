@@ -214,10 +214,10 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
                   <label className="block text-sm font-semibold text-slate-700">Page content</label>
                   <p className="mt-1 text-xs text-slate-500">
                     Select text and use <strong>Link articles</strong> to connect that phrase to
-                    specific existing articles. Readers who click it open only those linked
-                    articles. Add Bible references at the end of a line (e.g. John 3:16 or Matt
-                    21:34) — they appear in red and open a Scripture preview when readers click
-                    them.
+                    specific existing articles. Use <strong>Table</strong> to insert a content-sized
+                    table, then add or remove rows and columns from the toolbar. Add Bible
+                    references at the end of a line (e.g. John 3:16 or Matt 21:34) — they appear in
+                    red and open a Scripture preview when readers click them.
                   </p>
                   <div className="mt-2">
                     <RichTextEditor
