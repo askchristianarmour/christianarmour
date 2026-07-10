@@ -220,7 +220,7 @@ export function ArticleDetail() {
         />
       )}
       <div className="w-full bg-white">
-        <div className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+        <div className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
           <button
             type="button"
             onClick={handleBack}
@@ -231,63 +231,66 @@ export function ArticleDetail() {
           </button>
 
           {isAdmin && (
-            <div className="mt-4">
+            <div className="mt-3 sm:mt-4">
               <ArticleAdminActions postId={post.id} postTitle={post.title} />
             </div>
           )}
 
-          <article className="mt-6">
-            <div className="relative overflow-hidden rounded-[20px]">
+          <article className="mt-4 sm:mt-6">
+            <div className="relative overflow-hidden rounded-[14px] sm:rounded-[20px]">
               <PostCoverImage
                 imageUrl={post.image_url}
                 title={post.title}
-                className="aspect-[16/9] min-h-[280px] w-full sm:min-h-[340px] lg:min-h-[420px]"
-                titleClassName="max-w-xl font-serif text-4xl leading-tight text-slate-700"
+                className="aspect-[16/10] min-h-0 w-full sm:aspect-[16/9] sm:min-h-[340px] lg:min-h-[420px]"
+                titleClassName="max-w-xl font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
               />
 
-              <div className="absolute bottom-4 right-4 z-10 flex flex-wrap items-center justify-end gap-2 sm:bottom-5 sm:right-5 sm:gap-3">
+              <div className="absolute bottom-2.5 right-2.5 z-10 flex flex-wrap items-center justify-end gap-1.5 sm:bottom-5 sm:right-5 sm:gap-3">
                 <button
                   type="button"
                   onClick={likeState.toggleLike}
                   disabled={likeState.isPending}
-                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-sm backdrop-blur-sm transition-colors ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
                     likeState.userLiked
                       ? 'bg-rose-100 text-rose-700'
                       : 'bg-white/90 text-slate-800 hover:bg-white'
                   }`}
                 >
-                  <Heart size={15} fill={likeState.userLiked ? 'currentColor' : 'none'} />
-                  Like
+                  <Heart size={14} className="sm:hidden" fill={likeState.userLiked ? 'currentColor' : 'none'} />
+                  <Heart size={15} className="hidden sm:block" fill={likeState.userLiked ? 'currentColor' : 'none'} />
+                  <span className="sm:inline">Like</span>
                 </button>
 
                 <a
                   href="#comments"
-                  className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <MessageCircle size={15} />
+                  <MessageCircle size={14} className="sm:hidden" />
+                  <MessageCircle size={15} className="hidden sm:block" />
                   Comment
                 </a>
 
                 <button
                   type="button"
                   onClick={() => setShowShareModal(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-sm font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
                 >
-                  <Share2 size={15} />
+                  <Share2 size={14} className="sm:hidden" />
+                  <Share2 size={15} className="hidden sm:block" />
                   Share
                 </button>
               </div>
             </div>
 
-            <div className="mt-8 max-w-3xl">
-              <p className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
+            <div className="mt-5 max-w-3xl sm:mt-8">
+              <p className="font-sans text-[11px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[12.21px]">
                 {categoryLabel}
               </p>
-              <h1 className="mt-3 font-serif text-[40px] font-bold leading-none tracking-normal text-slate-900 sm:text-[48px]">
+              <h1 className="mt-2 font-serif text-[1.75rem] font-bold leading-[1.15] tracking-normal text-slate-900 sm:mt-3 sm:text-[48px] sm:leading-none">
                 {post.title}
               </h1>
 
-              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500 sm:mt-5 sm:gap-x-5 sm:gap-y-2 sm:text-sm">
                 <span>Christian Armour</span>
                 <span aria-hidden className="hidden text-slate-300 sm:inline">
                   ·
@@ -299,7 +302,7 @@ export function ArticleDetail() {
                 <span>{readingTime} mins read</span>
               </div>
 
-              <ArticleContent content={post.content} className="mt-8" showPageNav />
+              <ArticleContent content={post.content} className="mt-6 sm:mt-8" showPageNav />
             </div>
           </article>
 
