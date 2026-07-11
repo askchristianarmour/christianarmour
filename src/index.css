@@ -585,6 +585,60 @@ a.rtBibleRef:hover {
   }
 }
 
+/* Article cover "trunk lid" reveal:
+   the cover holds ~1.15s, then hinges up from its top edge (like a car
+   dicky opening), fades away, and its row collapses so the article
+   content rises into view without scrolling. */
+.article-cover-reveal {
+  display: grid;
+  grid-template-rows: 1fr;
+  pointer-events: none;
+  animation: article-cover-row-collapse 950ms cubic-bezier(0.7, 0, 0.3, 1) 1150ms forwards;
+}
+
+.article-cover-reveal__perspective {
+  min-height: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 0%;
+}
+
+.article-cover-reveal__lid {
+  transform-origin: 50% 0%;
+  will-change: transform, opacity;
+  animation: article-cover-lid-open 950ms cubic-bezier(0.55, -0.02, 0.3, 1) 1150ms forwards;
+}
+
+@keyframes article-cover-row-collapse {
+  from {
+    grid-template-rows: 1fr;
+  }
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes article-cover-lid-open {
+  0% {
+    transform: rotateX(0deg);
+    opacity: 1;
+  }
+  45% {
+    transform: rotateX(45deg);
+    opacity: 0.75;
+  }
+  100% {
+    transform: rotateX(74deg) translateY(-4%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .article-cover-reveal,
+  .article-cover-reveal__lid {
+    animation: none;
+  }
+}
+
 @keyframes skeleton-shimmer {
   0% {
     transform: translateX(-100%);

@@ -269,49 +269,19 @@ export function ArticleDetail() {
           )}
 
           <article className="mt-4 sm:mt-6">
-            <div className="relative overflow-hidden rounded-[14px] shadow-[0_16px_40px_rgba(15,8,4,0.35)] sm:rounded-[20px]">
-              <PostCoverImage
-                imageUrl={post.image_url}
-                title={post.title}
-                seed={post.id}
-                className="aspect-[16/10] min-h-0 w-full sm:aspect-[16/9] sm:min-h-[340px] lg:min-h-[420px]"
-                titleClassName="max-w-xl font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
-              />
-
-              <div className="absolute bottom-2.5 right-2.5 z-10 flex flex-wrap items-center justify-end gap-1.5 sm:bottom-5 sm:right-5 sm:gap-3">
-                <button
-                  type="button"
-                  onClick={likeState.toggleLike}
-                  disabled={likeState.isPending}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
-                    likeState.userLiked
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-white/90 text-slate-800 hover:bg-white'
-                  }`}
-                >
-                  <Heart size={14} className="sm:hidden" fill={likeState.userLiked ? 'currentColor' : 'none'} />
-                  <Heart size={15} className="hidden sm:block" fill={likeState.userLiked ? 'currentColor' : 'none'} />
-                  <span className="sm:inline">Like</span>
-                </button>
-
-                <a
-                  href="#comments"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                >
-                  <MessageCircle size={14} className="sm:hidden" />
-                  <MessageCircle size={15} className="hidden sm:block" />
-                  Comment
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => setShowShareModal(true)}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                >
-                  <Share2 size={14} className="sm:hidden" />
-                  <Share2 size={15} className="hidden sm:block" />
-                  Share
-                </button>
+            {/* Cover shows for a beat, then hinges up like a car trunk lid,
+                fades out, and collapses so the content rises into view. */}
+            <div className="article-cover-reveal" aria-hidden>
+              <div className="article-cover-reveal__perspective">
+                <div className="article-cover-reveal__lid overflow-hidden rounded-[14px] shadow-[0_16px_40px_rgba(15,8,4,0.35)] sm:rounded-[20px]">
+                  <PostCoverImage
+                    imageUrl={post.image_url}
+                    title={post.title}
+                    seed={post.id}
+                    className="aspect-[16/10] min-h-0 w-full sm:aspect-[16/9] sm:min-h-[340px] lg:min-h-[420px]"
+                    titleClassName="max-w-xl font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
+                  />
+                </div>
               </div>
             </div>
 
@@ -333,6 +303,42 @@ export function ArticleDetail() {
                   ·
                 </span>
                 <span>{readingTime} mins read</span>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={likeState.toggleLike}
+                  disabled={likeState.isPending}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-sm backdrop-blur-sm transition-colors sm:gap-2 sm:px-4 sm:py-2 sm:text-sm ${
+                    likeState.userLiked
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-white/90 text-slate-800 hover:bg-white'
+                  }`}
+                >
+                  <Heart size={14} className="sm:hidden" fill={likeState.userLiked ? 'currentColor' : 'none'} />
+                  <Heart size={15} className="hidden sm:block" fill={likeState.userLiked ? 'currentColor' : 'none'} />
+                  Like
+                </button>
+
+                <a
+                  href="#comments"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                >
+                  <MessageCircle size={14} className="sm:hidden" />
+                  <MessageCircle size={15} className="hidden sm:block" />
+                  Comment
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setShowShareModal(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                >
+                  <Share2 size={14} className="sm:hidden" />
+                  <Share2 size={15} className="hidden sm:block" />
+                  Share
+                </button>
               </div>
 
               <ArticleContent
