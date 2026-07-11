@@ -9,9 +9,10 @@ import { deletePost } from '../lib/posts'
 type Props = {
   postId: string
   postTitle: string
+  canDelete?: boolean
 }
 
-export function ArticleAdminActions({ postId, postTitle }: Props) {
+export function ArticleAdminActions({ postId, postTitle, canDelete = true }: Props) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { success: toastSuccess, error: toastError } = useToast()
@@ -36,7 +37,7 @@ export function ArticleAdminActions({ postId, postTitle }: Props) {
     <>
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-amber-200/80 bg-[#faf5e8]/60 px-4 py-3">
         <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a8863d]">
-          Admin
+          {canDelete ? 'Admin' : 'Editor'}
         </span>
         <div className="ml-auto flex flex-wrap gap-2">
           <Link
@@ -46,28 +47,32 @@ export function ArticleAdminActions({ postId, postTitle }: Props) {
             <Pencil size={15} />
             Edit article
           </Link>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setConfirmOpen(true)
-            }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-          >
-            <Trash2 size={15} />
-            Delete
-          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setConfirmOpen(true)
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3.5 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+            >
+              <Trash2 size={15} />
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
-      <DeleteArticleConfirmationModal
-        open={confirmOpen}
-        postTitle={postTitle}
-        isDeleting={deleteMutation.isPending}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={() => deleteMutation.mutate()}
-      />
+      {canDelete && (
+        <DeleteArticleConfirmationModal
+          open={confirmOpen}
+          postTitle={postTitle}
+          isDeleting={deleteMutation.isPending}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={() => deleteMutation.mutate()}
+        />
+      )}
     </>
   )
 }

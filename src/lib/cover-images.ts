@@ -89,8 +89,14 @@ export async function uploadPrandomCover(file: File) {
 }
 
 export async function deletePrandomCover(publicUrlOrPath: string) {
-  const path = extractPrandomObjectPath(publicUrlOrPath)
-  const { error } = await supabase.storage.from(PRANDOM_BUCKET).remove([path])
+  await deletePrandomCovers([publicUrlOrPath])
+}
+
+export async function deletePrandomCovers(publicUrlsOrPaths: string[]) {
+  const paths = publicUrlsOrPaths.map(extractPrandomObjectPath).filter(Boolean)
+  if (paths.length === 0) return
+
+  const { error } = await supabase.storage.from(PRANDOM_BUCKET).remove(paths)
   if (error) throw error
 }
 

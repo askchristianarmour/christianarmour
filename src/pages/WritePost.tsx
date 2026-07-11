@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { useIsAdmin } from '../hooks/useUserPermissions'
+import { useArticlePermissions } from '../hooks/useUserPermissions'
 import { supabase } from '../lib/supabase'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../contexts/ToastContext'
@@ -15,15 +15,17 @@ import {
   serializeArticleContent,
 } from '../lib/article-structure'
 import { TagPicker } from '../components/TagPicker'
+import { KeywordMapper } from '../components/KeywordMapper'
 import type { ArticleTagSlug } from '../lib/tags'
 import { getTagBySlug } from '../lib/tags'
+import { normalizeKeywords } from '../lib/keywords'
 import { fetchPostById, updatePost } from '../lib/posts'
 
 export function WritePost() {
   const { postId: editPostId } = useParams()
   const isEditing = !!editPostId
   const { user, loading: authLoading } = useAuth()
-  const { isAdmin, isLoading: permLoading } = useIsAdmin()
+  const { canAdd, canEdit, isLoading: permLoading } = useArticlePermissions()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { success: toastSuccess, error: toastError } = useToast()
@@ -35,6 +37,7 @@ export function WritePost() {
   )
   const [commentsEnabled, setCommentsEnabled] = useState(false)
   const [postTag, setPostTag] = useState<ArticleTagSlug | null>(null)
+  const [postKeywords, setPostKeywords] = useState<string[]>([])
 
   // Cover Image Cropping State
   const [postImageSrc, setPostImageSrc] = useState<string | null>(null)
@@ -51,10 +54,12 @@ export function WritePost() {
   // Preview confirmation state
   const [showPublishPreview, setShowPublishPreview] = useState(false)
 
+  const canAccess = isEditing ? canEdit : canAdd
+
   const { data: existingPost, isLoading: postLoading, error: postError } = useQuery({
     queryKey: ['post', editPostId],
     queryFn: () => fetchPostById(editPostId!),
-    enabled: isEditing && isAdmin,
+    enabled: isEditing && canEdit,
   })
 
   useEffect(() => {
@@ -63,6 +68,7 @@ export function WritePost() {
     setPostContent(existingPost.content)
     setCommentsEnabled(existingPost.comments_enabled)
     setPostTag((existingPost.tag as ArticleTagSlug | null) ?? null)
+    setPostKeywords(normalizeKeywords(existingPost.keywords ?? []))
     if (existingPost.image_url) {
       setPostImagePreview(existingPost.image_url)
       setExistingImageUrl(existingPost.image_url)
@@ -84,6 +90,7 @@ export function WritePost() {
       imageBlob: Blob | null
       commentsEnabled: boolean
       tag: ArticleTagSlug | null
+      keywords: string[]
     }) => {
       const postId = crypto.randomUUID()
       let imageUrl: string | null = null
@@ -113,6 +120,7 @@ export function WritePost() {
         image_url: imageUrl,
         comments_enabled: payload.commentsEnabled,
         tag: payload.tag ?? null,
+        keywords: normalizeKeywords(payload.keywords),
       })
 
       if (error) throw error
@@ -124,11 +132,13 @@ export function WritePost() {
       setPostContent(serializeArticleContent(createDefaultArticleContent()))
       setCommentsEnabled(false)
       setPostTag(null)
+      setPostKeywords([])
       setPostImageSrc(null)
       setPostImageBlob(null)
       setPostImagePreview(null)
       setShowPublishPreview(false)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts-by-search'] })
       queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
       queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
       navigate('/') // Redirect to home page where post will appear in real time
@@ -145,6 +155,7 @@ export function WritePost() {
       imageBlob: Blob | null
       commentsEnabled: boolean
       tag: ArticleTagSlug | null
+      keywords: string[]
       existingImageUrl: string | null
     }) => {
       if (!editPostId) throw new Error('Missing post ID')
@@ -155,12 +166,14 @@ export function WritePost() {
         existingImageUrl: payload.existingImageUrl,
         commentsEnabled: payload.commentsEnabled,
         tag: payload.tag,
+        keywords: payload.keywords,
       })
     },
     onSuccess: () => {
       toastSuccess('Article updated successfully!')
       setShowPublishPreview(false)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts-by-search'] })
       queryClient.invalidateQueries({ queryKey: ['post', editPostId] })
       queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
       queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
@@ -293,6 +306,7 @@ export function WritePost() {
       imageBlob: postImageBlob,
       commentsEnabled: commentsEnabled,
       tag: postTag,
+      keywords: postKeywords,
     }
 
     if (isEditing) {
@@ -330,13 +344,13 @@ export function WritePost() {
     )
   }
 
-  if (!isAdmin) {
+  if (!canAccess) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
         <ShieldAlert size={48} className="mx-auto text-red-600 mb-4 animate-bounce" />
         <h2 className="text-xl font-bold text-slate-900">Access Denied</h2>
         <p className="mt-2 text-slate-600 text-sm">
-          You do not have the required administrator privileges to {isEditing ? 'edit' : 'add'} posts.
+          You do not have permission to {isEditing ? 'edit' : 'add'} articles.
         </p>
         <button
           onClick={() => navigate('/')}
@@ -463,6 +477,8 @@ export function WritePost() {
           </div>
 
           <TagPicker value={postTag} onChange={setPostTag} />
+
+          <KeywordMapper value={postKeywords} onChange={setPostKeywords} />
 
           {/* Comment control settings */}
           <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
@@ -613,6 +629,9 @@ export function WritePost() {
                 <AlertCircle size={14} className="text-amber-500" />
                 <span>Comments: {commentsEnabled ? 'Enabled' : 'Disabled'}</span>
                 <span>Tag: {postTag ? getTagBySlug(postTag)?.title : 'None'}</span>
+                {postKeywords.length > 0 && (
+                  <span>Keywords: {postKeywords.join(', ')}</span>
+                )}
               </div>
             </div>
 

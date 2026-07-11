@@ -22,7 +22,15 @@ import {
 } from '../lib/posts'
 import { getTagBySlug } from '../lib/tags'
 
-export function AdminPostsManager() {
+const PREVIEW_LIMIT = 10
+
+type Props = {
+  /** Preview on Profile settings: first 10 + link to full page. */
+  variant?: 'preview' | 'full'
+}
+
+export function AdminPostsManager({ variant = 'full' }: Props) {
+  const isPreview = variant === 'preview'
   const queryClient = useQueryClient()
   const { success: toastSuccess, error: toastError } = useToast()
   const [search, setSearch] = useState('')
@@ -46,8 +54,12 @@ export function AdminPostsManager() {
     })
   }, [posts, search])
 
-  const allFilteredSelected =
-    filtered.length > 0 && filtered.every((post) => selectedIds.includes(post.id))
+  const visiblePosts = isPreview ? filtered.slice(0, PREVIEW_LIMIT) : filtered
+  const hasMoreThanPreview = posts.length > PREVIEW_LIMIT
+
+  const allVisibleSelected =
+    visiblePosts.length > 0 &&
+    visiblePosts.every((post) => selectedIds.includes(post.id))
 
   const selectedPosts = posts.filter((post) => selectedIds.includes(post.id))
 
@@ -92,15 +104,15 @@ export function AdminPostsManager() {
     )
   }
 
-  const toggleAllFiltered = () => {
-    if (allFilteredSelected) {
-      const filteredSet = new Set(filtered.map((post) => post.id))
-      setSelectedIds((current) => current.filter((id) => !filteredSet.has(id)))
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) {
+      const visibleSet = new Set(visiblePosts.map((post) => post.id))
+      setSelectedIds((current) => current.filter((id) => !visibleSet.has(id)))
       return
     }
     setSelectedIds((current) => {
       const next = new Set(current)
-      filtered.forEach((post) => next.add(post.id))
+      visiblePosts.forEach((post) => next.add(post.id))
       return [...next]
     })
   }
@@ -116,53 +128,61 @@ export function AdminPostsManager() {
         <div>
           <h2 className="text-xl font-bold text-slate-900">Manage Articles</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Select articles to delete, edit, or control comments across the site.
+            {isPreview
+              ? 'Recent articles at a glance. Open the full manager to search, select, and delete.'
+              : 'Select articles to delete, edit, or control comments across the site.'}
           </p>
         </div>
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          {posts.length} total
-        </p>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <Search
-            size={15}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title or category..."
-            className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-slate-400"
-          />
-        </div>
-
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleAllFiltered}
-            disabled={filtered.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
-          >
-            {allFilteredSelected ? <CheckSquare size={15} /> : <Square size={15} />}
-            {allFilteredSelected ? 'Clear selection' : 'Select all'}
-          </button>
-          <button
-            type="button"
-            disabled={selectedIds.length === 0 || deleteMutation.isPending}
-            onClick={() => setConfirmOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Trash2 size={15} />
-            Delete selected
-            {selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
-          </button>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            {isPreview
+              ? `Showing ${Math.min(PREVIEW_LIMIT, posts.length)} of ${posts.length}`
+              : `${posts.length} total`}
+          </p>
         </div>
       </div>
 
-      {selectedIds.length > 0 && (
+      {!isPreview && (
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-sm">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by title or category..."
+              className="w-full rounded-lg border border-slate-200 py-2 pl-9 pr-3 text-sm outline-none focus:border-slate-400"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleAllVisible}
+              disabled={visiblePosts.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            >
+              {allVisibleSelected ? <CheckSquare size={15} /> : <Square size={15} />}
+              {allVisibleSelected ? 'Clear selection' : 'Select all'}
+            </button>
+            <button
+              type="button"
+              disabled={selectedIds.length === 0 || deleteMutation.isPending}
+              onClick={() => setConfirmOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Trash2 size={15} />
+              Delete selected
+              {selectedIds.length > 0 ? ` (${selectedIds.length})` : ''}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isPreview && selectedIds.length > 0 && (
         <p className="mt-3 text-xs font-medium text-[#8a6d2b]">
           {selectedIds.length} article{selectedIds.length === 1 ? '' : 's'} selected
         </p>
@@ -177,17 +197,18 @@ export function AdminPostsManager() {
           <p className="px-4 py-10 text-center text-sm text-red-600">
             Failed to load articles. Please try again.
           </p>
-        ) : filtered.length === 0 ? (
+        ) : visiblePosts.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-slate-500">
             {search.trim() ? 'No articles match your search.' : 'No articles published yet.'}
           </p>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {filtered.map((post) => (
+            {visiblePosts.map((post) => (
               <AdminPostRowItem
                 key={post.id}
                 post={post}
-                selected={selectedIds.includes(post.id)}
+                selected={!isPreview && selectedIds.includes(post.id)}
+                showCheckbox={!isPreview}
                 onToggle={() => toggleOne(post.id)}
                 commentsPending={
                   commentsMutation.isPending && commentsMutation.variables?.postId === post.id
@@ -204,14 +225,28 @@ export function AdminPostsManager() {
         )}
       </div>
 
-      <DeleteArticleConfirmationModal
-        open={confirmOpen}
-        postTitle={confirmLabel}
-        bulkCount={selectedPosts.length}
-        isDeleting={deleteMutation.isPending}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={() => deleteMutation.mutate()}
-      />
+      {isPreview && (
+        <div className="mt-4 flex justify-center">
+          <Link
+            to="/manage-articles"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            Manage Articles
+            {hasMoreThanPreview ? ` (${posts.length})` : ''}
+          </Link>
+        </div>
+      )}
+
+      {!isPreview && (
+        <DeleteArticleConfirmationModal
+          open={confirmOpen}
+          postTitle={confirmLabel}
+          bulkCount={selectedPosts.length}
+          isDeleting={deleteMutation.isPending}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={() => deleteMutation.mutate()}
+        />
+      )}
     </div>
   )
 }
@@ -219,12 +254,14 @@ export function AdminPostsManager() {
 function AdminPostRowItem({
   post,
   selected,
+  showCheckbox,
   onToggle,
   onToggleComments,
   commentsPending,
 }: {
   post: AdminPostRow
   selected: boolean
+  showCheckbox: boolean
   onToggle: () => void
   onToggleComments: () => void
   commentsPending: boolean
@@ -242,13 +279,18 @@ function AdminPostRowItem({
         selected ? 'bg-[#faf8f4]' : 'bg-white hover:bg-slate-50/80'
       }`}
     >
-      <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
-        <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggle}
-          className="mt-1 h-4 w-4 rounded border-slate-300 text-[#1f2f3d] focus:ring-[#c6a14d]"
-        />
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        {showCheckbox && (
+          <label className="mt-1 inline-flex cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggle}
+              className="h-4 w-4 rounded border-slate-300 text-[#1f2f3d] focus:ring-[#c6a14d]"
+            />
+            <span className="sr-only">Select {post.title}</span>
+          </label>
+        )}
         <span className="min-w-0 flex-1">
           {tag && (
             <span className="text-[11px] font-bold uppercase tracking-wide text-[#D4AF37]">
@@ -260,9 +302,9 @@ function AdminPostRowItem({
           </span>
           <span className="mt-1 block text-xs text-slate-500">{date}</span>
         </span>
-      </label>
+      </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 pl-7 sm:pl-0">
+      <div className={`flex flex-wrap items-center gap-1.5 ${showCheckbox ? 'pl-7 sm:pl-0' : ''}`}>
         <button
           type="button"
           onClick={onToggleComments}

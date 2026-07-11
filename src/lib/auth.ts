@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import type { LockStatus } from '../types/database'
 import { formatAuthError } from './auth-errors'
 import { withRateLimit } from './rate-limiter'
+import { fetchUserBanStatus, storeBanNotice } from './user-bans'
 
 const MAX_ATTEMPTS = 5
 
@@ -43,6 +44,12 @@ async function signInRequest(email: string, password: string) {
       }
     }
 
+    const banStatus = await fetchUserBanStatus(normalized)
+    if (banStatus.banned) {
+      const reason = banStatus.reason || 'Your account has been banned.'
+      return { error: `This account has been banned. ${reason}` }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email: normalized,
       password,
@@ -73,6 +80,15 @@ async function signInRequest(email: string, password: string) {
       }
 
       return { error: formatAuthError(error) }
+    }
+
+    // Re-check after auth in case ban was applied mid-login
+    const postBan = await fetchUserBanStatus(normalized)
+    if (postBan.banned) {
+      const reason = postBan.reason || 'Your account has been banned.'
+      storeBanNotice(reason)
+      await supabase.auth.signOut()
+      return { error: `This account has been banned. ${reason}` }
     }
 
     await supabase.rpc('reset_login_attempts', { p_email: normalized })

@@ -3,6 +3,7 @@ import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { formatAuthError, secureSignIn } from '../lib/auth'
 import { withRateLimit } from '../lib/rate-limiter'
+import { fetchUserBanStatus, storeBanNotice } from '../lib/user-bans'
 import { AuthContext } from './auth-context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -11,20 +12,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
-      setUser(data.session?.user ?? null)
+    let cancelled = false
+
+    const applySession = async (nextSession: Session | null) => {
+      const nextUser = nextSession?.user ?? null
+      if (nextUser?.email) {
+        const banStatus = await fetchUserBanStatus(nextUser.email)
+        if (cancelled) return
+        if (banStatus.banned) {
+          storeBanNotice(banStatus.reason || 'Your account has been banned.')
+          await supabase.auth.signOut()
+          if (cancelled) return
+          setSession(null)
+          setUser(null)
+          setLoading(false)
+          return
+        }
+      }
+
+      if (cancelled) return
+      setSession(nextSession)
+      setUser(nextUser)
       setLoading(false)
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      void applySession(data.session)
     })
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-      setUser(nextSession?.user ?? null)
+      void applySession(nextSession)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -35,6 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const normalized = email.toLowerCase().trim()
 
     return withRateLimit('signUp', normalized, async () => {
+      const banStatus = await fetchUserBanStatus(normalized)
+      if (banStatus.banned) {
+        const reason = banStatus.reason || 'Your account has been banned.'
+        return { error: `This account has been banned. ${reason}` }
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email: normalized,
         password,

@@ -153,7 +153,8 @@ export function Articles() {
       if (readMins > readTimeMax) return false
 
       if (!activeSearch && keyword.trim()) {
-        const haystack = `${post.title} ${getPlainTextFromContent(post.content)}`.toLowerCase()
+        const mapped = (post.keywords ?? []).join(' ')
+        const haystack = `${post.title} ${getPlainTextFromContent(post.content)} ${mapped}`.toLowerCase()
         if (!haystack.includes(keyword.trim().toLowerCase())) return false
       }
 

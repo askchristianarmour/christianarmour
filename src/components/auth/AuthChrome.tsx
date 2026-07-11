@@ -86,15 +86,22 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
         return {
           email: user.email,
           can_post: user.email === 'ask@christianarmour.com',
+          can_edit: user.email === 'ask@christianarmour.com',
           is_admin: user.email === 'ask@christianarmour.com',
         }
       }
-      return data
+      return {
+        ...data,
+        can_edit: data.can_edit ?? data.can_post,
+      }
     },
   })
 
   const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
-  const canPost = user?.email === 'ask@christianarmour.com' || !!userPermission?.can_post
+  const canPost =
+    user?.email === 'ask@christianarmour.com' ||
+    !!userPermission?.is_admin ||
+    !!userPermission?.can_post
   const { data: unreadQuestionCount = 0 } = useQuery({
     queryKey: ['notification-count', user?.id],
     enabled: !!user?.id,
@@ -378,25 +385,25 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                   <User size={16} className="text-slate-400" />
                   Profile
                 </Link>
+                {canPost && (
+                  <Link
+                    to="/add-post"
+                    onClick={closeDrawers}
+                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <PlusCircle size={16} className="text-slate-400" />
+                    Add Post
+                  </Link>
+                )}
                 {isAdmin && (
-                  <>
-                    <Link
-                      to="/analytics"
-                      onClick={closeDrawers}
-                      className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      <BarChart3 size={16} className="text-slate-400" />
-                      Analytics
-                    </Link>
-                    <Link
-                      to="/add-post"
-                      onClick={closeDrawers}
-                      className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      <PlusCircle size={16} className="text-slate-400" />
-                      Add Post
-                    </Link>
-                  </>
+                  <Link
+                    to="/analytics"
+                    onClick={closeDrawers}
+                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <BarChart3 size={16} className="text-slate-400" />
+                    Analytics
+                  </Link>
                 )}
                 <button
                   type="button"
@@ -503,25 +510,25 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                     <User size={18} className="text-slate-400" />
                     Profile
                   </Link>
+                  {canPost && (
+                    <Link
+                      to="/add-post"
+                      onClick={closeDrawers}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      <PlusCircle size={18} className="text-slate-400" />
+                      Add Post
+                    </Link>
+                  )}
                   {isAdmin && (
-                    <>
-                      <Link
-                        to="/analytics"
-                        onClick={closeDrawers}
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        <BarChart3 size={18} className="text-slate-400" />
-                        Analytics
-                      </Link>
-                      <Link
-                        to="/add-post"
-                        onClick={closeDrawers}
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        <PlusCircle size={18} className="text-slate-400" />
-                        Add Post
-                      </Link>
-                    </>
+                    <Link
+                      to="/analytics"
+                      onClick={closeDrawers}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      <BarChart3 size={18} className="text-slate-400" />
+                      Analytics
+                    </Link>
                   )}
                 </nav>
               </div>

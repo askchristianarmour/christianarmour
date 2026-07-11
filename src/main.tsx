@@ -6,6 +6,7 @@ import { AppSeo } from './components/AppSeo'
 import { AuthProvider } from './contexts/AuthProvider'
 import { ToastProvider } from './contexts/ToastContext'
 import { ToastContainer } from './components/ToastContainer'
+import { BanNoticeListener } from './components/BanNoticeListener'
 import { Layout } from './components/Layout'
 import { Home } from './pages/Home'
 import { SignIn } from './pages/SignIn'
@@ -22,6 +23,8 @@ import { Ask } from './pages/Ask'
 import { QuestionAnswerDetail } from './pages/QuestionAnswerDetail'
 import { About } from './pages/About'
 import { WritePost } from './pages/WritePost'
+import { ManageArticles } from './pages/ManageArticles'
+import { ManageCoverPool } from './pages/ManageCoverPool'
 import './index.css'
 
 const queryClient = new QueryClient()
@@ -49,11 +52,14 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/add-post" element={<WritePost />} />
               <Route path="/add-post/edit/:postId" element={<WritePost />} />
+              <Route path="/manage-articles" element={<ManageArticles />} />
+              <Route path="/manage-cover-pool" element={<ManageCoverPool />} />
               <Route path="/ask" element={<Ask />} />
               <Route path="/ask/answers/:questionId" element={<QuestionAnswerDetail />} />
             </Route>
           </Routes>
           </BrowserRouter>
+          <BanNoticeListener />
           <ToastContainer />
         </ToastProvider>
       </AuthProvider>

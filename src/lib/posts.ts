@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { keywordsContainsFilter, normalizeKeywords } from './keywords'
 import type { ArticleTagSlug } from './tags'
 import type { Comment, Like, Post } from '../types/database'
 
@@ -58,11 +59,15 @@ export async function fetchPostsPageBySearch(
   const start = page * PAGE_SIZE
   const end = start + PAGE_SIZE - 1
   const pattern = `%${term}%`
+  const keywordFilter = keywordsContainsFilter(search)
+  const orFilter = keywordFilter
+    ? `title.ilike.${pattern},content.ilike.${pattern},${keywordFilter}`
+    : `title.ilike.${pattern},content.ilike.${pattern}`
 
   const { data: posts, error } = await supabase
     .from('posts')
     .select('*')
-    .or(`title.ilike.${pattern},content.ilike.${pattern}`)
+    .or(orFilter)
     .order('created_at', { ascending: false })
     .range(start, end)
 
@@ -227,6 +232,7 @@ export async function updatePost(
     existingImageUrl?: string | null
     commentsEnabled: boolean
     tag: string | null
+    keywords?: string[]
   }
 ) {
   let imageUrl = payload.existingImageUrl ?? null
@@ -254,6 +260,7 @@ export async function updatePost(
       image_url: imageUrl,
       comments_enabled: payload.commentsEnabled,
       tag: payload.tag,
+      keywords: normalizeKeywords(payload.keywords ?? []),
     })
     .eq('id', postId)
 

@@ -16,7 +16,7 @@ import { resolvePostCoverImage } from '../lib/cover-images'
 import { useAuth } from '../hooks/useAuth'
 import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
 import { usePostLike } from '../hooks/usePostLike'
-import { useIsAdmin } from '../hooks/useUserPermissions'
+import { useArticlePermissions, useIsAdmin } from '../hooks/useUserPermissions'
 import { logView } from '../lib/analytics'
 import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { fetchPostById } from '../lib/posts'
@@ -40,6 +40,7 @@ export function ArticleDetail() {
     (backTo === '/' || backTo.startsWith('/?') ? 'Back to home' : 'Back to articles')
   const { user } = useAuth()
   const { isAdmin } = useIsAdmin()
+  const { canEdit } = useArticlePermissions()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
   const [commentText, setCommentText] = useState('')
@@ -269,9 +270,13 @@ export function ArticleDetail() {
             {backLabel}
           </button>
 
-          {isAdmin && (
+          {(isAdmin || canEdit) && (
             <div className="mt-3 sm:mt-4">
-              <ArticleAdminActions postId={post.id} postTitle={post.title} />
+              <ArticleAdminActions
+                postId={post.id}
+                postTitle={post.title}
+                canDelete={isAdmin}
+              />
             </div>
           )}
 

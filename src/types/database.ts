@@ -6,6 +6,8 @@ export type Post = {
   image_url?: string | null
   comments_enabled: boolean
   tag?: string | null
+  /** Normalized search terms mapped on create/edit */
+  keywords?: string[] | null
 }
 
 export type Comment = {
@@ -27,6 +29,14 @@ export type LockStatus = {
   remaining?: number
   locked_until?: string
   message?: string
+}
+
+export type UserBan = {
+  email: string
+  reason: string | null
+  banned_by: string | null
+  banned_at: string
+  active: boolean
 }
 
 export type Question = {

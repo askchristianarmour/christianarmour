@@ -4,12 +4,16 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Trash2, Image as ImageIcon, HelpCircle } from 'lucide-react'
+import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Image as ImageIcon, HelpCircle, MoreHorizontal, Ban } from 'lucide-react'
 import { TagPicker } from '../components/TagPicker'
+import { KeywordMapper } from '../components/KeywordMapper'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
 import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
 import { AdminPostsManager } from '../components/AdminPostsManager'
 import { AdminRandomCoversManager } from '../components/AdminRandomCoversManager'
+import { AdminBannedUsersManager } from '../components/AdminBannedUsersManager'
+import { EditPermissionModal } from '../components/EditPermissionModal'
+import { RevokePermissionConfirmationModal } from '../components/RevokePermissionConfirmationModal'
 import { ArticleContent } from '../components/ArticleContent'
 import { ArticlePagesEditor } from '../components/ArticlePagesEditor'
 import {
@@ -19,6 +23,7 @@ import {
 } from '../lib/article-structure'
 import type { ArticleTagSlug } from '../lib/tags'
 import { getTagBySlug } from '../lib/tags'
+import { normalizeKeywords } from '../lib/keywords'
 
 interface ActivityLike {
   id: string
@@ -62,7 +67,7 @@ export function Profile() {
 
   // Tab navigation state
   const [activeTab, setActiveTab] = useState<
-    'settings' | 'activity' | 'add-post' | 'permissions' | 'asked-questions'
+    'settings' | 'activity' | 'add-post' | 'permissions' | 'banned-users' | 'asked-questions'
   >('settings')
 
   // Add post state
@@ -72,6 +77,7 @@ export function Profile() {
   )
   const [commentsEnabled, setCommentsEnabled] = useState(false)
   const [postTag, setPostTag] = useState<ArticleTagSlug | null>(null)
+  const [postKeywords, setPostKeywords] = useState<string[]>([])
   const [showPublishPreview, setShowPublishPreview] = useState(false)
 
   // Post Header Image & Crop state
@@ -85,6 +91,12 @@ export function Profile() {
 
   // Permissions state
   const [newAccessEmail, setNewAccessEmail] = useState('')
+  const [editingPermission, setEditingPermission] = useState<{
+    email: string
+    canAdd: boolean
+    canEdit: boolean
+  } | null>(null)
+  const [revokeEmail, setRevokeEmail] = useState<string | null>(null)
 
   // Fetch current user permissions
   const { data: userPermission } = useQuery({
@@ -142,6 +154,7 @@ export function Profile() {
       imageBlob: Blob | null
       commentsEnabled: boolean
       tag: ArticleTagSlug | null
+      keywords: string[]
     }) => {
       const postId = crypto.randomUUID()
       let imageUrl: string | null = null
@@ -172,6 +185,7 @@ export function Profile() {
         image_url: imageUrl,
         comments_enabled: payload.commentsEnabled,
         tag: payload.tag ?? null,
+        keywords: normalizeKeywords(payload.keywords),
       })
 
       if (error) throw error
@@ -183,11 +197,13 @@ export function Profile() {
       setPostContent(serializeArticleContent(createDefaultArticleContent()))
       setCommentsEnabled(false)
       setPostTag(null)
+      setPostKeywords([])
       setPostImageSrc(null)
       setPostImageBlob(null)
       setPostImagePreview(null)
       setShowPublishPreview(false)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
+      queryClient.invalidateQueries({ queryKey: ['posts-by-search'] })
       queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
       queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
     },
@@ -198,23 +214,60 @@ export function Profile() {
 
   // Mutation to grant post access to an email
   const grantPermissionMutation = useMutation({
-    mutationFn: async (targetEmail: string) => {
-      const email = targetEmail.toLowerCase().trim()
+    mutationFn: async (payload: {
+      email: string
+      canAdd: boolean
+      canEdit: boolean
+    }) => {
+      const email = payload.email.toLowerCase().trim()
+      if (!payload.canAdd && !payload.canEdit) {
+        throw new Error('Select at least one permission: Can Add or Can Edit')
+      }
       const { data, error } = await supabase.from('user_permissions').upsert({
         email,
-        can_post: true,
+        can_post: payload.canAdd,
+        can_edit: payload.canEdit,
         is_admin: false,
       })
       if (error) throw error
       return data
     },
     onSuccess: () => {
-      toastSuccess('Posting access granted successfully!')
+      toastSuccess('Access permissions updated successfully!')
       setNewAccessEmail('')
       refetchPermissions()
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to grant access')
+    },
+  })
+
+  const updatePermissionMutation = useMutation({
+    mutationFn: async (payload: {
+      email: string
+      can_post: boolean
+      can_edit: boolean
+    }) => {
+      if (!payload.can_post && !payload.can_edit) {
+        throw new Error('Keep at least one permission, or use Revoke to remove access')
+      }
+      const { error } = await supabase
+        .from('user_permissions')
+        .update({
+          can_post: payload.can_post,
+          can_edit: payload.can_edit,
+        })
+        .eq('email', payload.email)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toastSuccess('Access permissions updated')
+      setEditingPermission(null)
+      refetchPermissions()
+      queryClient.invalidateQueries({ queryKey: ['user-permissions'] })
+    },
+    onError: (err: Error) => {
+      toastError(err.message || 'Failed to update permission')
     },
   })
 
@@ -229,11 +282,14 @@ export function Profile() {
       return data
     },
     onSuccess: () => {
-      toastSuccess('Posting access revoked successfully!')
+      toastSuccess('User removed from permissions list')
+      setRevokeEmail(null)
+      setEditingPermission(null)
       refetchPermissions()
+      queryClient.invalidateQueries({ queryKey: ['user-permissions'] })
     },
     onError: (err: Error) => {
-      toastError(err.message || 'Failed to revoke access')
+      toastError(err.message || 'Failed to remove user')
     },
   })
 
@@ -254,6 +310,7 @@ export function Profile() {
       imageBlob: postImageBlob,
       commentsEnabled,
       tag: postTag,
+      keywords: postKeywords,
     })
   }
 
@@ -263,7 +320,11 @@ export function Profile() {
       toastError('Email address is required')
       return
     }
-    grantPermissionMutation.mutate(newAccessEmail.trim())
+    grantPermissionMutation.mutate({
+      email: newAccessEmail.trim(),
+      canAdd: true,
+      canEdit: true,
+    })
   }
 
   // Cropper state
@@ -798,6 +859,21 @@ export function Profile() {
                   Manage Permissions
                 </button>
               )}
+
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('banned-users')}
+                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                    activeTab === 'banned-users'
+                      ? 'bg-slate-900 text-white'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Ban size={16} />
+                  Banned Users
+                </button>
+              )}
             </nav>
           </div>
 
@@ -928,8 +1004,8 @@ export function Profile() {
             </div>
           )}
 
-          {activeTab === 'settings' && isAdmin && <AdminPostsManager />}
-          {activeTab === 'settings' && isAdmin && <AdminRandomCoversManager />}
+          {activeTab === 'settings' && isAdmin && <AdminPostsManager variant="preview" />}
+          {activeTab === 'settings' && isAdmin && <AdminRandomCoversManager variant="preview" />}
 
           {/* Activity Feeds */}
           {activeTab === 'activity' && (
@@ -1077,6 +1153,8 @@ export function Profile() {
 
                 <TagPicker value={postTag} onChange={setPostTag} />
 
+                <KeywordMapper value={postKeywords} onChange={setPostKeywords} />
+
                 {/* Comment control settings (Default: False/Disabled) */}
                 <div className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
                   <input
@@ -1111,7 +1189,7 @@ export function Profile() {
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Manage Access Permissions</h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  Grant or revoke posting privileges for other accounts.
+                  Control who can add new articles and who can edit existing ones.
                 </p>
               </div>
 
@@ -1119,32 +1197,39 @@ export function Profile() {
                 <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700 flex items-start gap-2">
                   <ShieldAlert size={18} className="shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-semibold">Database Setup Required:</span> Please ensure the permissions table is created in your database. Run the SQL commands inside <code className="rounded bg-amber-100 px-1 font-mono">supabase/migrations/003_post_permissions.sql</code> in your Supabase SQL editor.
+                    <span className="font-semibold">Database Setup Required:</span> Please ensure the permissions table is created in your database. Run the SQL commands inside <code className="rounded bg-amber-100 px-1 font-mono">supabase/migrations/003_post_permissions.sql</code> and <code className="rounded bg-amber-100 px-1 font-mono">016_permission_add_edit.sql</code> in your Supabase SQL editor.
                   </div>
                 </div>
               )}
 
               {/* Grant access form */}
               {!permissionsTableError && (
-                <form onSubmit={handleGrantAccess} className="flex flex-col sm:flex-row gap-2">
-                  <div className="flex-1">
-                    <input
-                      type="email"
-                      value={newAccessEmail}
-                      onChange={(e) => setNewAccessEmail(e.target.value)}
-                      placeholder="Enter user email address"
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={grantPermissionMutation.isPending}
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    Grant Access
-                  </button>
-                </form>
+                <div className="space-y-3">
+                  <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-sm font-medium text-amber-900">
+                    <span className="font-bold">Important:</span> You can only grant access to users
+                    who have already registered in the app. Ask them to sign up first, then enter
+                    their registered email here.
+                  </p>
+                  <form onSubmit={handleGrantAccess} className="flex flex-col gap-2 sm:flex-row">
+                    <div className="flex-1">
+                      <input
+                        type="email"
+                        value={newAccessEmail}
+                        onChange={(e) => setNewAccessEmail(e.target.value)}
+                        placeholder="Enter user email address"
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-slate-400"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={grantPermissionMutation.isPending}
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      Grant Access
+                    </button>
+                  </form>
+                </div>
               )}
 
               {/* Permissions list */}
@@ -1157,7 +1242,10 @@ export function Profile() {
                           User Email
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          Can Post
+                          Can Add
+                        </th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          Can Edit
                         </th>
                         <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                           Role
@@ -1170,51 +1258,114 @@ export function Profile() {
                     <tbody className="bg-white divide-y divide-slate-100 text-sm">
                       {allPermissions && allPermissions.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="px-4 py-4 text-center text-slate-400">
+                          <td colSpan={5} className="px-4 py-4 text-center text-slate-400">
                             No other accounts have posting privileges yet.
                           </td>
                         </tr>
                       ) : (
-                        allPermissions?.map((perm) => (
-                          <tr key={perm.email}>
-                            <td className="px-4 py-3 font-medium text-slate-900 truncate max-w-[200px]" title={perm.email}>
-                              {perm.email}
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                                perm.can_post ? 'bg-green-50 text-green-700 border border-green-200/50' : 'bg-slate-50 text-slate-500 border border-slate-200/50'
-                              }`}>
-                                {perm.can_post ? 'Yes' : 'No'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-xs text-slate-500">
-                              {perm.is_admin ? 'Admin' : 'Authorized Author'}
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              {perm.email === 'ask@christianarmour.com' ? (
-                                <span className="text-xs text-slate-400 font-medium">System Root</span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => revokePermissionMutation.mutate(perm.email)}
-                                  disabled={revokePermissionMutation.isPending}
-                                  className="text-red-600 hover:text-red-900 font-semibold flex items-center gap-1 ml-auto cursor-pointer"
-                                  title="Revoke posting permissions"
+                        allPermissions?.map((perm) => {
+                          const canEdit = Boolean(perm.can_edit ?? perm.can_post)
+                          const isSystemRoot = perm.email === 'ask@christianarmour.com'
+
+                          return (
+                            <tr key={perm.email}>
+                              <td className="px-4 py-3 font-medium text-slate-900 truncate max-w-[200px]" title={perm.email}>
+                                {perm.email}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${
+                                    perm.can_post
+                                      ? 'border-green-200/50 bg-green-50 text-green-700'
+                                      : 'border-slate-200 bg-slate-50 text-slate-500'
+                                  }`}
                                 >
-                                  <Trash2 size={14} />
-                                  Revoke
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))
+                                  {perm.can_post ? 'Yes' : 'No'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span
+                                  className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium ${
+                                    canEdit
+                                      ? 'border-green-200/50 bg-green-50 text-green-700'
+                                      : 'border-slate-200 bg-slate-50 text-slate-500'
+                                  }`}
+                                >
+                                  {canEdit ? 'Yes' : 'No'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-xs text-slate-500">
+                                {perm.is_admin ? 'Admin' : 'Authorized Author'}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                {isSystemRoot ? (
+                                  <span className="text-xs font-medium text-slate-400">System Root</span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setEditingPermission({
+                                        email: perm.email,
+                                        canAdd: !!perm.can_post,
+                                        canEdit,
+                                      })
+                                    }
+                                    className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50"
+                                    aria-label={`Manage access for ${perm.email}`}
+                                    title="Update access"
+                                  >
+                                    <MoreHorizontal size={16} />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })
                       )}
                     </tbody>
                   </table>
                 </div>
               )}
+
+              <EditPermissionModal
+                open={!!editingPermission}
+                email={editingPermission?.email ?? ''}
+                canAdd={editingPermission?.canAdd ?? false}
+                canEdit={editingPermission?.canEdit ?? false}
+                isSaving={updatePermissionMutation.isPending}
+                onClose={() => {
+                  if (!updatePermissionMutation.isPending) setEditingPermission(null)
+                }}
+                onSave={({ canAdd, canEdit }) => {
+                  if (!editingPermission) return
+                  updatePermissionMutation.mutate({
+                    email: editingPermission.email,
+                    can_post: canAdd,
+                    can_edit: canEdit,
+                  })
+                }}
+                onRemoveUser={() => {
+                  if (!editingPermission) return
+                  setRevokeEmail(editingPermission.email)
+                  setEditingPermission(null)
+                }}
+              />
+
+              <RevokePermissionConfirmationModal
+                open={!!revokeEmail}
+                email={revokeEmail ?? ''}
+                isRevoking={revokePermissionMutation.isPending}
+                onClose={() => {
+                  if (!revokePermissionMutation.isPending) setRevokeEmail(null)
+                }}
+                onConfirm={() => {
+                  if (revokeEmail) revokePermissionMutation.mutate(revokeEmail)
+                }}
+              />
             </div>
           )}
+
+          {activeTab === 'banned-users' && isAdmin && <AdminBannedUsersManager />}
         </div>
       </div>
 
@@ -1424,6 +1575,11 @@ export function Profile() {
                   {postTag ? getTagBySlug(postTag)?.title : 'No tag'}
                 </span>
               </div>
+              {postKeywords.length > 0 && (
+                <p className="text-[11px] text-slate-400">
+                  Keywords: {postKeywords.join(', ')}
+                </p>
+              )}
             </div>
 
             {/* Actions */}
