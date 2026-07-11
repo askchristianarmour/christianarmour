@@ -747,7 +747,7 @@ export function Profile() {
     : null
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
       <div className="mb-6">
         <Link
           to="/"
