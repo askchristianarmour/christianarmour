@@ -19,7 +19,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: 'Home', to: '/', key: 'home' },
   { label: 'About', to: '/about', key: 'about' },
-  { label: 'Article', to: '/articles', key: 'article' },
+  { label: 'Exegesis', to: '/articles?tag=exegesis', key: 'exegesis' },
   { label: 'Theology', to: '/articles?tag=theology', key: 'theology' },
   { label: 'History', to: '/articles?tag=history', key: 'history' },
   { label: 'Life', to: '/articles?tag=life', key: 'life' },
@@ -39,9 +39,9 @@ function resolveActiveNav(pathname: string, override?: string, tagParam?: string
     if (tagParam === 'history') return 'history'
     if (tagParam === 'life') return 'life'
     if (tagParam === 'exegesis') return 'exegesis'
-    return 'article'
+    return 'exegesis'
   }
-  if (pathname.startsWith('/articles/')) return 'article'
+  if (pathname.startsWith('/articles/')) return 'exegesis'
   if (pathname.startsWith('/tags/theology')) return 'theology'
   if (pathname.startsWith('/tags/history')) return 'history'
   if (pathname.startsWith('/tags/life')) return 'life'
@@ -52,7 +52,7 @@ function resolveActiveNav(pathname: string, override?: string, tagParam?: string
       pathname.startsWith(p),
     )
   ) {
-    return 'article'
+    return 'exegesis'
   }
   return undefined
 }

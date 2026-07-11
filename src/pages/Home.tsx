@@ -257,7 +257,11 @@ export function Home() {
                 />
               )}
               <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/70 to-transparent sm:h-28 lg:h-32"
+                className="pointer-events-none absolute inset-y-0 left-0 w-36 bg-gradient-to-r from-white via-white/85 to-transparent sm:w-52 lg:w-72"
+                aria-hidden
+              />
+              <div
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-white via-white/65 to-transparent sm:h-20 lg:h-24"
                 aria-hidden
               />
             </div>
@@ -273,20 +277,26 @@ export function Home() {
                 <Link
                   key={category.slug}
                   to={`/articles?tag=${category.slug}`}
-                  className="group flex flex-col rounded-[14px] border border-slate-200 bg-white p-3 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)] sm:rounded-[26px] sm:p-6"
+                  className="group flex flex-col rounded-[20px] border border-slate-200 bg-white p-3.5 shadow-[0_10px_28px_rgba(15,23,42,0.1)] transition-all hover:-translate-y-0.5 hover:border-[#c6a14d]/40 hover:shadow-[0_14px_36px_rgba(15,23,42,0.14)] sm:rounded-[40px] sm:p-8"
                 >
-                  <img src={category.icon} alt="" className="h-8 w-8 sm:h-12 sm:w-12" />
-                  <h2 className="mt-2.5 font-serif text-lg leading-tight text-slate-900 sm:mt-5 sm:text-[2rem]">
-                    {category.title}
-                  </h2>
-                  <p className="mt-1.5 line-clamp-3 flex-1 text-[11px] leading-4 text-slate-500 sm:mt-3 sm:line-clamp-none sm:text-sm sm:leading-7">
+                  <div className="flex items-center gap-2.5 sm:gap-4">
+                    <img
+                      src={category.icon}
+                      alt=""
+                      className="h-8 w-8 shrink-0 sm:h-12 sm:w-12"
+                    />
+                    <h2 className="font-serif text-lg leading-none text-slate-900 sm:text-[2rem]">
+                      {category.title}
+                    </h2>
+                  </div>
+                  <p className="mt-3 line-clamp-3 flex-1 text-[11px] leading-4 text-slate-500 sm:mt-5 sm:line-clamp-none sm:text-sm sm:leading-7">
                     {category.description}
                   </p>
-                  <div className="mt-2.5 flex items-center justify-between gap-1 sm:mt-5">
-                    <span className="text-[11px] font-medium text-slate-700 sm:text-sm">
+                  <div className="mt-3 flex items-center justify-between gap-2 sm:mt-6">
+                    <span className="text-[11px] font-medium text-[#1D2B34] sm:text-sm">
                       {count} {count === 1 ? 'Article' : 'Articles'}
                     </span>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors group-hover:border-[#c6a14d]/40 sm:h-9 sm:w-9">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-[0_2px_6px_rgba(15,23,42,0.08)] transition-colors group-hover:border-[#c6a14d]/40 sm:h-9 sm:w-9">
                       <img
                         src="/home/noverticalhorizontalarrowiconyellow.svg"
                         alt=""
@@ -418,14 +428,10 @@ export function Home() {
             Browse By Book
           </p>
           <h2 className="mt-3 max-w-3xl font-serif text-3xl leading-tight text-white sm:mt-4 sm:text-5xl">
-            Exegesis, Organized Like A Concordance
+            Exegesis: Interpreting the Bible
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/70 sm:mt-4 sm:leading-7">
-            Choose a testament, then a book. Every article tagged to that book appears on its
-            page, exactly the way you&apos;d look something up in a print concordance.
-          </p>
 
-          <div className="mt-6 flex items-center gap-6 border-b border-white/15 text-sm sm:mt-10 sm:gap-10">
+          <div className="mt-6 flex items-center gap-6 border-b border-white/15 text-base sm:mt-10 sm:gap-10 sm:text-xl">
             <button
               type="button"
               onClick={() => {
@@ -434,8 +440,8 @@ export function Home() {
               }}
               className={
                 testament === 'old'
-                  ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3'
-                  : 'pb-2.5 font-semibold text-white/70 transition-colors hover:text-white sm:pb-3'
+                  ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3.5'
+                  : 'pb-2.5 font-semibold text-white/70 transition-colors hover:text-white sm:pb-3.5'
               }
             >
               Old Testament
@@ -448,8 +454,8 @@ export function Home() {
               }}
               className={
                 testament === 'new'
-                  ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3'
-                  : 'pb-2.5 font-semibold text-white/70 transition-colors hover:text-white sm:pb-3'
+                  ? 'border-b-2 border-[#c6a14d] pb-2.5 font-semibold text-[#c6a14d] sm:pb-3.5'
+                  : 'pb-2.5 font-semibold text-white/70 transition-colors hover:text-white sm:pb-3.5'
               }
             >
               New Testament
