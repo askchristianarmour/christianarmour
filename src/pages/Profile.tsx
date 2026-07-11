@@ -4,10 +4,11 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Image as ImageIcon, HelpCircle, MoreHorizontal, Ban, Gift, FileText } from 'lucide-react'
+import { User as Lock, Heart, MessageSquare, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Image as ImageIcon, HelpCircle, MoreHorizontal, Ban, Gift, FileText } from 'lucide-react'
 import { TagPicker } from '../components/TagPicker'
 import { KeywordMapper } from '../components/KeywordMapper'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
+import { PageBackLink } from '../components/PageBackLink'
 import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
 import { AdminPostsManager } from '../components/AdminPostsManager'
 import { AdminRandomCoversManager } from '../components/AdminRandomCoversManager'
@@ -747,16 +748,8 @@ export function Profile() {
     : null
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-8 sm:px-6">
-      <div className="mb-6">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          <ChevronLeft size={16} />
-          Back to Home
-        </Link>
-      </div>
+    <div className="mx-auto max-w-4xl px-4 pb-8 pt-1 sm:px-6">
+      <PageBackLink to="/">Back to Home</PageBackLink>
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* User Card & Navigation */}

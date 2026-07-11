@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useArticlePermissions } from '../hooks/useUserPermissions'
 import { supabase } from '../lib/supabase'
@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToast } from '../contexts/ToastContext'
 import { ChevronLeft, Image as ImageIcon, ShieldAlert, FileText, CheckCircle2, AlertCircle } from 'lucide-react'
 import { CrossSpinner, PageLoader } from '../components/CrossLoader'
+import { PageBackLink } from '../components/PageBackLink'
 import { ArticleContent } from '../components/ArticleContent'
 import { ArticlePagesEditor } from '../components/ArticlePagesEditor'
 import {
@@ -359,7 +360,7 @@ export function WritePost() {
 
   if (isEditing && (postError || !existingPost || !canEditThisPost)) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+      <div className="mx-4 max-w-md rounded-2xl border border-red-200 bg-red-50 p-6 text-center shadow-sm sm:mx-auto sm:p-8">
         <h2 className="text-xl font-bold text-slate-900">Article not found</h2>
         <p className="mt-2 text-slate-600 text-sm">
           This article may have been removed or you do not have access to edit it.
@@ -377,7 +378,7 @@ export function WritePost() {
 
   if (!canAccess) {
     return (
-      <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+      <div className="mx-4 max-w-md rounded-2xl border border-red-200 bg-red-50 p-6 text-center shadow-sm sm:mx-auto sm:p-8">
         <ShieldAlert size={48} className="mx-auto text-red-600 mb-4 animate-bounce" />
         <h2 className="text-xl font-bold text-slate-900">Sign in required</h2>
         <p className="mt-2 text-slate-600 text-sm">
@@ -395,31 +396,27 @@ export function WritePost() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl animate-in fade-in duration-300">
-      <div className="mb-6">
-        <Link
-          to={isEditing ? `/articles/${editPostId}` : '/'}
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          <ChevronLeft size={16} />
-          {isEditing ? 'Back to article' : 'Back to Feed'}
-        </Link>
-      </div>
+    <div className="mx-auto max-w-2xl px-4 pb-10 pt-1 sm:px-6 sm:pb-12 animate-in fade-in duration-300">
+      <PageBackLink to={isEditing ? `/articles/${editPostId}` : '/'}>
+        {isEditing ? 'Back to article' : 'Back to Feed'}
+      </PageBackLink>
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-          <FileText className="text-amber-600" size={32} />
-          {isEditing ? 'Edit Article' : 'Write a New Post'}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-900 sm:text-3xl">
+          <FileText className="shrink-0 text-amber-600" size={28} />
+          {isEditing ? 'Edit Article' : canPublishLive ? 'Write a New Post' : 'Submit an Article'}
         </h1>
-        <p className="mt-1 text-slate-500 text-sm">
+        <p className="mt-2 text-sm leading-relaxed text-slate-500">
           {isEditing
             ? 'Update the title, cover image, content, or settings for this article.'
-            : 'Draft a new article, upload a cover header, and publish it to the community.'}
+            : canPublishLive
+              ? 'Draft a new article, upload a cover header, and publish it to the community.'
+              : 'Write your article and submit it for review. It will appear on the site once approved.'}
         </p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <form onSubmit={handlePublishSubmit} className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <form onSubmit={handlePublishSubmit} className="space-y-5 sm:space-y-6">
           {/* Title */}
           <div>
             <label htmlFor="postTitle" className="block text-sm font-semibold text-slate-700">

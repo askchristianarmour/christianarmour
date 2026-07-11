@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ShieldAlert } from 'lucide-react'
 import { AdminRandomCoversManager } from '../components/AdminRandomCoversManager'
+import { PageBackLink } from '../components/PageBackLink'
 import { PageLoader } from '../components/CrossLoader'
 import { useAuth } from '../hooks/useAuth'
 import { useIsAdmin } from '../hooks/useUserPermissions'
@@ -58,13 +59,7 @@ export function ManageCoverPool() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <Link
-        to="/profile"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
-      >
-        <ArrowLeft size={16} />
-        Back to profile
-      </Link>
+      <PageBackLink to="/profile">Back to profile</PageBackLink>
       <AdminRandomCoversManager variant="full" />
     </div>
   )

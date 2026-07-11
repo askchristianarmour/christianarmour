@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { PageBackLink } from '../components/PageBackLink'
 import { PageLoader } from '../components/CrossLoader'
 import { SiteFooter } from '../components/SiteFooter'
 import { useAuth } from '../hooks/useAuth'
@@ -53,13 +53,7 @@ export function QuestionAnswerDetail() {
   return (
     <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#f3f1ec]">
       <div className="mx-auto max-w-[900px] px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        <Link
-          to="/ask"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-        >
-          <ChevronLeft size={16} />
-          Back to Ask
-        </Link>
+        <PageBackLink to="/ask">Back to Ask</PageBackLink>
 
         <p className="mt-6 text-xs font-semibold uppercase tracking-[0.22em] text-[#c6a14d]">
           Your answer

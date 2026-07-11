@@ -4,8 +4,9 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
+import { PageBackLink } from '../components/PageBackLink'
 import { useToast } from '../contexts/ToastContext'
-import { Heart, MessageSquare, ChevronLeft } from 'lucide-react'
+import { Heart, MessageSquare } from 'lucide-react'
 
 interface ActivityLike {
   id: string
@@ -140,19 +141,11 @@ export function Activity() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6">
-        <Link
-          to="/profile"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-        >
-          <ChevronLeft size={16} />
-          Back to Profile
-        </Link>
-      </div>
+    <div className="mx-auto max-w-2xl px-4 pb-10 sm:px-6">
+      <PageBackLink to="/profile">Back to Profile</PageBackLink>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Your Activity History</h1>
+        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Your Activity History</h1>
         <p className="mt-2 text-slate-600">
           A full timeline of your comments and likes across Christian Armour.
         </p>

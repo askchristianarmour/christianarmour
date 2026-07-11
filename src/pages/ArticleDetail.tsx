@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, Heart, MessageCircle, Share2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { pageBackControlClass } from '../components/PageBackLink'
 import { ArticleAdminActions } from '../components/ArticleAdminActions'
 import { ArticleContent } from '../components/ArticleContent'
 import { AuthRequiredModal } from '../components/AuthRequiredModal'
@@ -247,11 +248,11 @@ export function ArticleDetail() {
           <div className="absolute bottom-[8%] right-[10%] h-80 w-80 rounded-full bg-[#1a0f0a]/35 blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+        <div className="relative z-10 mx-auto max-w-[1240px] px-4 pt-3 pb-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#e8d0b0]/85 transition-colors hover:text-[#f8ecd8]"
+            className={`${pageBackControlClass} inline-flex items-center gap-1.5 text-sm font-medium text-[#e8d0b0]/85 transition-colors hover:text-[#f8ecd8]`}
           >
             <ChevronLeft size={16} />
             {backLabel}
