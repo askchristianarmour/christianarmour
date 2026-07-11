@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArticlesPagination } from '../components/ArticlesPagination'
 import { PostCard } from '../components/PostCard'
+import { PostCoverImage } from '../components/PostCoverImage'
 import { HomePageSkeleton } from '../components/Skeleton'
 import { SiteFooter } from '../components/SiteFooter'
 import { usePosts } from '../hooks/usePosts'
@@ -11,28 +12,25 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchTagCounts } from '../lib/posts'
 import { assignAdjacentCoverImages } from '../lib/cover-images'
 import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
+import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { supabase } from '../lib/supabase'
 import { HomeSearchPanel } from '../components/HomeSearchPanel'
-import { ARTICLE_TAGS } from '../lib/tags'
+import { ARTICLE_TAGS, getTagBySlug } from '../lib/tags'
 import {
   buildArticlesBookPath,
   NEW_TESTAMENT_BOOKS,
   OLD_TESTAMENT_BOOKS,
 } from '../lib/bible-books'
 
-const HERO_CONTENT = {
-  label: 'Latest Article',
-  titleLine1: 'Dating The Crucifixion',
-  titleLine2: 'Of Jesus Christ',
-  description:
-    'A Comprehensive Examination Of Historical Evidence, Roman Records, And Jewish Sources To Determine The Most Probable Date Of Jesus\' Crucifixion.',
-  author: 'Author Name',
-  date: 'June 28, 2026',
-  readMins: 12,
-}
-
 const MOBILE_BOOK_PREVIEW = 9
 const MOBILE_ARTICLE_PREVIEW = 5
+
+function splitHeroTitle(title: string): [string, string | null] {
+  const words = title.trim().split(/\s+/).filter(Boolean)
+  if (words.length <= 3) return [title.trim(), null]
+  const mid = Math.ceil(words.length / 2)
+  return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')]
+}
 
 export function Home() {
   const [testament, setTestament] = useState<'old' | 'new'>('old')
@@ -129,6 +127,29 @@ export function Home() {
     [posts, coverPool]
   )
 
+  const latestPost = posts[0] ?? null
+  const recentPosts = useMemo(
+    () => (latestPost ? posts.slice(1) : posts),
+    [posts, latestPost]
+  )
+  const latestTag = getTagBySlug(latestPost?.tag)
+  const [heroTitleLine1, heroTitleLine2] = useMemo(
+    () => (latestPost ? splitHeroTitle(latestPost.title) : ['', null]),
+    [latestPost]
+  )
+  const heroExcerpt = latestPost ? getExcerptFromContent(latestPost.content, 180) : ''
+  const heroDate = latestPost
+    ? new Date(latestPost.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : ''
+  const heroReadMins = latestPost ? getReadingMinutes(latestPost.content) : 0
+  const heroCoverUrl = latestPost ? coverById[latestPost.id] : null
+  const heroArticlePath = latestPost ? `/articles/${latestPost.id}` : '/articles'
+  const heroLinkState = { from: '/', fromLabel: 'Back to home' }
+
   if (isLoading) {
     return <HomePageSkeleton />
   }
@@ -139,53 +160,102 @@ export function Home() {
         <section className="relative overflow-hidden bg-white">
           <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="relative z-10 flex flex-col justify-start px-4 pb-16 pt-5 sm:px-6 sm:pb-28 sm:pt-8 lg:px-8 lg:pb-32 lg:pt-10 lg:pl-[max(2rem,calc((100vw-1440px)/2+2rem))]">
-              <p className="font-sans text-[13px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[18px]">
-                {HERO_CONTENT.label}
-              </p>
-              <h1 className="mt-2.5 max-w-xl font-serif text-[1.75rem] leading-[1.15] text-slate-900 sm:mt-3 sm:text-5xl sm:leading-tight lg:text-[4rem]">
-                <span className="block sm:whitespace-nowrap">{HERO_CONTENT.titleLine1}</span>
-                <span className="relative mt-1 inline-block pb-2 sm:whitespace-nowrap sm:pb-3">
-                  {HERO_CONTENT.titleLine2}
-                  <span
-                    className="absolute bottom-0 left-0 h-0.5 w-2/12 min-w-6 bg-[#D4AF37] sm:min-w-8"
-                    aria-hidden
-                  />
-                </span>
-              </h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
-                {HERO_CONTENT.description}
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 sm:mt-4 sm:gap-x-6 sm:gap-y-3 sm:text-sm">
-                <span className="inline-flex items-center gap-1.5 sm:gap-2">
-                  <img src="/home/account.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {HERO_CONTENT.author}
-                </span>
-                <span className="inline-flex items-center gap-1.5 sm:gap-2">
-                  <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {HERO_CONTENT.date}
-                </span>
-                <span className="inline-flex items-center gap-1.5 sm:gap-2">
-                  <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
-                  {HERO_CONTENT.readMins} mins read
-                </span>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="font-sans text-[13px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[18px]">
+                  Latest Article
+                </p>
+                {latestTag && (
+                  <Link
+                    to={`/articles?tag=${latestTag.slug}`}
+                    className="font-sans text-[13px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e] sm:text-[18px]"
+                  >
+                    {latestTag.title}
+                  </Link>
+                )}
               </div>
-              <div className="mt-4 sm:mt-4">
-                <Link
-                  to="/articles"
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#1f2f3d] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#182633] sm:rounded-xl sm:px-5 sm:py-3"
-                >
-                  Read Article
-                  <img src="/home/Arrow.svg" alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Link>
-              </div>
+
+              {latestPost ? (
+                <>
+                  <Link to={heroArticlePath} state={heroLinkState} className="mt-2.5 block max-w-xl sm:mt-3">
+                    <h1 className="font-serif text-[1.75rem] leading-[1.15] text-slate-900 transition-colors hover:text-[#15222a] sm:text-5xl sm:leading-tight lg:text-[4rem]">
+                      {heroTitleLine2 ? (
+                        <>
+                          <span className="block">{heroTitleLine1}</span>
+                          <span className="relative mt-1 inline-block pb-2 sm:pb-3">
+                            {heroTitleLine2}
+                            <span
+                              className="absolute bottom-0 left-0 h-0.5 w-2/12 min-w-6 bg-[#D4AF37] sm:min-w-8"
+                              aria-hidden
+                            />
+                          </span>
+                        </>
+                      ) : (
+                        <span className="relative inline-block pb-2 sm:pb-3">
+                          {heroTitleLine1}
+                          <span
+                            className="absolute bottom-0 left-0 h-0.5 w-2/12 min-w-6 bg-[#D4AF37] sm:min-w-8"
+                            aria-hidden
+                          />
+                        </span>
+                      )}
+                    </h1>
+                  </Link>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
+                    {heroExcerpt}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 sm:mt-4 sm:gap-x-6 sm:gap-y-3 sm:text-sm">
+                    <span className="inline-flex items-center gap-1.5 sm:gap-2">
+                      <img src="/home/account.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
+                      Christian Armour
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 sm:gap-2">
+                      <img src="/home/Calendar,Schedule.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {heroDate}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 sm:gap-2">
+                      <img src="/home/Alarm, Clock, Time.svg" alt="" className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {heroReadMins} mins read
+                    </span>
+                  </div>
+                  <div className="mt-4 sm:mt-4">
+                    <Link
+                      to={heroArticlePath}
+                      state={heroLinkState}
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#1f2f3d] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#182633] sm:rounded-xl sm:px-5 sm:py-3"
+                    >
+                      Read Article
+                      <img src="/home/Arrow.svg" alt="" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="mt-2.5 max-w-xl font-serif text-[1.75rem] leading-[1.15] text-slate-900 sm:mt-3 sm:text-5xl sm:leading-tight lg:text-[4rem]">
+                    No articles yet
+                  </h1>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
+                    New studies will appear here when they are published.
+                  </p>
+                </>
+              )}
             </div>
 
-            <div className="relative order-first min-h-[180px] bg-slate-100 sm:order-none sm:min-h-[220px] lg:absolute lg:inset-y-0 lg:right-0 lg:w-[52%] lg:min-h-0">
-              <img
-                src="/home/background.svg"
-                alt="Christian Armour hero banner"
-                className="h-full w-full object-cover"
-              />
+            <div className="relative order-first min-h-[180px] overflow-hidden bg-slate-100 sm:order-none sm:min-h-[220px] lg:absolute lg:inset-y-0 lg:right-0 lg:w-[52%] lg:min-h-0">
+              {latestPost ? (
+                <PostCoverImage
+                  imageUrl={heroCoverUrl}
+                  title={latestPost.title}
+                  seed={latestPost.id}
+                  className="absolute inset-0 h-full min-h-[180px] w-full sm:min-h-[220px] lg:min-h-full"
+                  titleClassName="font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
+                />
+              ) : (
+                <img
+                  src="/home/background.svg"
+                  alt="Christian Armour hero banner"
+                  className="h-full w-full object-cover"
+                />
+              )}
               <div
                 className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white via-white/70 to-transparent sm:h-28 lg:h-32"
                 aria-hidden
@@ -251,8 +321,10 @@ export function Home() {
             </Link>
           </div>
 
-          {posts.length === 0 ? (
-            <p className="text-center text-slate-500">No posts yet.</p>
+          {recentPosts.length === 0 ? (
+            <p className="text-center text-slate-500">
+              {latestPost ? 'More articles will appear here as they are published.' : 'No posts yet.'}
+            </p>
           ) : (
             <>
               <div
@@ -262,7 +334,7 @@ export function Home() {
                     : 'grid-cols-1 gap-3 sm:gap-6 md:gap-8'
                 } sm:grid-cols-2`}
               >
-                {posts.map((post, index) => (
+                {recentPosts.map((post, index) => (
                   <div
                     key={post.id}
                     className={
@@ -282,7 +354,7 @@ export function Home() {
               </div>
 
               {!mobileArticlesExpanded &&
-                (posts.length > MOBILE_ARTICLE_PREVIEW || hasNextPage) && (
+                (recentPosts.length > MOBILE_ARTICLE_PREVIEW || hasNextPage) && (
                   <div className="mt-8 flex justify-center sm:hidden">
                     <button
                       type="button"
@@ -300,7 +372,7 @@ export function Home() {
 
               <div className={mobileArticlesExpanded ? 'block' : 'hidden sm:block'}>
                 <ArticlesPagination
-                  loadedCount={posts.length}
+                  loadedCount={recentPosts.length}
                   hasNextPage={Boolean(hasNextPage)}
                   isFetchingNextPage={isFetchingNextPage}
                   onLoadMore={() => void fetchNextPage()}
