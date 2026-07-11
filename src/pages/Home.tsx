@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchTagCounts } from '../lib/posts'
 import { assignAdjacentCoverImages } from '../lib/cover-images'
 import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
+import { useRefTagger } from '../hooks/useRefTagger'
 import { getExcerptFromContent, getReadingMinutes } from '../lib/article-content'
 import { supabase } from '../lib/supabase'
 import { HomeSearchPanel } from '../components/HomeSearchPanel'
@@ -150,6 +151,8 @@ export function Home() {
   const heroArticlePath = latestPost ? `/articles/${latestPost.id}` : '/articles'
   const heroLinkState = { from: '/', fromLabel: 'Back to home' }
 
+  useRefTagger([latestPost?.id, heroExcerpt])
+
   if (isLoading) {
     return <HomePageSkeleton />
   }
@@ -200,7 +203,7 @@ export function Home() {
                       )}
                     </h1>
                   </Link>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
+                  <p className="hero-article-excerpt mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-base sm:leading-7">
                     {heroExcerpt}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 sm:mt-4 sm:gap-x-6 sm:gap-y-3 sm:text-sm">

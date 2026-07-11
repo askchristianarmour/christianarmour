@@ -196,8 +196,10 @@ a.rtBibleRef:hover {
 /* Keep Reftagger popup above page chrome and avoid transform-based misplacement */
 .rtTooltip,
 #rtTooltip {
+  position: fixed !important;
   z-index: 99999 !important;
   max-width: min(360px, calc(100vw - 24px));
+  transform: none !important;
 }
 
 /* Hide Edge/IE native password reveal so custom eye toggles are not doubled */
