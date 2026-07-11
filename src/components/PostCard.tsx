@@ -105,7 +105,7 @@ export function PostCard({
         <div className="flex flex-wrap items-center gap-1 sm:gap-2">
           <p
             className={`font-sans font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[12.21px] ${
-              compact ? 'hidden sm:block sm:text-[12.21px]' : 'text-[10px]'
+              compact ? 'hidden sm:block sm:text-[12.21px]' : 'text-[12px]'
             }`}
           >
             Recent Article
@@ -114,7 +114,7 @@ export function PostCard({
             <Link
               to={`/articles?tag=${tag.slug}`}
               className={`font-sans font-bold uppercase leading-none tracking-normal text-[#D4AF37] transition-colors hover:text-[#c49a2e] sm:text-[12.21px] ${
-                compact ? 'text-[9px]' : 'text-[10px]'
+                compact ? 'text-[9px]' : 'text-[12px]'
               }`}
             >
               {tag.title}
@@ -135,7 +135,7 @@ export function PostCard({
         >
           <h2
             className={`line-clamp-2 font-serif font-semibold tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none ${
-              compact ? 'text-[13px] leading-snug' : 'text-base leading-tight'
+              compact ? 'text-[13px] leading-snug' : 'text-[19px] leading-tight'
             }`}
           >
             {post.title}
@@ -172,14 +172,14 @@ export function PostCard({
           className={`font-sans font-normal tracking-normal text-[#5F6368] sm:mt-5 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-2 sm:text-[18px] sm:leading-[26px] ${
             compact
               ? 'mt-3 hidden text-[11px] leading-4 sm:mt-5 sm:flex'
-              : 'mt-3 flex flex-col gap-1 text-[11px] leading-4'
+              : 'mt-3 flex flex-col gap-1.5 text-[13px] leading-5'
           }`}
         >
           <span className="inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap sm:h-[26px] sm:gap-2">
             <img
               src="/home/Calendar,Schedule.svg"
               alt=""
-              className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5"
+              className={`shrink-0 sm:h-5 sm:w-5 ${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`}
             />
             <span className="truncate">{longDate}</span>
           </span>
@@ -187,7 +187,7 @@ export function PostCard({
             <img
               src="/home/Alarm, Clock, Time.svg"
               alt=""
-              className="h-3.5 w-3.5 shrink-0 sm:h-5 sm:w-5"
+              className={`shrink-0 sm:h-5 sm:w-5 ${compact ? 'h-3.5 w-3.5' : 'h-4 w-4'}`}
             />
             {readMins} mins
           </span>
@@ -212,7 +212,7 @@ export function PostCard({
             } ${
               compact
                 ? 'gap-0.5 p-0 text-[10px] sm:gap-2 sm:rounded-full sm:border sm:px-4 sm:py-2 sm:text-sm'
-                : 'gap-1.5 rounded-full border px-2.5 py-1.5 text-xs'
+                : 'gap-1.5 rounded-full border px-3 py-1.5 text-[13px]'
             } ${
               !compact && userLiked
                 ? 'border-rose-200 bg-rose-50'
@@ -233,7 +233,7 @@ export function PostCard({
             className={`inline-flex items-center font-medium text-slate-500 transition-colors hover:text-slate-800 sm:gap-2 sm:rounded-full sm:border sm:border-slate-200 sm:px-4 sm:py-2 sm:text-sm sm:text-slate-600 sm:hover:border-slate-300 sm:hover:text-slate-900 ${
               compact
                 ? 'gap-0.5 p-0 text-[10px]'
-                : 'gap-1.5 rounded-full border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600'
+                : 'gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-[13px] text-slate-600'
             }`}
           >
             <MessageCircle size={compact ? 12 : 14} className="sm:hidden" />

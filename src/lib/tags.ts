@@ -20,7 +20,7 @@ export const ARTICLE_TAGS = [
   {
     slug: 'life',
     title: 'Apologetics',
-    description: 'Defending the Christian faith with reason, evidence, and Scripture.',
+    description: 'Defending christianity through scripture, reason and history.',
     icon: '/home/Lifeicon.svg',
   },
 ] as const
