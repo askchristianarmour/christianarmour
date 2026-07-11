@@ -134,8 +134,10 @@ export function PostCard({
           className={`block sm:mt-3 ${compact ? 'mt-1.5' : 'mt-2'}`}
         >
           <h2
-            className={`line-clamp-2 font-serif font-semibold tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none ${
-              compact ? 'text-[13px] leading-snug' : 'text-[19px] leading-tight'
+            className={`line-clamp-2 font-serif tracking-normal text-[#1D2B34] transition-colors hover:text-[#15222a] sm:text-[28px] sm:leading-none ${
+              compact
+                ? 'text-[13px] font-semibold leading-snug'
+                : 'text-[19px] font-bold leading-tight sm:font-semibold'
             }`}
           >
             {post.title}
