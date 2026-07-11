@@ -143,20 +143,6 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
         <header className="bg-[#1c2b3a] text-white">
           <div className="mx-auto flex max-w-[1440px] items-center gap-3 px-4 py-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-4">
             <div className="flex min-w-0 items-center gap-3 sm:gap-4 lg:justify-self-start">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
-                <img
-                  src="/signin/facebookheadlogo.svg"
-                  alt=""
-                  className="h-5 w-auto opacity-90 hover:opacity-100"
-                />
-              </a>
-              <a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="WhatsApp">
-                <img
-                  src="/signin/wattsapplogoheader.svg"
-                  alt=""
-                  className="h-5 w-5 opacity-90 hover:opacity-100"
-                />
-              </a>
               <a
                 href="https://instagram.com"
                 target="_blank"
@@ -165,6 +151,13 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
               >
                 <img
                   src="/signin/instalogoheader.svg"
+                  alt=""
+                  className="h-5 w-5 shrink-0 opacity-90 hover:opacity-100"
+                />
+              </a>
+              <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X (Twitter)">
+                <img
+                  src="/signin/xlogoheader.svg"
                   alt=""
                   className="h-5 w-5 shrink-0 opacity-90 hover:opacity-100"
                 />

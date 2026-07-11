@@ -19,25 +19,17 @@ export function SiteFooter() {
               it came from honestly.
             </p>
             <div className="mt-5 flex items-center gap-3.5 sm:mt-6 sm:gap-4">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">
                 <img
-                  src="/signin/facebookheadlogo.svg"
-                  alt=""
-                  loading="lazy"
-                  className="h-4 w-auto opacity-90 hover:opacity-100 sm:h-5"
-                />
-              </a>
-              <a href="https://wa.me" target="_blank" rel="noreferrer" aria-label="WhatsApp">
-                <img
-                  src="/signin/wattsapplogoheader.svg"
+                  src="/signin/instalogoheader.svg"
                   alt=""
                   loading="lazy"
                   className="h-4 w-4 opacity-90 hover:opacity-100 sm:h-5 sm:w-5"
                 />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram">
+              <a href="https://x.com" target="_blank" rel="noreferrer" aria-label="X (Twitter)">
                 <img
-                  src="/signin/instalogoheader.svg"
+                  src="/signin/xlogoheader.svg"
                   alt=""
                   loading="lazy"
                   className="h-4 w-4 opacity-90 hover:opacity-100 sm:h-5 sm:w-5"
