@@ -10,6 +10,12 @@ export function Layout() {
     logView({ action: 'visit' })
   }, [location.pathname])
 
+  useEffect(() => {
+    // Always open pages at the top (React Router keeps prior scroll by default).
+    if (location.hash) return
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname, location.hash])
+
   return (
     <div className="min-h-screen bg-white">
       <AuthChrome />
