@@ -22,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Exegesis', to: '/articles?tag=exegesis', key: 'exegesis' },
   { label: 'Theology', to: '/articles?tag=theology', key: 'theology' },
   { label: 'History', to: '/articles?tag=history', key: 'history' },
-  { label: 'Life', to: '/articles?tag=life', key: 'life' },
+  { label: 'Apologetics', to: '/articles?tag=life', key: 'life' },
   { label: 'Ask', to: '/ask', key: 'ask' },
 ]
 

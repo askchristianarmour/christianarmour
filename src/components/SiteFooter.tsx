@@ -15,8 +15,8 @@ export function SiteFooter() {
               />
             </Link>
             <p className="mt-4 max-w-full font-sans text-[14px] font-normal leading-relaxed tracking-normal text-white/70 sm:mt-6 sm:w-[311px] sm:text-[18px] sm:leading-normal">
-              Exegesis, theology, history, and life. Reading the text closely, and the world it came
-              from honestly.
+              Exegesis, theology, history, and apologetics. Reading the text closely, and the world
+              it came from honestly.
             </p>
             <div className="mt-5 flex items-center gap-3.5 sm:mt-6 sm:gap-4">
               <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
@@ -53,12 +53,36 @@ export function SiteFooter() {
                 <span className="mt-1.5 block h-0.5 w-1/2 self-start bg-[#D4AF37] sm:mt-2" aria-hidden />
               </h3>
               <ul className="mt-3 space-y-2 font-sans text-[13px] font-normal leading-snug tracking-normal text-white/70 sm:mt-4 sm:text-[18px] sm:leading-none">
-                <li>Old testament</li>
-                <li>New testament</li>
-                <li>Exegesis</li>
-                <li>Theology</li>
-                <li>History</li>
-                <li>Life</li>
+                <li>
+                  <Link to="/articles?search=old%20testament" className="hover:text-white">
+                    Old testament
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/articles?search=new%20testament" className="hover:text-white">
+                    New testament
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/articles?tag=exegesis" className="hover:text-white">
+                    Exegesis
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/articles?tag=theology" className="hover:text-white">
+                    Theology
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/articles?tag=history" className="hover:text-white">
+                    History
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/articles?tag=life" className="hover:text-white">
+                    Apologetics
+                  </Link>
+                </li>
               </ul>
             </div>
 

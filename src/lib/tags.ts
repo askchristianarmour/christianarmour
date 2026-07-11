@@ -19,8 +19,8 @@ export const ARTICLE_TAGS = [
   },
   {
     slug: 'life',
-    title: 'Life',
-    description: 'Contemporary Christian living and practical applications.',
+    title: 'Apologetics',
+    description: 'Defending the Christian faith with reason, evidence, and Scripture.',
     icon: '/home/Lifeicon.svg',
   },
 ] as const

@@ -10,7 +10,7 @@ export function TagPicker({ value, onChange }: Props) {
     <div>
       <p className="text-sm font-semibold text-slate-700">Article tag (optional)</p>
       <p className="mt-1 text-xs text-slate-500">
-        Choose a category to list this article under Exegesis, Theology, History, or Life. Leave
+        Choose a category to list this article under Exegesis, Theology, History, or Apologetics. Leave
         unselected to publish without a tag.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">

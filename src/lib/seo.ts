@@ -44,7 +44,7 @@ export const ROUTE_SEO: Record<string, RouteSeo> = {
   '/articles': {
     title: 'Articles | Christian Armour',
     description:
-      'Browse biblically faithful articles on exegesis, theology, church history, and Christian life. Filter by topic, keyword, or reading time.',
+      'Browse biblically faithful articles on exegesis, theology, church history, and apologetics. Filter by topic, keyword, or reading time.',
   },
   '/ask': {
     title: 'Ask a Question | Christian Armour',

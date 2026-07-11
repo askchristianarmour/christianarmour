@@ -3,7 +3,7 @@ export const QUESTION_CATEGORIES = [
   'Exegesis — New Testament',
   'Theology',
   'History',
-  'Life',
+  'Apologetics',
   'General',
 ] as const
 

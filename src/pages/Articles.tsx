@@ -205,7 +205,7 @@ export function Articles() {
           <p className="mx-auto mt-3 max-w-2xl text-center font-sans text-[16px] font-normal leading-6 tracking-normal text-white/75">
             {activeSearch
               ? `Showing articles related to “${activeSearch}”.`
-              : 'Engage with academically grounded, biblically faithful articles exploring Scripture, theology, church history, and Christian life—designed to help readers grow in knowledge, wisdom, and faith.'}
+              : 'Engage with academically grounded, biblically faithful articles exploring Scripture, theology, church history, and apologetics—designed to help readers grow in knowledge, wisdom, and faith.'}
           </p>
         </div>
       </section>
