@@ -243,9 +243,9 @@ export function ArticleDetail() {
         />
       )}
       <div className="article-wood-table relative w-full overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-          <div className="absolute left-1/2 top-[12%] h-72 w-72 -translate-x-1/2 rounded-full bg-[#a87348]/20 blur-3xl" />
-          <div className="absolute bottom-[8%] right-[10%] h-80 w-80 rounded-full bg-[#1a0f0a]/35 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden transform-gpu" aria-hidden>
+          <div className="absolute left-1/2 top-[12%] h-72 w-72 -translate-x-1/2 transform-gpu rounded-full bg-[#a87348]/20 blur-3xl" />
+          <div className="absolute bottom-[8%] right-[10%] h-80 w-80 transform-gpu rounded-full bg-[#1a0f0a]/35 blur-3xl" />
         </div>
 
         <div className="relative z-10 mx-auto max-w-[1240px] px-4 pt-3 pb-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
@@ -278,6 +278,8 @@ export function ArticleDetail() {
                     imageUrl={post.image_url}
                     title={post.title}
                     seed={post.id}
+                    loading="eager"
+                    fetchPriority="high"
                     className="aspect-[16/10] min-h-0 w-full sm:aspect-[16/9] sm:min-h-[340px] lg:min-h-[420px]"
                     titleClassName="max-w-xl font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
                   />

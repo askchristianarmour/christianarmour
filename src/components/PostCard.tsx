@@ -18,9 +18,17 @@ type Props = {
   coverImageUrl?: string | null
   /** Denser layout for narrow 2-column mobile grids (max-sm only). */
   compact?: boolean
+  /** Preload the cover right away so it doesn't pop in on scroll. */
+  eagerCover?: boolean
 }
 
-export function PostCard({ post, canToggleComments, coverImageUrl, compact = false }: Props) {
+export function PostCard({
+  post,
+  canToggleComments,
+  coverImageUrl,
+  compact = false,
+  eagerCover = false,
+}: Props) {
   const location = useLocation()
   const { success: toastSuccess, error: toastError } = useToast()
   const queryClient = useQueryClient()
@@ -86,6 +94,8 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
           imageUrl={coverImageUrl ?? post.image_url}
           title={post.title}
           seed={post.id}
+          loading={eagerCover ? 'eager' : 'lazy'}
+          fetchPriority={eagerCover ? 'low' : 'auto'}
           className={compact ? 'aspect-[16/11] sm:aspect-[16/9]' : 'aspect-[16/10] sm:aspect-[16/9]'}
           titleClassName="font-serif text-sm leading-tight text-slate-700 sm:text-3xl"
         />

@@ -9,6 +9,9 @@ type Props = {
   seed?: string | null
   className?: string
   titleClassName?: string
+  /** 'eager' preloads immediately (heroes / near-viewport cards); default 'lazy'. */
+  loading?: 'eager' | 'lazy'
+  fetchPriority?: 'high' | 'low' | 'auto'
 }
 
 function CoverPlaceholder({
@@ -35,6 +38,8 @@ export function PostCoverImage({
   seed = null,
   className = '',
   titleClassName,
+  loading = 'lazy',
+  fetchPriority = 'auto',
 }: Props) {
   const { data: coverPool } = useFallbackCoverPool()
   const primaryUrl = useMemo(
@@ -66,7 +71,8 @@ export function PostCoverImage({
       <img
         src={src}
         alt={title}
-        loading="lazy"
+        loading={loading}
+        fetchPriority={fetchPriority}
         decoding="async"
         onLoad={() => setStatus('loaded')}
         onError={() => {

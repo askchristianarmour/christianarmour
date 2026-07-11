@@ -212,7 +212,13 @@ export function AdminRandomCoversManager({ variant = 'full' }: Props) {
                     selected ? 'border-[#c6a14d] ring-2 ring-[#c6a14d]/25' : 'border-slate-200'
                   }`}
                 >
-                  <img src={url} alt="" className="aspect-[16/10] w-full object-cover" />
+                  <img
+                    src={url}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[16/10] w-full object-cover"
+                  />
                   {!isPreview && isRemote && (
                     <label className="absolute left-2 top-2 inline-flex cursor-pointer items-center">
                       <input

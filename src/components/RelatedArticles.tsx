@@ -52,7 +52,12 @@ export function RelatedArticles({ postId, tag }: Props) {
 
       <div className="mt-6 grid grid-cols-2 justify-items-stretch gap-3 sm:justify-items-start sm:gap-[12.21px] lg:grid-cols-3">
         {relatedPosts.map((post) => (
-          <ArticleListCard key={post.id} post={post} coverImageUrl={coverById[post.id]} />
+          <ArticleListCard
+            key={post.id}
+            post={post}
+            coverImageUrl={coverById[post.id]}
+            eagerCover
+          />
         ))}
       </div>
     </section>

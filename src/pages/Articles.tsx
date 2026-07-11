@@ -274,7 +274,11 @@ export function Articles() {
                             : 'w-full'
                         }
                       >
-                        <ArticleListCard post={post} coverImageUrl={coverById[post.id]} />
+                        <ArticleListCard
+                          post={post}
+                          coverImageUrl={coverById[post.id]}
+                          eagerCover
+                        />
                       </div>
                     ))}
                   </div>

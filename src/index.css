@@ -331,6 +331,8 @@ a.rtBibleRef:hover {
     );
   mix-blend-mode: soft-light;
   opacity: 1;
+  /* Own compositor layer: keeps scrolling smooth despite the blend mode */
+  transform: translateZ(0);
 }
 
 .article-wood-table::after {
@@ -341,6 +343,7 @@ a.rtBibleRef:hover {
   background:
     radial-gradient(ellipse 70% 45% at 50% 42%, transparent 30%, rgba(12, 6, 3, 0.22) 100%);
   opacity: 0.85;
+  transform: translateZ(0);
 }
 
 .article-wood-frame {

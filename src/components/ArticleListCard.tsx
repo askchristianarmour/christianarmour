@@ -10,9 +10,11 @@ type Props = {
   post: PostWithMeta
   /** Pre-assigned cover (from adjacent-aware list assignment). */
   coverImageUrl?: string | null
+  /** Preload the cover right away (small below-fold sections) so it doesn't pop in on scroll. */
+  eagerCover?: boolean
 }
 
-export function ArticleListCard({ post, coverImageUrl }: Props) {
+export function ArticleListCard({ post, coverImageUrl, eagerCover = false }: Props) {
   const location = useLocation()
   const tag = getTagBySlug(post.tag)
   const formattedDate = new Date(post.created_at).toLocaleDateString('en-US', {
@@ -46,6 +48,8 @@ export function ArticleListCard({ post, coverImageUrl }: Props) {
             imageUrl={coverImageUrl ?? post.image_url}
             title={post.title}
             seed={post.id}
+            loading={eagerCover ? 'eager' : 'lazy'}
+            fetchPriority={eagerCover ? 'low' : 'auto'}
             className="h-full min-h-full w-full sm:min-h-[168px]"
             titleClassName="font-serif text-base leading-tight text-slate-700 sm:text-2xl"
           />

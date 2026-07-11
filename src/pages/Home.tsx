@@ -249,6 +249,8 @@ export function Home() {
                   imageUrl={heroCoverUrl}
                   title={latestPost.title}
                   seed={latestPost.id}
+                  loading="eager"
+                  fetchPriority="high"
                   className="absolute inset-0 h-full min-h-[180px] w-full sm:min-h-[220px] lg:min-h-full"
                   titleClassName="font-serif text-2xl leading-tight text-slate-700 sm:text-4xl"
                 />
@@ -361,6 +363,7 @@ export function Home() {
                       canToggleComments={canManage}
                       coverImageUrl={coverById[post.id]}
                       compact={mobileArticlesExpanded}
+                      eagerCover
                     />
                   </div>
                 ))}
@@ -417,6 +420,7 @@ export function Home() {
               <img
                 src="/home/questionmark.svg"
                 alt=""
+                loading="lazy"
                 className="h-24 w-auto shrink-0 sm:h-28 lg:h-[7.5rem]"
                 aria-hidden
               />

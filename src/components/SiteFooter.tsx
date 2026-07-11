@@ -10,6 +10,7 @@ export function SiteFooter() {
               <img
                 src="/signin/headerlogowithcompname.svg"
                 alt="Christian Armour"
+                loading="lazy"
                 className="h-12 w-auto sm:h-20 lg:h-24"
               />
             </Link>
@@ -22,6 +23,7 @@ export function SiteFooter() {
                 <img
                   src="/signin/facebookheadlogo.svg"
                   alt=""
+                  loading="lazy"
                   className="h-4 w-auto opacity-90 hover:opacity-100 sm:h-5"
                 />
               </a>
@@ -29,6 +31,7 @@ export function SiteFooter() {
                 <img
                   src="/signin/wattsapplogoheader.svg"
                   alt=""
+                  loading="lazy"
                   className="h-4 w-4 opacity-90 hover:opacity-100 sm:h-5 sm:w-5"
                 />
               </a>
@@ -36,6 +39,7 @@ export function SiteFooter() {
                 <img
                   src="/signin/instalogoheader.svg"
                   alt=""
+                  loading="lazy"
                   className="h-4 w-4 opacity-90 hover:opacity-100 sm:h-5 sm:w-5"
                 />
               </a>

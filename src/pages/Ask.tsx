@@ -180,6 +180,8 @@ export function Ask() {
               <img
                 src="/ask/asktabimage.svg"
                 alt="Open Bible with John 14:6"
+                loading="lazy"
+                decoding="async"
                 className="h-full min-h-[320px] w-full object-cover sm:min-h-[420px] lg:min-h-[640px]"
               />
             </div>
