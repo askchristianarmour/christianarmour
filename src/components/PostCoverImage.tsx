@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { getFallbackCoverImage, resolvePostCoverImage } from '../lib/cover-images'
 import { useFallbackCoverPool } from '../hooks/useFallbackCoverPool'
 
@@ -42,6 +42,7 @@ export function PostCoverImage({
   fetchPriority = 'auto',
 }: Props) {
   const { data: coverPool } = useFallbackCoverPool()
+  const imgRef = useRef<HTMLImageElement>(null)
   const primaryUrl = useMemo(
     () => resolvePostCoverImage(imageUrl, seed, [], coverPool),
     [imageUrl, seed, coverPool]
@@ -57,6 +58,16 @@ export function PostCoverImage({
     setUsedFallback(!imageUrl?.trim())
   }, [imageUrl, seed, coverPool])
 
+  // Browser-cached images can finish before React attaches onLoad (e.g. when
+  // navigating back to a page), which left covers stuck invisible. Detect the
+  // already-complete state and mark them loaded.
+  useEffect(() => {
+    const img = imgRef.current
+    if (img?.complete && img.naturalWidth > 0) {
+      setStatus('loaded')
+    }
+  }, [src])
+
   if (status === 'error') {
     return (
       <CoverPlaceholder title={title} className={className} titleClassName={titleClassName} />
@@ -69,6 +80,7 @@ export function PostCoverImage({
         <div className="absolute inset-0 animate-pulse bg-slate-200" aria-hidden />
       )}
       <img
+        ref={imgRef}
         src={src}
         alt={title}
         loading={loading}

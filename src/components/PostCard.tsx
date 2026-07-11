@@ -244,13 +244,19 @@ export function PostCard({
           <Link
             to={`/articles/${post.id}`}
             state={articleLinkState}
-            className={`ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#1f2f3d] px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#182633] sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm ${
-              compact ? 'px-2 py-1 text-[10px] sm:px-4 sm:py-2 sm:text-sm' : ''
+            className={`ml-auto inline-flex items-center font-medium text-white transition-colors hover:bg-[#182633] sm:gap-2 sm:rounded-xl sm:px-4 sm:py-2 sm:text-sm ${
+              compact
+                ? 'gap-1.5 rounded-lg bg-[#1f2f3d] px-2 py-1 text-[10px]'
+                : 'gap-2 rounded-xl bg-[#1f2f3d] px-4 py-2 text-sm'
             }`}
           >
-            <span className="sm:hidden">Read</span>
+            <span className="sm:hidden">{compact ? 'Read' : 'Read Article'}</span>
             <span className="hidden sm:inline">Read Article</span>
-            <img src="/home/Arrow.svg" alt="" className="h-3 w-3 -rotate-45 sm:h-4 sm:w-4" />
+            <img
+              src="/home/Arrow.svg"
+              alt=""
+              className={`-rotate-45 sm:h-4 sm:w-4 ${compact ? 'h-3 w-3' : 'h-3.5 w-3.5'}`}
+            />
           </Link>
         </div>
 
