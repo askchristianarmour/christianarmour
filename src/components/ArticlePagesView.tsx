@@ -20,6 +20,7 @@ type Props = {
   content: string
   className?: string
   showPageNav?: boolean
+  woodSurface?: boolean
 }
 
 type ArticleLinkTarget = {
@@ -248,7 +249,9 @@ function ArticlePagePanel({
                 >
                   {footnoteIndex + 1}.
                 </button>
-                <span>{footnote.text.trim() || '—'}</span>
+                <span className="article-footnote-text min-w-0 flex-1 break-words [overflow-wrap:anywhere]">
+                  {footnote.text.trim() || '—'}
+                </span>
               </li>
             ))}
           </ol>
@@ -284,7 +287,12 @@ function pageIndexFromHash(pages: ArticlePage[]) {
   return index >= 0 ? index : 0
 }
 
-export function ArticlePagesView({ content, className = '', showPageNav = true }: Props) {
+export function ArticlePagesView({
+  content,
+  className = '',
+  showPageNav = true,
+  woodSurface = false,
+}: Props) {
   const navigate = useNavigate()
   const structured = parseArticleContent(content)
   const pages = structured.pages
@@ -416,10 +424,15 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
       onPointerDown={handleSwipeStart}
       onPointerUp={handleSwipeEnd}
       onPointerCancel={handleSwipeCancel}
-    >      {showPageNav && hasMultiplePages && (
+    >
+      {showPageNav && hasMultiplePages && (
         <nav
           aria-label="Article pages"
-          className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-[#e8dfc8] bg-[#faf5e8]/70 p-3"
+          className={`mb-8 flex flex-wrap gap-2 rounded-2xl border p-3 ${
+            woodSurface
+              ? 'border-[#3d2615]/70 bg-[#2f1c12]/35 backdrop-blur-[2px]'
+              : 'border-[#e8dfc8] bg-[#faf5e8]/70'
+          }`}
         >
           {pages.map((page, index) => (
             <button
@@ -430,7 +443,9 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
               className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-60 ${
                 index === pageIndex
                   ? 'border-[#c6a14d] bg-[#1f2f3d] text-white'
-                  : 'border-[#d9c48a]/60 bg-white text-[#8a6d2b] hover:border-[#c6a14d] hover:text-[#5c4718]'
+                  : woodSurface
+                    ? 'border-[#a87348]/50 bg-[#fdfbf7]/90 text-[#5c3a24] hover:border-[#c6a14d] hover:bg-white'
+                    : 'border-[#d9c48a]/60 bg-white text-[#8a6d2b] hover:border-[#c6a14d] hover:text-[#5c4718]'
               }`}
             >
               {page.label || `Page ${index + 1}`}
@@ -439,6 +454,8 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
         </nav>
       )}
 
+      <div className={woodSurface ? 'article-wood-frame' : undefined}>
+        <div className={woodSurface ? 'article-wood-frame-inner' : undefined}>
       <div
         ref={bookRef}
         className="book-spread scroll-mt-28 [perspective:2600px]"
@@ -505,6 +522,8 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
           </div>
         </div>
       </div>
+        </div>
+      </div>
 
       {hasMultiplePages && (
         <div className="mt-8 flex items-center justify-between gap-4">
@@ -512,13 +531,21 @@ export function ArticlePagesView({ content, className = '', showPageNav = true }
             type="button"
             onClick={() => goToPage(pageIndex - 1, 'prev')}
             disabled={isFirst || isTurning}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+              woodSurface
+                ? 'border-[#a87348]/45 bg-[#fdfbf7]/92 text-[#3d2615] hover:bg-white'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+            }`}
           >
             <ChevronLeft size={16} />
             Previous
           </button>
 
-          <p className="text-sm font-medium text-slate-500">
+          <p
+            className={`text-sm font-medium ${
+              woodSurface ? 'text-[#f0dcc0]/80' : 'text-slate-500'
+            }`}
+          >
             Page {pageIndex + 1} of {pages.length}
           </p>
 

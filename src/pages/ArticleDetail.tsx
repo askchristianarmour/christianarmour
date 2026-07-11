@@ -184,7 +184,7 @@ export function ArticleDetail() {
 
   if (isLoading) {
     return (
-      <div className="w-full bg-white">
+      <div className="article-wood-table relative w-full overflow-hidden">
         <ArticleDetailSkeleton />
       </div>
     )
@@ -192,13 +192,13 @@ export function ArticleDetail() {
 
   if (error || !post) {
     return (
-      <div className="w-full bg-white">
-        <div className="mx-auto max-w-[1240px] px-4 py-12 text-center sm:px-6 lg:px-8">
-          <p className="text-slate-600">This article could not be found.</p>
+      <div className="article-wood-table relative w-full overflow-hidden">
+        <div className="relative z-10 mx-auto max-w-[1240px] px-4 py-12 text-center sm:px-6 lg:px-8">
+          <p className="text-[#f0dcc0]/90">This article could not be found.</p>
           <button
             type="button"
             onClick={handleBack}
-            className="mt-4 inline-block text-sm font-medium text-[#1c2b3a] underline"
+            className="mt-4 inline-block text-sm font-medium text-[#f5e6c8] underline"
           >
             {backLabel}
           </button>
@@ -221,50 +221,17 @@ export function ArticleDetail() {
           jsonLd={articleSeo.jsonLd}
         />
       )}
-      <div className="relative w-full overflow-hidden bg-[#fdfcfa]">
-        {/* Seamless transparent professional graphics */}
+      <div className="article-wood-table relative w-full overflow-hidden">
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,175,55,0.06),_transparent_55%),radial-gradient(ellipse_at_bottom_right,_rgba(31,47,61,0.04),_transparent_50%)]" />
-
-          <div className="absolute -left-32 top-24 h-[28rem] w-[28rem] rounded-full border border-[#D4AF37]/10" />
-          <div className="absolute -left-20 top-36 h-[22rem] w-[22rem] rounded-full border border-[#1f2f3d]/[0.05]" />
-          <div className="absolute -right-40 top-[38%] h-[32rem] w-[32rem] rounded-full border border-[#D4AF37]/[0.08]" />
-          <div className="absolute -right-24 top-[42%] h-[24rem] w-[24rem] rounded-full border border-[#1f2f3d]/[0.04]" />
-
-          <div className="absolute left-1/2 top-[18%] h-64 w-64 -translate-x-1/2 rounded-full bg-[#D4AF37]/[0.05] blur-3xl" />
-          <div className="absolute bottom-[12%] left-[18%] h-72 w-72 rounded-full bg-[#1f2f3d]/[0.035] blur-3xl" />
-
-          <img
-            src="/signin/cross.svg"
-            alt=""
-            className="absolute left-[8%] top-[22%] hidden h-40 w-auto opacity-[0.035] lg:block xl:left-[12%] xl:h-48"
-          />
-          <img
-            src="/signin/cross.svg"
-            alt=""
-            className="absolute bottom-[18%] right-[10%] hidden h-36 w-auto opacity-[0.03] lg:block xl:right-[14%]"
-          />
-
-          <img
-            src="/article/left_armour_imagehero.svg"
-            alt=""
-            className="absolute -left-4 top-[28%] h-[min(52vh,420px)] w-auto opacity-[0.045] sm:opacity-[0.055] lg:-left-2 lg:opacity-[0.07]"
-          />
-          <img
-            src="/article/right_armour_imagehero.svg"
-            alt=""
-            className="absolute -right-4 top-[48%] h-[min(48vh,380px)] w-auto opacity-[0.045] sm:opacity-[0.055] lg:-right-2 lg:opacity-[0.07]"
-          />
-
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/20 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#1f2f3d]/[0.08] to-transparent" />
+          <div className="absolute left-1/2 top-[12%] h-72 w-72 -translate-x-1/2 rounded-full bg-[#a87348]/20 blur-3xl" />
+          <div className="absolute bottom-[8%] right-[10%] h-80 w-80 rounded-full bg-[#1a0f0a]/35 blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-[1100px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
+        <div className="relative z-10 mx-auto max-w-[1240px] px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-12">
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-[#1c2b3a]"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#e8d0b0]/85 transition-colors hover:text-[#f8ecd8]"
           >
             <ChevronLeft size={16} />
             {backLabel}
@@ -281,7 +248,7 @@ export function ArticleDetail() {
           )}
 
           <article className="mt-4 sm:mt-6">
-            <div className="relative overflow-hidden rounded-[14px] sm:rounded-[20px]">
+            <div className="relative overflow-hidden rounded-[14px] shadow-[0_16px_40px_rgba(15,8,4,0.35)] sm:rounded-[20px]">
               <PostCoverImage
                 imageUrl={post.image_url}
                 title={post.title}
@@ -327,27 +294,32 @@ export function ArticleDetail() {
               </div>
             </div>
 
-            <div className="mt-5 max-w-3xl sm:mt-8">
-              <p className="font-sans text-[11px] font-bold uppercase leading-none tracking-normal text-[#D4AF37] sm:text-[12.21px]">
+            <div className="mt-5 max-w-3xl sm:mt-8 lg:max-w-4xl xl:max-w-5xl">
+              <p className="font-sans text-[11px] font-bold uppercase leading-none tracking-normal text-[#e0b35a] sm:text-[12.21px]">
                 {categoryLabel}
               </p>
-              <h1 className="mt-2 font-serif text-[1.75rem] font-bold leading-[1.15] tracking-normal text-slate-900 sm:mt-3 sm:text-[48px] sm:leading-none">
+              <h1 className="mt-2 font-serif text-[1.75rem] font-bold leading-[1.15] tracking-normal text-[#f8ecd8] sm:mt-3 sm:text-[48px] sm:leading-none">
                 {post.title}
               </h1>
 
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500 sm:mt-5 sm:gap-x-5 sm:gap-y-2 sm:text-sm">
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-[#e8d0b0]/75 sm:mt-5 sm:gap-x-5 sm:gap-y-2 sm:text-sm">
                 <span>Christian Armour</span>
-                <span aria-hidden className="hidden text-slate-300 sm:inline">
+                <span aria-hidden className="hidden text-[#e8d0b0]/40 sm:inline">
                   ·
                 </span>
                 <span>{formattedDate}</span>
-                <span aria-hidden className="hidden text-slate-300 sm:inline">
+                <span aria-hidden className="hidden text-[#e8d0b0]/40 sm:inline">
                   ·
                 </span>
                 <span>{readingTime} mins read</span>
               </div>
 
-              <ArticleContent content={post.content} className="mt-6 sm:mt-8" showPageNav />
+              <ArticleContent
+                content={post.content}
+                className="mt-6 sm:mt-8"
+                showPageNav
+                woodSurface
+              />
             </div>
           </article>
 

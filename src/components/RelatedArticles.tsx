@@ -32,19 +32,19 @@ export function RelatedArticles({ postId, tag }: Props) {
   }
 
   return (
-    <section className="mt-12 border-t border-slate-200 pt-10">
+    <section className="mt-12 border-t border-[#a87348]/35 pt-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#D4AF37]">
+          <p className="font-sans text-[12.21px] font-bold uppercase leading-none tracking-normal text-[#e0b35a]">
             Related Articles
           </p>
-          <h2 className="mt-2 font-serif text-3xl text-slate-900 sm:text-4xl">
+          <h2 className="mt-2 font-serif text-3xl text-[#f8ecd8] sm:text-4xl">
             More in {category?.title ?? 'this category'}
           </h2>
         </div>
         <Link
           to={`/articles?tag=${validTag}`}
-          className="text-sm font-medium text-[#1f2f3d] underline-offset-2 hover:underline"
+          className="text-sm font-medium text-[#f0dcc0] underline-offset-2 hover:underline"
         >
           View all
         </Link>
