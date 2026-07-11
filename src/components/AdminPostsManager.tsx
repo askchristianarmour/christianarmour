@@ -21,6 +21,7 @@ import {
   type AdminPostRow,
 } from '../lib/posts'
 import { getTagBySlug } from '../lib/tags'
+import { ApprovalButtons } from './MySubmissionsPanel'
 
 const PREVIEW_LIMIT = 10
 
@@ -34,6 +35,9 @@ export function AdminPostsManager({ variant = 'full' }: Props) {
   const queryClient = useQueryClient()
   const { success: toastSuccess, error: toastError } = useToast()
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>(
+    'all'
+  )
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -44,15 +48,18 @@ export function AdminPostsManager({ variant = 'full' }: Props) {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
-    if (!term) return posts
     return posts.filter((post) => {
+      if (statusFilter !== 'all' && post.status !== statusFilter) return false
+      if (!term) return true
       const tag = post.tag ? getTagBySlug(post.tag)?.title ?? post.tag : ''
       return (
         post.title.toLowerCase().includes(term) ||
         tag.toLowerCase().includes(term)
       )
     })
-  }, [posts, search])
+  }, [posts, search, statusFilter])
+
+  const pendingCount = posts.filter((p) => p.status === 'pending').length
 
   const visiblePosts = isPreview ? filtered.slice(0, PREVIEW_LIMIT) : filtered
   const hasMoreThanPreview = posts.length > PREVIEW_LIMIT
@@ -129,11 +136,16 @@ export function AdminPostsManager({ variant = 'full' }: Props) {
           <h2 className="text-xl font-bold text-slate-900">Manage Articles</h2>
           <p className="mt-1 text-sm text-slate-500">
             {isPreview
-              ? 'Recent articles at a glance. Open the full manager to search, select, and delete.'
-              : 'Select articles to delete, edit, or control comments across the site.'}
+              ? 'Recent articles at a glance. Open the full manager to approve, search, and delete.'
+              : 'Approve community submissions, edit, delete, or control comments.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {pendingCount > 0 && (
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">
+              {pendingCount} pending
+            </span>
+          )}
           <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
             {isPreview
               ? `Showing ${Math.min(PREVIEW_LIMIT, posts.length)} of ${posts.length}`
@@ -159,6 +171,20 @@ export function AdminPostsManager({ variant = 'full' }: Props) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {(['all', 'pending', 'approved', 'rejected'] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setStatusFilter(key)}
+                className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold capitalize transition-colors ${
+                  statusFilter === key
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {key}
+              </button>
+            ))}
             <button
               type="button"
               onClick={toggleAllVisible}
@@ -199,7 +225,11 @@ export function AdminPostsManager({ variant = 'full' }: Props) {
           </p>
         ) : visiblePosts.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-slate-500">
-            {search.trim() ? 'No articles match your search.' : 'No articles published yet.'}
+            {search.trim()
+              ? 'No articles match your search.'
+              : statusFilter !== 'all'
+                ? `No ${statusFilter} articles.`
+                : 'No articles published yet.'}
           </p>
         ) : (
           <ul className="divide-y divide-slate-100">
@@ -300,11 +330,26 @@ function AdminPostRowItem({
           <span className="mt-0.5 block truncate text-sm font-semibold text-slate-900">
             {post.title}
           </span>
-          <span className="mt-1 block text-xs text-slate-500">{date}</span>
+          <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span>{date}</span>
+            <span
+              className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                post.status === 'approved'
+                  ? 'border-green-200 bg-green-50 text-green-700'
+                  : post.status === 'pending'
+                    ? 'border-amber-200 bg-amber-50 text-amber-800'
+                    : 'border-red-200 bg-red-50 text-red-700'
+              }`}
+            >
+              {post.status}
+            </span>
+          </span>
         </span>
       </div>
 
       <div className={`flex flex-wrap items-center gap-1.5 ${showCheckbox ? 'pl-7 sm:pl-0' : ''}`}>
+        <ApprovalButtons postId={post.id} status={post.status} />
+
         <button
           type="button"
           onClick={onToggleComments}

@@ -3,8 +3,42 @@ import type { Session, User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { formatAuthError, secureSignIn } from '../lib/auth'
 import { withRateLimit } from '../lib/rate-limiter'
+import { claimReferralCode } from '../lib/invite-rewards'
 import { fetchUserBanStatus, storeBanNotice } from '../lib/user-bans'
 import { AuthContext } from './auth-context'
+
+const PENDING_REFERRAL_KEY = 'ca_pending_referral'
+
+function readPendingReferral() {
+  try {
+    return localStorage.getItem(PENDING_REFERRAL_KEY)
+  } catch {
+    return null
+  }
+}
+
+function writePendingReferral(code: string | null | undefined) {
+  try {
+    const normalized = code?.trim().toUpperCase()
+    if (normalized) localStorage.setItem(PENDING_REFERRAL_KEY, normalized)
+    else localStorage.removeItem(PENDING_REFERRAL_KEY)
+  } catch {
+    // ignore
+  }
+}
+
+async function tryClaimPendingReferral() {
+  const code = readPendingReferral()
+  if (!code) return
+  try {
+    const result = await claimReferralCode(code)
+    if (result?.ok || result?.error === 'Invite already claimed' || result?.error === 'Invite code not found') {
+      writePendingReferral(null)
+    }
+  } catch {
+    // Wallet/migration may not exist yet — keep code for a later attempt.
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -28,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false)
           return
         }
+        await tryClaimPendingReferral()
       }
 
       if (cancelled) return
@@ -56,8 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return secureSignIn(email, password)
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, referralCode?: string | null) => {
     const normalized = email.toLowerCase().trim()
+    const code = referralCode?.trim().toUpperCase() || null
 
     return withRateLimit('signUp', normalized, async () => {
       const banStatus = await fetchUserBanStatus(normalized)
@@ -66,11 +102,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: `This account has been banned. ${reason}` }
       }
 
+      if (code) writePendingReferral(code)
+
       const { data, error } = await supabase.auth.signUp({
         email: normalized,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
+          data: code ? { referral_code: code } : undefined,
         },
       })
 
@@ -86,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.session) {
+        await tryClaimPendingReferral()
         return { error: null }
       }
 

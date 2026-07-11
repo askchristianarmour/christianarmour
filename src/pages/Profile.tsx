@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { supabase } from '../lib/supabase'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Image as ImageIcon, HelpCircle, MoreHorizontal, Ban } from 'lucide-react'
+import { User as Lock, Heart, MessageSquare, ChevronLeft, Camera, Settings, Activity, PlusCircle, ShieldAlert, ShieldCheck, Image as ImageIcon, HelpCircle, MoreHorizontal, Ban, Gift, FileText } from 'lucide-react'
 import { TagPicker } from '../components/TagPicker'
 import { KeywordMapper } from '../components/KeywordMapper'
 import { CrossLoader, CrossSpinner, PageLoader } from '../components/CrossLoader'
@@ -12,6 +12,8 @@ import { AskedQuestionsPanel } from '../components/AskedQuestionsPanel'
 import { AdminPostsManager } from '../components/AdminPostsManager'
 import { AdminRandomCoversManager } from '../components/AdminRandomCoversManager'
 import { AdminBannedUsersManager } from '../components/AdminBannedUsersManager'
+import { InviteRewardsPanel } from '../components/InviteRewardsPanel'
+import { MySubmissionsPanel, AdminPendingApprovalsBanner } from '../components/MySubmissionsPanel'
 import { EditPermissionModal } from '../components/EditPermissionModal'
 import { RevokePermissionConfirmationModal } from '../components/RevokePermissionConfirmationModal'
 import { ArticleContent } from '../components/ArticleContent'
@@ -67,7 +69,14 @@ export function Profile() {
 
   // Tab navigation state
   const [activeTab, setActiveTab] = useState<
-    'settings' | 'activity' | 'add-post' | 'permissions' | 'banned-users' | 'asked-questions'
+    | 'settings'
+    | 'activity'
+    | 'add-post'
+    | 'permissions'
+    | 'banned-users'
+    | 'asked-questions'
+    | 'invite'
+    | 'submissions'
   >('settings')
 
   // Add post state
@@ -123,13 +132,21 @@ export function Profile() {
   })
 
   const isAdmin = user?.email === 'ask@christianarmour.com' || !!userPermission?.is_admin
-  const canPost = user?.email === 'ask@christianarmour.com' || !!userPermission?.can_post
+  const canPost =
+    user?.email === 'ask@christianarmour.com' ||
+    !!userPermission?.is_admin ||
+    !!userPermission?.can_post
 
   useEffect(() => {
-    if (searchParams.get('tab') === 'asked-questions' && canPost) {
-      setActiveTab('asked-questions')
-    }
-  }, [searchParams, canPost])
+    const tab = searchParams.get('tab')
+    if (tab === 'asked-questions' && canPost) setActiveTab('asked-questions')
+    else if (tab === 'invite') setActiveTab('invite')
+    else if (tab === 'submissions') setActiveTab('submissions')
+    else if (tab === 'add-post') setActiveTab('add-post')
+    else if (tab === 'activity') setActiveTab('activity')
+    else if (tab === 'permissions' && isAdmin) setActiveTab('permissions')
+    else if (tab === 'banned-users' && isAdmin) setActiveTab('banned-users')
+  }, [searchParams, canPost, isAdmin])
 
   // Fetch all permissions for Admin View
   const { data: allPermissions, refetch: refetchPermissions, error: permissionsTableError } = useQuery({
@@ -178,6 +195,9 @@ export function Profile() {
         imageUrl = data.publicUrl
       }
 
+      if (!user?.id) throw new Error('You must be signed in')
+      const status = canPost ? 'approved' : 'pending'
+
       const { data, error } = await supabase.from('posts').insert({
         id: postId,
         title: payload.title,
@@ -186,13 +206,19 @@ export function Profile() {
         comments_enabled: payload.commentsEnabled,
         tag: payload.tag ?? null,
         keywords: normalizeKeywords(payload.keywords),
+        author_id: user.id,
+        status,
       })
 
       if (error) throw error
-      return data
+      return { data, status }
     },
-    onSuccess: () => {
-      toastSuccess('Post published successfully!')
+    onSuccess: (result) => {
+      if (result.status === 'pending') {
+        toastSuccess('Article submitted for review. It will appear after approval.')
+      } else {
+        toastSuccess('Post published successfully!')
+      }
       setPostTitle('')
       setPostContent(serializeArticleContent(createDefaultArticleContent()))
       setCommentsEnabled(false)
@@ -206,6 +232,9 @@ export function Profile() {
       queryClient.invalidateQueries({ queryKey: ['posts-by-search'] })
       queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
       queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-posts-list'] })
+      queryClient.invalidateQueries({ queryKey: ['my-submissions'] })
+      if (result.status === 'pending') setActiveTab('submissions')
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to publish post')
@@ -815,6 +844,32 @@ export function Profile() {
                 Activity Feed
               </button>
 
+              <button
+                type="button"
+                onClick={() => setActiveTab('invite')}
+                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'invite'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <Gift size={16} />
+                Invite & Earn
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('submissions')}
+                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'submissions'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <FileText size={16} />
+                My Submissions
+              </button>
+
               {canPost && (
                 <button
                   type="button"
@@ -830,20 +885,18 @@ export function Profile() {
                 </button>
               )}
 
-              {canPost && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('add-post')}
-                  className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
-                    activeTab === 'add-post'
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <PlusCircle size={16} />
-                  Add Post
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setActiveTab('add-post')}
+                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'add-post'
+                    ? 'bg-slate-900 text-white'
+                    : 'text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <PlusCircle size={16} />
+                {canPost ? 'Add Post' : 'Submit Article'}
+              </button>
 
               {isAdmin && (
                 <button
@@ -1004,6 +1057,7 @@ export function Profile() {
             </div>
           )}
 
+          {activeTab === 'settings' && isAdmin && <AdminPendingApprovalsBanner />}
           {activeTab === 'settings' && isAdmin && <AdminPostsManager variant="preview" />}
           {activeTab === 'settings' && isAdmin && <AdminRandomCoversManager variant="preview" />}
 
@@ -1061,14 +1115,30 @@ export function Profile() {
             </div>
           )}
 
+          {activeTab === 'invite' && <InviteRewardsPanel />}
+
+          {activeTab === 'submissions' && <MySubmissionsPanel />}
+
           {/* Add Post tab */}
           {activeTab === 'asked-questions' && canPost && user && (
             <AskedQuestionsPanel userId={user.id} isAdmin={isAdmin} />
           )}
 
-          {activeTab === 'add-post' && canPost && (
+          {activeTab === 'add-post' && (
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm animate-in fade-in duration-200">
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Add New Post</h2>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">
+                {canPost ? 'Add New Post' : 'Submit an Article'}
+              </h2>
+              {!canPost && (
+                <p className="mb-4 text-sm text-slate-500">
+                  Your article will be reviewed before it appears on the site. You can also use the{' '}
+                  <Link to="/add-post" className="font-semibold text-slate-800 underline">
+                    full writer
+                  </Link>
+                  .
+                </p>
+              )}
+              {canPost && <div className="mb-4" />}
               <form onSubmit={handleAddPost} className="space-y-4">
                 {/* Title */}
                 <div>
@@ -1176,7 +1246,7 @@ export function Profile() {
                     disabled={addPostMutation.isPending}
                     className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
-                    Publish Post
+                    {canPost ? 'Publish Post' : 'Submit for Review'}
                   </button>
                 </div>
               </form>
@@ -1601,10 +1671,12 @@ export function Profile() {
                 {addPostMutation.isPending ? (
                   <>
                     <CrossSpinner size="xs" />
-                    Publishing…
+                    {canPost ? 'Publishing…' : 'Submitting…'}
                   </>
-                ) : (
+                ) : canPost ? (
                   'Confirm & Publish'
+                ) : (
+                  'Confirm & Submit for Review'
                 )}
               </button>
             </div>

@@ -8,6 +8,10 @@ export type Post = {
   tag?: string | null
   /** Normalized search terms mapped on create/edit */
   keywords?: string[] | null
+  author_id?: string | null
+  status?: 'pending' | 'approved' | 'rejected' | null
+  reviewed_at?: string | null
+  rejection_reason?: string | null
 }
 
 export type Comment = {

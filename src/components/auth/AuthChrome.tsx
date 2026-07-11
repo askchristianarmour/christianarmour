@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { BarChart3, Home, LogOut, Menu, PlusCircle, User, X } from 'lucide-react'
+import { BarChart3, Gift, Home, LogOut, Menu, PlusCircle, User, X } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { NotificationBell } from '../NotificationBell'
 import { HeaderArticleSearch } from '../HeaderArticleSearch'
@@ -385,16 +385,22 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                   <User size={16} className="text-slate-400" />
                   Profile
                 </Link>
-                {canPost && (
-                  <Link
-                    to="/add-post"
-                    onClick={closeDrawers}
-                    className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    <PlusCircle size={16} className="text-slate-400" />
-                    Add Post
-                  </Link>
-                )}
+                <Link
+                  to="/profile?tab=invite"
+                  onClick={closeDrawers}
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  <Gift size={16} className="text-slate-400" />
+                  Invite & Earn
+                </Link>
+                <Link
+                  to="/add-post"
+                  onClick={closeDrawers}
+                  className="flex items-center gap-2 rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  <PlusCircle size={16} className="text-slate-400" />
+                  {canPost ? 'Add Post' : 'Submit Article'}
+                </Link>
                 {isAdmin && (
                   <Link
                     to="/analytics"
@@ -510,16 +516,22 @@ export function AuthChrome({ activeNav: activeNavProp }: Props) {
                     <User size={18} className="text-slate-400" />
                     Profile
                   </Link>
-                  {canPost && (
-                    <Link
-                      to="/add-post"
-                      onClick={closeDrawers}
-                      className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      <PlusCircle size={18} className="text-slate-400" />
-                      Add Post
-                    </Link>
-                  )}
+                  <Link
+                    to="/profile?tab=invite"
+                    onClick={closeDrawers}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <Gift size={18} className="text-slate-400" />
+                    Invite & Earn
+                  </Link>
+                  <Link
+                    to="/add-post"
+                    onClick={closeDrawers}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <PlusCircle size={18} className="text-slate-400" />
+                    {canPost ? 'Add Post' : 'Submit Article'}
+                  </Link>
                   {isAdmin && (
                     <Link
                       to="/analytics"

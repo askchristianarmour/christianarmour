@@ -54,13 +54,20 @@ export function WritePost() {
   // Preview confirmation state
   const [showPublishPreview, setShowPublishPreview] = useState(false)
 
-  const canAccess = isEditing ? canEdit : canAdd
+  const canPublishLive = canAdd
+  const canAccess = isEditing ? true : !!user
 
   const { data: existingPost, isLoading: postLoading, error: postError } = useQuery({
     queryKey: ['post', editPostId],
     queryFn: () => fetchPostById(editPostId!),
-    enabled: isEditing && canEdit,
+    enabled: isEditing && !!user,
   })
+
+  const canEditThisPost =
+    !!existingPost &&
+    (canEdit ||
+      (existingPost.author_id === user?.id &&
+        (existingPost.status === 'pending' || existingPost.status === 'rejected')))
 
   useEffect(() => {
     if (!existingPost) return
@@ -92,8 +99,10 @@ export function WritePost() {
       tag: ArticleTagSlug | null
       keywords: string[]
     }) => {
+      if (!user?.id) throw new Error('You must be signed in')
       const postId = crypto.randomUUID()
       let imageUrl: string | null = null
+      const status = canPublishLive ? 'approved' : 'pending'
 
       // Upload image to Supabase Storage if selected
       if (payload.imageBlob) {
@@ -121,13 +130,19 @@ export function WritePost() {
         comments_enabled: payload.commentsEnabled,
         tag: payload.tag ?? null,
         keywords: normalizeKeywords(payload.keywords),
+        author_id: user.id,
+        status,
       })
 
       if (error) throw error
-      return data
+      return { data, status }
     },
-    onSuccess: () => {
-      toastSuccess('Post published successfully!')
+    onSuccess: (result) => {
+      if (result.status === 'pending') {
+        toastSuccess('Article submitted for review. It will appear after approval.')
+      } else {
+        toastSuccess('Post published successfully!')
+      }
       setPostTitle('')
       setPostContent(serializeArticleContent(createDefaultArticleContent()))
       setCommentsEnabled(false)
@@ -141,7 +156,9 @@ export function WritePost() {
       queryClient.invalidateQueries({ queryKey: ['posts-by-search'] })
       queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
       queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
-      navigate('/') // Redirect to home page where post will appear in real time
+      queryClient.invalidateQueries({ queryKey: ['admin-posts-list'] })
+      queryClient.invalidateQueries({ queryKey: ['my-submissions'] })
+      navigate(result.status === 'pending' ? '/profile?tab=submissions' : '/')
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to publish post')
@@ -167,17 +184,31 @@ export function WritePost() {
         commentsEnabled: payload.commentsEnabled,
         tag: payload.tag,
         keywords: payload.keywords,
+        resubmitForReview:
+          !canEdit &&
+          existingPost?.author_id === user?.id &&
+          (existingPost?.status === 'rejected' || existingPost?.status === 'pending'),
       })
     },
     onSuccess: () => {
-      toastSuccess('Article updated successfully!')
+      const resubmitted =
+        !canEdit &&
+        existingPost?.author_id === user?.id &&
+        (existingPost?.status === 'rejected' || existingPost?.status === 'pending')
+      toastSuccess(
+        resubmitted
+          ? 'Article updated and sent for review.'
+          : 'Article updated successfully!'
+      )
       setShowPublishPreview(false)
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       queryClient.invalidateQueries({ queryKey: ['posts-by-search'] })
       queryClient.invalidateQueries({ queryKey: ['post', editPostId] })
       queryClient.invalidateQueries({ queryKey: ['tag-counts'] })
       queryClient.invalidateQueries({ queryKey: ['total-post-count'] })
-      navigate(`/articles/${editPostId}`)
+      queryClient.invalidateQueries({ queryKey: ['my-submissions'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-posts-list'] })
+      navigate(resubmitted ? '/profile?tab=submissions' : `/articles/${editPostId}`)
     },
     onError: (err: Error) => {
       toastError(err.message || 'Failed to update article')
@@ -326,7 +357,7 @@ export function WritePost() {
     return <PageLoader label={isEditing ? 'Loading article...' : 'Preparing editor...'} minHeightClassName="min-h-[40vh]" />
   }
 
-  if (isEditing && (postError || !existingPost)) {
+  if (isEditing && (postError || !existingPost || !canEditThisPost)) {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
         <h2 className="text-xl font-bold text-slate-900">Article not found</h2>
@@ -348,9 +379,9 @@ export function WritePost() {
     return (
       <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
         <ShieldAlert size={48} className="mx-auto text-red-600 mb-4 animate-bounce" />
-        <h2 className="text-xl font-bold text-slate-900">Access Denied</h2>
+        <h2 className="text-xl font-bold text-slate-900">Sign in required</h2>
         <p className="mt-2 text-slate-600 text-sm">
-          You do not have permission to {isEditing ? 'edit' : 'add'} articles.
+          Sign in to submit an article for review.
         </p>
         <button
           onClick={() => navigate('/')}
@@ -504,12 +535,14 @@ export function WritePost() {
               {isSaving ? (
                 <>
                   <CrossSpinner size="xs" />
-                  {isEditing ? 'Saving…' : 'Publishing…'}
+                  {isEditing ? 'Saving…' : canPublishLive ? 'Publishing…' : 'Submitting…'}
                 </>
               ) : isEditing ? (
                 'Save Changes'
-              ) : (
+              ) : canPublishLive ? (
                 'Publish Post'
+              ) : (
+                'Submit for review'
               )}
             </button>
           </div>
@@ -599,7 +632,7 @@ export function WritePost() {
               <CheckCircle2 className="text-emerald-500 shrink-0" size={24} />
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  {isEditing ? 'Confirm & Save Changes' : 'Confirm & Publish Post'}
+                  {isEditing ? 'Confirm & Save Changes' : canPublishLive ? 'Confirm & Publish Post' : 'Confirm & Submit for Review'}
                 </h3>
                 <p className="mt-1 text-xs text-slate-500">
                   Review the preview of your {isEditing ? 'changes' : 'post'} before {isEditing ? 'saving' : 'publishing'}.
@@ -653,12 +686,14 @@ export function WritePost() {
                 {isSaving ? (
                   <>
                     <CrossSpinner size="xs" />
-                    {isEditing ? 'Saving…' : 'Publishing…'}
+                    {isEditing ? 'Saving…' : canPublishLive ? 'Publishing…' : 'Submitting…'}
                   </>
                 ) : isEditing ? (
                   'Confirm & Save'
-                ) : (
+                ) : canPublishLive ? (
                   'Confirm & Publish'
+                ) : (
+                  'Confirm & Submit'
                 )}
               </button>
             </div>

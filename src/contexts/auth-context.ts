@@ -16,7 +16,7 @@ export type AuthContextType = {
   session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<SignInResult>
-  signUp: (email: string, password: string) => Promise<SignUpResult>
+  signUp: (email: string, password: string, referralCode?: string | null) => Promise<SignUpResult>
   signOut: () => Promise<void>
 }
 

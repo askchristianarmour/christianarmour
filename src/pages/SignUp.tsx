@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { z } from 'zod'
 import { AuthChrome } from '../components/auth/AuthChrome'
 import { AuthFormLogo, AuthFormPanel } from '../components/auth/AuthFormPanel'
@@ -31,6 +31,8 @@ export function SignUp() {
   const { signUp } = useAuth()
   const { success: toastSuccess, error: toastError } = useToast()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const inviteCode = (searchParams.get('ref') ?? '').trim().toUpperCase()
   const [showFailureHints, setShowFailureHints] = useState(false)
 
   const {
@@ -54,7 +56,11 @@ export function SignUp() {
 
     setShowFailureHints(false)
 
-    const { error, needsEmailConfirmation } = await signUp(data.email, data.password)
+    const { error, needsEmailConfirmation } = await signUp(
+      data.email,
+      data.password,
+      inviteCode || null
+    )
 
     if (error) {
       setShowFailureHints(true)
@@ -89,6 +95,13 @@ export function SignUp() {
             <h1 className="mt-8 text-center font-serif text-3xl font-semibold text-slate-900 sm:text-4xl">
               Create Account
             </h1>
+
+            {inviteCode && (
+              <p className="mt-3 rounded-lg border border-[#e8d9b0] bg-[#faf5e8] px-3 py-2 text-center text-sm text-[#5c4718]">
+                Invited with code <span className="font-mono font-semibold">{inviteCode}</span> — you
+                will earn Bible Tokens after joining.
+              </p>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
               <div>

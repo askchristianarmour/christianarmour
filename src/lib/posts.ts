@@ -67,6 +67,7 @@ export async function fetchPostsPageBySearch(
   const { data: posts, error } = await supabase
     .from('posts')
     .select('*')
+    .eq('status', 'approved')
     .or(orFilter)
     .order('created_at', { ascending: false })
     .range(start, end)
@@ -96,6 +97,7 @@ export async function fetchPostsPageByTag(
   let query = supabase
     .from('posts')
     .select('*')
+    .eq('status', 'approved')
     .order('created_at', { ascending: false })
     .range(start, end)
 
@@ -127,6 +129,7 @@ export async function fetchRelatedPostsByTag(
   const { data: posts, error } = await supabase
     .from('posts')
     .select('*')
+    .eq('status', 'approved')
     .eq('tag', tag)
     .neq('id', excludePostId)
     .order('created_at', { ascending: false })
@@ -142,6 +145,7 @@ export async function fetchTotalPostCount(): Promise<number> {
   const { count, error } = await supabase
     .from('posts')
     .select('*', { count: 'exact', head: true })
+    .eq('status', 'approved')
 
   if (error) throw error
   return count ?? 0
@@ -153,6 +157,7 @@ export async function fetchTagCounts(): Promise<Record<ArticleTagSlug, number>> 
       const { count, error } = await supabase
         .from('posts')
         .select('*', { count: 'exact', head: true })
+        .eq('status', 'approved')
         .eq('tag', tag)
 
       if (error) throw error
@@ -190,6 +195,7 @@ export async function fetchPostSummaries(
   let query = supabase
     .from('posts')
     .select('id, title, tag, created_at')
+    .eq('status', 'approved')
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -233,6 +239,8 @@ export async function updatePost(
     commentsEnabled: boolean
     tag: string | null
     keywords?: string[]
+    /** When an author revises a rejected submission, send it back to pending */
+    resubmitForReview?: boolean
   }
 ) {
   let imageUrl = payload.existingImageUrl ?? null
@@ -261,6 +269,9 @@ export async function updatePost(
       comments_enabled: payload.commentsEnabled,
       tag: payload.tag,
       keywords: normalizeKeywords(payload.keywords ?? []),
+      ...(payload.resubmitForReview
+        ? { status: 'pending', rejection_reason: null, reviewed_at: null }
+        : {}),
     })
     .eq('id', postId)
 
@@ -287,16 +298,22 @@ export type AdminPostRow = {
   created_at: string
   comments_enabled: boolean
   image_url: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  author_id: string | null
+  rejection_reason: string | null
 }
 
 export async function fetchAdminPostList(): Promise<AdminPostRow[]> {
   const { data, error } = await supabase
     .from('posts')
-    .select('id, title, tag, created_at, comments_enabled, image_url')
+    .select('id, title, tag, created_at, comments_enabled, image_url, status, author_id, rejection_reason')
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return (data ?? []) as AdminPostRow[]
+  return (data ?? []).map((row) => ({
+    ...row,
+    status: (row.status as AdminPostRow['status']) ?? 'approved',
+  })) as AdminPostRow[]
 }
 
 export async function setPostCommentsEnabled(postId: string, enabled: boolean) {
@@ -306,4 +323,35 @@ export async function setPostCommentsEnabled(postId: string, enabled: boolean) {
     .eq('id', postId)
 
   if (error) throw error
+}
+
+export async function setPostApprovalStatus(
+  postId: string,
+  status: 'approved' | 'rejected',
+  rejectionReason?: string | null
+) {
+  const { error } = await supabase
+    .from('posts')
+    .update({
+      status,
+      reviewed_at: new Date().toISOString(),
+      rejection_reason: status === 'rejected' ? rejectionReason?.trim() || null : null,
+    })
+    .eq('id', postId)
+
+  if (error) throw error
+}
+
+export async function fetchMySubmissions(userId: string): Promise<AdminPostRow[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, title, tag, created_at, comments_enabled, image_url, status, author_id, rejection_reason')
+    .eq('author_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return (data ?? []).map((row) => ({
+    ...row,
+    status: (row.status as AdminPostRow['status']) ?? 'approved',
+  })) as AdminPostRow[]
 }

@@ -207,6 +207,26 @@ export function ArticleDetail() {
     )
   }
 
+  const isApproved = !post.status || post.status === 'approved'
+  const canPreviewUnlisted =
+    isAdmin || canEdit || (!!user && post.author_id === user.id)
+  if (!isApproved && !canPreviewUnlisted) {
+    return (
+      <div className="article-wood-table relative w-full overflow-hidden">
+        <div className="relative z-10 mx-auto max-w-[1240px] px-4 py-12 text-center sm:px-6 lg:px-8">
+          <p className="text-[#f0dcc0]/90">This article could not be found.</p>
+          <button
+            type="button"
+            onClick={handleBack}
+            className="mt-4 inline-block text-sm font-medium text-[#f5e6c8] underline"
+          >
+            {backLabel}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const categoryLabel = getTagBySlug(post.tag)?.title || post.tag?.trim() || 'Article'
 
   return (
