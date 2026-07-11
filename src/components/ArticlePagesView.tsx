@@ -375,7 +375,11 @@ export function ArticlePagesView({
 
   const handleSwipeStart = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (pages.length <= 1 || isTurning) return
-    if ((event.target as HTMLElement).closest('button, a, input, textarea, [contenteditable="true"]')) {
+    if (
+      (event.target as HTMLElement).closest(
+        'button, a, input, textarea, [contenteditable="true"], .tableWrapper, table'
+      )
+    ) {
       return
     }
 

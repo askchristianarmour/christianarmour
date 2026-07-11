@@ -140,12 +140,17 @@ body {
   }
 }
 
-/* TipTap / article tables — content-sized columns, readable on mobile */
+/* TipTap / article tables — swipe horizontally on mobile when wider than the page */
 .prose-editor .tableWrapper,
 .article-content .tableWrapper {
   margin: 1rem 0;
   max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-width: thin;
 }
 
 .prose-editor table,
@@ -153,11 +158,31 @@ body {
 .prose-editor .article-table,
 .article-content .article-table {
   width: max-content;
-  max-width: 100%;
+  min-width: 100%;
+  max-width: none;
   border-collapse: collapse;
   table-layout: auto;
   font-size: 0.925rem;
   line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .article-content .tableWrapper {
+    display: block;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-bottom: 0.4rem;
+  }
+
+  .article-content .tableWrapper::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .article-content .tableWrapper::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.7);
+    border-radius: 999px;
+  }
 }
 
 .prose-editor th,

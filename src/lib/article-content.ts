@@ -14,6 +14,7 @@ const ALLOWED_TAGS = [
   'li',
   'span',
   'sup',
+  'div',
   'table',
   'thead',
   'tbody',
@@ -68,10 +69,23 @@ export function getReadingMinutes(content: string) {
 }
 
 export function sanitizeArticleHtml(html: string) {
-  return DOMPurify.sanitize(html, {
+  const cleaned = DOMPurify.sanitize(html, {
     ALLOWED_TAGS,
     ALLOWED_ATTR,
   })
+
+  if (typeof DOMParser === 'undefined') return cleaned
+
+  const doc = new DOMParser().parseFromString(cleaned, 'text/html')
+  doc.querySelectorAll('table').forEach((table) => {
+    if (table.parentElement?.classList.contains('tableWrapper')) return
+    const wrap = doc.createElement('div')
+    wrap.className = 'tableWrapper'
+    table.parentNode?.insertBefore(wrap, table)
+    wrap.appendChild(table)
+  })
+
+  return doc.body.innerHTML
 }
 
 export function buildArticlesSearchUrl(keyword: string) {
