@@ -70,6 +70,40 @@ body {
   color: #a8863d;
 }
 
+.prose-editor .footnote-ref,
+.article-content .footnote-ref {
+  margin-left: 0.12em;
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 0;
+  color: #2563eb;
+  cursor: pointer;
+  vertical-align: super;
+  text-decoration: none;
+}
+
+.prose-editor .footnote-ref:hover,
+.article-content .footnote-ref:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.article-footnote.footnote-flash,
+.article-content .footnote-ref.footnote-flash,
+sup.footnote-ref.footnote-flash {
+  animation: footnote-flash 1.2s ease;
+}
+
+@keyframes footnote-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgba(37, 99, 235, 0.18);
+  }
+}
+
 /* TipTap / article tables — content-sized columns, readable on mobile */
 .prose-editor .tableWrapper,
 .article-content .tableWrapper {

@@ -1,13 +1,17 @@
-import { BookOpen, ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react'
+import { BookOpen, ChevronDown, ChevronUp, Plus, Superscript, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { RichTextEditor } from './editor/RichTextEditor'
 import {
+  createArticleFootnote,
   createArticlePage,
   createBiblePassage,
   createDefaultArticleContent,
   parseArticleContent,
   reindexPageLabels,
+  renumberFootnoteRefsInHtml,
   serializeArticleContent,
+  stripFootnoteRefFromHtml,
+  type ArticleFootnote,
   type ArticlePage,
   type BiblePassage,
   type StructuredArticleContent,
@@ -27,11 +31,14 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
     () => structured.pages[0]?.id ?? null
   )
   const lastEmittedRef = useRef(value)
+  const structuredRef = useRef(structured)
+  structuredRef.current = structured
 
   useEffect(() => {
     if (value === lastEmittedRef.current) return
     lastEmittedRef.current = value
     const parsed = value ? parseArticleContent(value) : createDefaultArticleContent()
+    structuredRef.current = parsed
     setStructured(parsed)
     setExpandedPageId((current) => current ?? parsed.pages[0]?.id ?? null)
   }, [value])
@@ -43,48 +50,53 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
     }
     const serialized = serializeArticleContent(normalized)
     lastEmittedRef.current = serialized
+    structuredRef.current = normalized
     setStructured(normalized)
     onChange(serialized)
   }
 
   const updatePage = (pageId: string, patch: Partial<ArticlePage>) => {
+    const prev = structuredRef.current
     commit({
-      ...structured,
-      pages: structured.pages.map((page) => (page.id === pageId ? { ...page, ...patch } : page)),
+      ...prev,
+      pages: prev.pages.map((page) => (page.id === pageId ? { ...page, ...patch } : page)),
     })
   }
 
   const addPage = () => {
-    const nextPage = createArticlePage(structured.pages.length + 1)
+    const prev = structuredRef.current
+    const nextPage = createArticlePage(prev.pages.length + 1)
     commit({
-      ...structured,
-      pages: [...structured.pages, nextPage],
+      ...prev,
+      pages: [...prev.pages, nextPage],
     })
     setExpandedPageId(nextPage.id)
   }
 
   const removePage = (pageId: string) => {
-    if (structured.pages.length === 1) return
-    const nextPages = structured.pages.filter((page) => page.id !== pageId)
-    commit({ ...structured, pages: nextPages })
+    const prev = structuredRef.current
+    if (prev.pages.length === 1) return
+    const nextPages = prev.pages.filter((page) => page.id !== pageId)
+    commit({ ...prev, pages: nextPages })
     if (expandedPageId === pageId) {
       setExpandedPageId(nextPages[0]?.id ?? null)
     }
   }
 
   const movePage = (pageId: string, direction: -1 | 1) => {
-    const index = structured.pages.findIndex((page) => page.id === pageId)
+    const prev = structuredRef.current
+    const index = prev.pages.findIndex((page) => page.id === pageId)
     const targetIndex = index + direction
-    if (index < 0 || targetIndex < 0 || targetIndex >= structured.pages.length) return
+    if (index < 0 || targetIndex < 0 || targetIndex >= prev.pages.length) return
 
-    const nextPages = [...structured.pages]
+    const nextPages = [...prev.pages]
     const [moved] = nextPages.splice(index, 1)
     nextPages.splice(targetIndex, 0, moved)
-    commit({ ...structured, pages: nextPages })
+    commit({ ...prev, pages: nextPages })
   }
 
   const updatePassage = (pageId: string, passageId: string, patch: Partial<BiblePassage>) => {
-    const page = structured.pages.find((item) => item.id === pageId)
+    const page = structuredRef.current.pages.find((item) => item.id === pageId)
     if (!page) return
 
     updatePage(pageId, {
@@ -95,7 +107,7 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
   }
 
   const addPassage = (pageId: string) => {
-    const page = structured.pages.find((item) => item.id === pageId)
+    const page = structuredRef.current.pages.find((item) => item.id === pageId)
     if (!page) return
 
     updatePage(pageId, {
@@ -104,7 +116,7 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
   }
 
   const removePassage = (pageId: string, passageId: string) => {
-    const page = structured.pages.find((item) => item.id === pageId)
+    const page = structuredRef.current.pages.find((item) => item.id === pageId)
     if (!page) return
 
     updatePage(pageId, {
@@ -112,11 +124,42 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
     })
   }
 
+  const createFootnoteForPage = (pageId: string) => {
+    const page = structuredRef.current.pages.find((item) => item.id === pageId)
+    if (!page) return { id: '', number: 1 }
+
+    const footnote = createArticleFootnote()
+    const footnotes = [...page.footnotes, footnote]
+    updatePage(pageId, { footnotes })
+    return { id: footnote.id, number: footnotes.length }
+  }
+
+  const updateFootnote = (pageId: string, footnoteId: string, patch: Partial<ArticleFootnote>) => {
+    const page = structuredRef.current.pages.find((item) => item.id === pageId)
+    if (!page) return
+
+    updatePage(pageId, {
+      footnotes: page.footnotes.map((footnote) =>
+        footnote.id === footnoteId ? { ...footnote, ...patch } : footnote
+      ),
+    })
+  }
+
+  const removeFootnote = (pageId: string, footnoteId: string) => {
+    const page = structuredRef.current.pages.find((item) => item.id === pageId)
+    if (!page) return
+
+    const footnotes = page.footnotes.filter((footnote) => footnote.id !== footnoteId)
+    const stripped = stripFootnoteRefFromHtml(page.body, footnoteId)
+    const body = renumberFootnoteRefsInHtml(stripped, footnotes)
+    updatePage(pageId, { footnotes, body })
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-[#e8dfc8] bg-[#faf8f4] px-4 py-3 text-sm text-slate-600">
-        Build your article in pages. Each page can include a short description, rich text, and
-        Bible passages with references and verse text.
+        Build your article in pages. Each page can include a short description, rich text, footnotes,
+        and Bible passages with references and verse text.
       </div>
 
       {structured.pages.map((page, index) => {
@@ -213,11 +256,10 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
                 <div>
                   <label className="block text-sm font-semibold text-slate-700">Page content</label>
                   <p className="mt-1 text-xs text-slate-500">
-                    Select text and use <strong>Link articles</strong> to connect that phrase to
-                    specific existing articles. Use <strong>Table</strong> to insert a content-sized
-                    table, then add or remove rows and columns from the toolbar. Add Bible
-                    references at the end of a line (e.g. John 3:16 or Matt 21:34) — they appear in
-                    red and open a Scripture preview when readers click them.
+                    Place the cursor where a citation should appear, then click{' '}
+                    <strong>Footnote</strong> to insert a blue superscript number. Edit the footnote
+                    text in the Footnotes section below. Select text and use{' '}
+                    <strong>Link articles</strong> to connect phrases to existing articles.
                   </p>
                   <div className="mt-2">
                     <RichTextEditor
@@ -225,8 +267,57 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
                       onChange={(html) => updatePage(page.id, { body: html })}
                       minHeightClassName="min-h-[220px]"
                       excludePostId={excludePostId}
+                      onCreateFootnote={() => createFootnoteForPage(page.id)}
                     />
                   </div>
+                </div>
+
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-blue-800">
+                    <Superscript size={16} />
+                    Footnotes
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    These appear at the bottom of the page. Readers can click a superscript number to
+                    jump here, then click the number again to return.
+                  </p>
+
+                  {page.footnotes.length === 0 ? (
+                    <p className="mt-3 text-xs text-slate-500">
+                      No footnotes yet. Use the Footnote button in the editor toolbar.
+                    </p>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {page.footnotes.map((footnote, footnoteIndex) => (
+                        <div
+                          key={footnote.id}
+                          className="rounded-xl border border-white bg-white p-4 shadow-sm"
+                        >
+                          <div className="mb-2 flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-700">
+                              Footnote {footnoteIndex + 1}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => removeFootnote(page.id, footnote.id)}
+                              className="text-xs font-semibold text-red-600 hover:text-red-700"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <textarea
+                            value={footnote.text}
+                            onChange={(e) =>
+                              updateFootnote(page.id, footnote.id, { text: e.target.value })
+                            }
+                            rows={3}
+                            placeholder="Enter the footnote text..."
+                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm leading-6 outline-none focus:border-slate-400"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-2xl border border-[#e8dfc8] bg-[#faf8f4] p-4">

@@ -27,6 +27,14 @@ type ArticleLinkTarget = {
   keyword: string | null
 }
 
+function scrollToFootnoteTarget(selector: string) {
+  const el = document.querySelector(selector) as HTMLElement | null
+  if (!el) return
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el.classList.add('footnote-flash')
+  window.setTimeout(() => el.classList.remove('footnote-flash'), 1400)
+}
+
 function PageBody({
   body,
   onArticleLinkClick,
@@ -51,6 +59,18 @@ function PageBody({
     }
 
     const handleClick = (event: MouseEvent) => {
+      const footnoteTarget = (event.target as HTMLElement).closest(
+        'sup.footnote-ref[data-footnote-id], sup[data-footnote-id]'
+      ) as HTMLElement | null
+      if (footnoteTarget) {
+        if ((event.target as HTMLElement).closest('.rtBibleRef')) return
+        event.preventDefault()
+        event.stopPropagation()
+        const footnoteId = footnoteTarget.getAttribute('data-footnote-id')
+        if (footnoteId) scrollToFootnoteTarget(`#fn-${footnoteId}`)
+        return
+      }
+
       const target = (event.target as HTMLElement).closest(
         '[data-article-ids], [data-keyword]'
       ) as HTMLElement | null
@@ -68,6 +88,7 @@ function PageBody({
 
     const handlePointerOver = (event: Event) => {
       const pointerEvent = event as globalThis.PointerEvent
+      if ((pointerEvent.target as HTMLElement).closest('sup[data-footnote-id]')) return
       const target = (pointerEvent.target as HTMLElement).closest(
         '[data-article-ids], [data-keyword]'
       ) as HTMLElement | null
@@ -190,6 +211,33 @@ function ArticlePagePanel({
               </blockquote>
             )
           })}
+        </div>
+      )}
+
+      {page.footnotes.length > 0 && (
+        <div className="article-footnotes mt-8 border-t border-slate-200 pt-5">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Footnotes
+          </h3>
+          <ol className="mt-3 space-y-3">
+            {page.footnotes.map((footnote, footnoteIndex) => (
+              <li
+                key={footnote.id}
+                id={`fn-${footnote.id}`}
+                className="article-footnote flex gap-2 text-sm leading-6 text-slate-600 scroll-mt-24"
+              >
+                <button
+                  type="button"
+                  className="footnote-backref shrink-0 font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                  title="Return to citation"
+                  onClick={() => scrollToFootnoteTarget(`#fnref-${footnote.id}`)}
+                >
+                  {footnoteIndex + 1}.
+                </button>
+                <span>{footnote.text.trim() || '—'}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       )}
     </section>

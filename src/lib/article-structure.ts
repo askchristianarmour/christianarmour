@@ -10,12 +10,18 @@ export type BiblePassage = {
   translation?: string
 }
 
+export type ArticleFootnote = {
+  id: string
+  text: string
+}
+
 export type ArticlePage = {
   id: string
   label: string
   description: string
   body: string
   biblePassages: BiblePassage[]
+  footnotes: ArticleFootnote[]
 }
 
 export type StructuredArticleContent = {
@@ -34,6 +40,10 @@ export function createBiblePassage(): BiblePassage {
   return { id: newId(), reference: '', text: '', translation: '' }
 }
 
+export function createArticleFootnote(text = ''): ArticleFootnote {
+  return { id: newId(), text }
+}
+
 export function createArticlePage(pageNumber: number): ArticlePage {
   return {
     id: newId(),
@@ -41,6 +51,7 @@ export function createArticlePage(pageNumber: number): ArticlePage {
     description: '',
     body: '<p></p>',
     biblePassages: [],
+    footnotes: [],
   }
 }
 
@@ -81,6 +92,10 @@ export function parseArticleContent(raw: string): StructuredArticleContent {
               text: passage.text ?? '',
               translation: passage.translation ?? '',
             })),
+            footnotes: (page.footnotes ?? []).map((footnote) => ({
+              id: footnote.id || newId(),
+              text: footnote.text ?? '',
+            })),
           })),
         }
       }
@@ -98,6 +113,7 @@ export function parseArticleContent(raw: string): StructuredArticleContent {
         description: '',
         body: raw,
         biblePassages: [],
+        footnotes: [],
       },
     ],
   }
@@ -109,8 +125,9 @@ export function getStructuredPlainText(content: StructuredArticleContent): strin
       const passageText = page.biblePassages
         .map((passage) => [passage.reference, passage.text, passage.translation].filter(Boolean).join(' '))
         .join(' ')
+      const footnoteText = page.footnotes.map((footnote) => footnote.text).filter(Boolean).join(' ')
 
-      return [page.label, page.description, getPlainTextFromContent(page.body), passageText]
+      return [page.label, page.description, getPlainTextFromContent(page.body), passageText, footnoteText]
         .filter(Boolean)
         .join(' ')
     })
@@ -124,8 +141,43 @@ export function hasArticleBody(raw: string): boolean {
   return structured.pages.some(
     (page) =>
       getPlainTextFromContent(page.body).trim().length > 0 ||
-      page.biblePassages.some((passage) => passage.reference.trim() || passage.text.trim())
+      page.biblePassages.some((passage) => passage.reference.trim() || passage.text.trim()) ||
+      page.footnotes.some((footnote) => footnote.text.trim())
   )
+}
+
+/** Keep superscript numbers in sync with the footnotes list order. */
+export function renumberFootnoteRefsInHtml(html: string, footnotes: ArticleFootnote[]): string {
+  if (!html?.trim() || typeof DOMParser === 'undefined') return html
+
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const byId = new Map(footnotes.map((footnote, index) => [footnote.id, index + 1]))
+
+  doc.querySelectorAll('sup[data-footnote-id]').forEach((element) => {
+    const id = element.getAttribute('data-footnote-id')
+    if (!id) return
+    const number = byId.get(id)
+    if (!number) {
+      element.remove()
+      return
+    }
+    element.setAttribute('data-footnote-number', String(number))
+    element.id = `fnref-${id}`
+    element.classList.add('footnote-ref')
+    element.textContent = String(number)
+  })
+
+  return doc.body.innerHTML
+}
+
+export function stripFootnoteRefFromHtml(html: string, footnoteId: string): string {
+  if (!html?.trim() || typeof DOMParser === 'undefined') return html
+
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  doc.querySelectorAll(`sup[data-footnote-id="${footnoteId}"]`).forEach((element) => {
+    element.remove()
+  })
+  return doc.body.innerHTML
 }
 
 export function reindexPageLabels(pages: ArticlePage[]): ArticlePage[] {

@@ -18,11 +18,13 @@ import {
   Trash2,
   Rows3,
   Columns3,
+  Superscript,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useToast } from '../../contexts/ToastContext'
 import { ArticleLinkPickerModal } from './ArticleLinkPickerModal'
 import { KeywordLink, parseArticleIdsAttr } from './KeywordLinkExtension'
+import { FootnoteRef } from './FootnoteRefExtension'
 
 type Props = {
   value: string
@@ -30,6 +32,8 @@ type Props = {
   placeholder?: string
   minHeightClassName?: string
   excludePostId?: string | null
+  /** Create a footnote entry and return its id + display number for the citation. */
+  onCreateFootnote?: () => { id: string; number: number }
 }
 
 export function RichTextEditor({
@@ -38,6 +42,7 @@ export function RichTextEditor({
   placeholder = 'Write your article...',
   minHeightClassName = 'min-h-[280px]',
   excludePostId = null,
+  onCreateFootnote,
 }: Props) {
   const { info: toastInfo } = useToast()
   const [selectedText, setSelectedText] = useState('')
@@ -49,6 +54,7 @@ export function RichTextEditor({
     extensions: [
       StarterKit,
       KeywordLink,
+      FootnoteRef,
       Table.configure({
         resizable: true,
         HTMLAttributes: {
@@ -111,6 +117,17 @@ export function RichTextEditor({
     setShowArticlePicker(false)
     setSelectedText('')
     setInitialSelectedIds([])
+  }
+
+  const insertFootnote = () => {
+    if (!editor || !onCreateFootnote) return
+    const created = onCreateFootnote()
+    if (!created?.id) return
+    editor
+      .chain()
+      .focus()
+      .insertFootnoteRef({ footnoteId: created.id, number: created.number })
+      .run()
   }
 
   if (!editor) return null
@@ -229,6 +246,18 @@ export function RichTextEditor({
         >
           <Unlink size={16} />
         </ToolbarButton>
+
+        {onCreateFootnote && (
+          <ToolbarButton
+            onClick={insertFootnote}
+            active={false}
+            label="Insert footnote"
+            className="gap-1.5 px-3 text-xs font-semibold text-blue-700"
+          >
+            <Superscript size={15} />
+            Footnote
+          </ToolbarButton>
+        )}
       </div>
 
       <EditorContent editor={editor} data-placeholder={placeholder} />
