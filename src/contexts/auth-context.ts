@@ -4,6 +4,7 @@ import type { Session, User } from '@supabase/supabase-js'
 export type SignInResult = {
   error: string | null
   needsEmailVerification?: boolean
+  invalidCredentials?: boolean
 }
 
 export type SignUpResult = {

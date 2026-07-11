@@ -69,13 +69,19 @@ async function signInRequest(email: string, password: string) {
         })
 
         const fail = failResult as LockStatus
-        if (fail?.message) {
-          return { error: fail.message }
+        if (fail?.locked) {
+          return {
+            error:
+              fail.message ||
+              'Account locked after too many wrong passwords. Try again after 24 hours.',
+            invalidCredentials: true,
+          }
         }
 
         const remaining = fail?.remaining ?? MAX_ATTEMPTS - 1
         return {
-          error: `Invalid email or password. ${remaining} attempt(s) remaining before lockout.`,
+          error: `Your credentials are invalid. ${remaining} attempt(s) remaining before lockout.`,
+          invalidCredentials: true,
         }
       }
 

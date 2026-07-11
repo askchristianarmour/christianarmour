@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -40,6 +41,7 @@ export function SignIn() {
     register,
     handleSubmit,
     watch,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -50,16 +52,33 @@ export function SignIn() {
   const passwordField = register('password')
   const email = watch('email')
   const rateLimit = useRateLimit('signIn', email)
+  const [invalidCredNotice, setInvalidCredNotice] = useState<string | null>(null)
 
   const onSubmit = async (data: FormData) => {
     if (showFailureHints && rateLimit.isBlocked) return
 
     setShowFailureHints(false)
+    setInvalidCredNotice(null)
 
-    const { error, needsEmailVerification } = await signIn(data.email, data.password)
+    const { error, needsEmailVerification, invalidCredentials } = await signIn(
+      data.email,
+      data.password
+    )
 
     if (error) {
       setShowFailureHints(true)
+
+      if (invalidCredentials) {
+        reset({ email: '', password: '' })
+        setInvalidCredNotice('Your credentials are invalid')
+        toastError(
+          error.toLowerCase().includes('locked')
+            ? error
+            : 'Your credentials are invalid'
+        )
+        return
+      }
+
       if (needsEmailVerification) {
         toastInfo(error)
       } else {
@@ -68,6 +87,7 @@ export function SignIn() {
       return
     }
 
+    setInvalidCredNotice(null)
     toastSuccess('Signed in successfully!')
     navigate('/')
   }
@@ -89,6 +109,21 @@ export function SignIn() {
             </h1>
 
             <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+              {invalidCredNotice && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 animate-in fade-in slide-in-from-top-1 duration-200"
+                >
+                  <AlertCircle size={18} className="mt-0.5 shrink-0 text-rose-600" />
+                  <div>
+                    <p className="font-semibold">Your credentials are invalid</p>
+                    <p className="mt-0.5 text-xs leading-5 text-rose-700/90">
+                      Email and password were cleared. Please try again carefully.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <input
                   id="email"
@@ -96,7 +131,10 @@ export function SignIn() {
                   autoComplete="email"
                   placeholder="Enter your email id"
                   {...emailField}
-                  onChange={withTrimStart(emailField.onChange)}
+                  onChange={(e) => {
+                    if (invalidCredNotice) setInvalidCredNotice(null)
+                    withTrimStart(emailField.onChange)(e)
+                  }}
                   className="w-full border-0 border-b border-slate-300 bg-transparent py-2.5 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#1c2b3a]"
                 />
                 {errors.email && (
@@ -109,7 +147,10 @@ export function SignIn() {
                 autoComplete="current-password"
                 error={errors.password?.message}
                 {...passwordField}
-                onChange={withTrimStart(passwordField.onChange)}
+                onChange={(e) => {
+                  if (invalidCredNotice) setInvalidCredNotice(null)
+                  withTrimStart(passwordField.onChange)(e)
+                }}
               />
 
               <div className="text-right">
