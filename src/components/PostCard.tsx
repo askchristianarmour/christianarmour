@@ -184,8 +184,10 @@ export function PostCard({ post, canToggleComments, coverImageUrl, compact = fal
         </div>
 
         <div
-          className={`flex items-center border-t border-slate-100 sm:mt-8 sm:flex-wrap sm:gap-3 sm:pt-6 ${
-            compact ? 'mt-3.5 gap-2 border-0 pt-0 sm:mt-8 sm:border-t sm:pt-6' : 'mt-5 flex-wrap gap-2 pt-4'
+          className={`flex items-center border-t border-slate-100 sm:mt-8 sm:flex-wrap sm:gap-3 sm:pt-7 ${
+            compact
+              ? 'mt-3 gap-2 border-0 pt-1 sm:mt-8 sm:border-t sm:pt-7'
+              : 'mt-5 flex-wrap gap-2 pt-6'
           }`}
         >
           <button
