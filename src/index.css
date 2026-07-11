@@ -72,25 +72,44 @@ body {
 
 .prose-editor .footnote-ref,
 .article-content .footnote-ref {
-  margin-left: 0.12em;
-  font-size: 0.7em;
-  font-weight: 700;
-  line-height: 0;
   color: #2563eb;
   cursor: pointer;
-  vertical-align: super;
-  text-decoration: none;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: rgba(37, 99, 235, 0.35);
+  text-underline-offset: 2px;
 }
 
 .prose-editor .footnote-ref:hover,
 .article-content .footnote-ref:hover {
   color: #1d4ed8;
-  text-decoration: underline;
+  text-decoration-color: rgba(29, 78, 216, 0.55);
+}
+
+/* Number after the linked word (selection becomes the link) */
+.prose-editor .footnote-ref-text::after,
+.article-content .footnote-ref-text::after {
+  content: attr(data-footnote-number);
+  margin-left: 0.08em;
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 0;
+  vertical-align: super;
+}
+
+.prose-editor sup.footnote-ref,
+.article-content sup.footnote-ref {
+  margin-left: 0.12em;
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 0;
+  vertical-align: super;
+  text-decoration: none;
 }
 
 .article-footnote.footnote-flash,
 .article-content .footnote-ref.footnote-flash,
-sup.footnote-ref.footnote-flash {
+.footnote-ref.footnote-flash {
   animation: footnote-flash 1.2s ease;
 }
 

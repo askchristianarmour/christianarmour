@@ -60,10 +60,19 @@ function PageBody({
 
     const handleClick = (event: MouseEvent) => {
       const footnoteTarget = (event.target as HTMLElement).closest(
-        'sup.footnote-ref[data-footnote-id], sup[data-footnote-id]'
+        '.footnote-ref[data-footnote-id], [data-footnote-id].footnote-ref, span[data-footnote-id], sup[data-footnote-id]'
       ) as HTMLElement | null
       if (footnoteTarget) {
         if ((event.target as HTMLElement).closest('.rtBibleRef')) return
+        // Don't treat article keyword links that also happen to be nested oddly
+        if (
+          footnoteTarget.hasAttribute('data-article-ids') &&
+          !footnoteTarget.hasAttribute('data-footnote-id')
+        ) {
+          return
+        }
+        if (!footnoteTarget.getAttribute('data-footnote-id')) return
+
         event.preventDefault()
         event.stopPropagation()
         const footnoteId = footnoteTarget.getAttribute('data-footnote-id')
@@ -77,6 +86,7 @@ function PageBody({
       if (!target) return
 
       if ((event.target as HTMLElement).closest('.rtBibleRef')) return
+      if ((event.target as HTMLElement).closest('[data-footnote-id]')) return
 
       event.preventDefault()
       onArticleLinkHover(null)
@@ -88,7 +98,9 @@ function PageBody({
 
     const handlePointerOver = (event: Event) => {
       const pointerEvent = event as globalThis.PointerEvent
-      if ((pointerEvent.target as HTMLElement).closest('sup[data-footnote-id]')) return
+      if ((pointerEvent.target as HTMLElement).closest('.footnote-ref[data-footnote-id], [data-footnote-id].footnote-ref')) {
+        return
+      }
       const target = (pointerEvent.target as HTMLElement).closest(
         '[data-article-ids], [data-keyword]'
       ) as HTMLElement | null
@@ -154,6 +166,8 @@ function ArticlePagePanel({
   onArticleLinkHover: (target: LinkedHoverTarget | null) => void
   inert?: boolean
 }) {
+  const footnotes = page.footnotes ?? []
+
   return (
     <section
       id={inert ? undefined : `article-page-${page.id}`}
@@ -183,13 +197,13 @@ function ArticlePagePanel({
         </div>
       )}
 
-      {page.biblePassages.length > 0 && (
+      {(page.biblePassages ?? []).length > 0 && (
         <div className="mt-6 space-y-4">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#a8863d]">
             <BookOpen size={14} />
             Scripture
           </div>
-          {page.biblePassages.map((passage) => {
+          {(page.biblePassages ?? []).map((passage) => {
             if (!passage.reference.trim() && !passage.text.trim()) return null
 
             return (
@@ -214,13 +228,13 @@ function ArticlePagePanel({
         </div>
       )}
 
-      {page.footnotes.length > 0 && (
+      {footnotes.length > 0 && (
         <div className="article-footnotes mt-8 border-t border-slate-200 pt-5">
           <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
             Footnotes
           </h3>
           <ol className="mt-3 space-y-3">
-            {page.footnotes.map((footnote, footnoteIndex) => (
+            {footnotes.map((footnote, footnoteIndex) => (
               <li
                 key={footnote.id}
                 id={`fn-${footnote.id}`}

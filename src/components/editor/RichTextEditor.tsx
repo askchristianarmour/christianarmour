@@ -51,6 +51,7 @@ export function RichTextEditor({
   const savedSelectionRef = useRef<{ from: number; to: number } | null>(null)
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       KeywordLink,
@@ -120,14 +121,31 @@ export function RichTextEditor({
   }
 
   const insertFootnote = () => {
-    if (!editor || !onCreateFootnote) return
-    const created = onCreateFootnote()
-    if (!created?.id) return
-    editor
+    if (!editor) return
+
+    const { empty } = editor.state.selection
+    if (empty) {
+      toastInfo('Select the word or phrase that should become the footnote link.')
+      return
+    }
+
+    let created = onCreateFootnote?.()
+    if (!created?.id) {
+      created = {
+        id: crypto.randomUUID(),
+        number: (editor.getHTML().match(/data-footnote-id/g)?.length ?? 0) + 1,
+      }
+    }
+
+    const ok = editor
       .chain()
       .focus()
-      .insertFootnoteRef({ footnoteId: created.id, number: created.number })
+      .setFootnoteRef({ footnoteId: created.id, number: created.number })
       .run()
+
+    if (!ok) {
+      toastInfo('Could not add the footnote link. Select some text and try again.')
+    }
   }
 
   if (!editor) return null
@@ -171,6 +189,16 @@ export function RichTextEditor({
           label="Numbered list"
         >
           <ListOrdered size={16} />
+        </ToolbarButton>
+
+        <ToolbarButton
+          onClick={insertFootnote}
+          active={false}
+          label="Insert footnote"
+          className="gap-1.5 px-3 text-xs font-semibold text-blue-700 border border-blue-200 bg-blue-50"
+        >
+          <Superscript size={15} />
+          Footnote
         </ToolbarButton>
 
         <span className="mx-1 h-6 w-px bg-slate-200" />
@@ -246,18 +274,6 @@ export function RichTextEditor({
         >
           <Unlink size={16} />
         </ToolbarButton>
-
-        {onCreateFootnote && (
-          <ToolbarButton
-            onClick={insertFootnote}
-            active={false}
-            label="Insert footnote"
-            className="gap-1.5 px-3 text-xs font-semibold text-blue-700"
-          >
-            <Superscript size={15} />
-            Footnote
-          </ToolbarButton>
-        )}
       </div>
 
       <EditorContent editor={editor} data-placeholder={placeholder} />

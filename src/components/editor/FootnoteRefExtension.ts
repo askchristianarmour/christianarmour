@@ -1,19 +1,22 @@
-import { Node, mergeAttributes } from '@tiptap/core'
+import { Mark, mergeAttributes } from '@tiptap/core'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     footnoteRef: {
-      insertFootnoteRef: (attrs: { footnoteId: string; number: number }) => ReturnType
+      setFootnoteRef: (attrs: { footnoteId: string; number: number }) => ReturnType
+      unsetFootnoteRef: () => ReturnType
     }
   }
 }
 
-export const FootnoteRef = Node.create({
+/**
+ * Wraps the selected word/phrase as the footnote link.
+ * A blue superscript number is shown after the text via CSS (::after).
+ */
+export const FootnoteRef = Mark.create({
   name: 'footnoteRef',
-  group: 'inline',
-  inline: true,
-  atom: true,
-  selectable: true,
+  inclusive: false,
+  excludes: '',
 
   addAttributes() {
     return {
@@ -29,7 +32,9 @@ export const FootnoteRef = Node.create({
         default: 1,
         parseHTML: (element) => {
           const raw =
-            element.getAttribute('data-footnote-number') || element.textContent || '1'
+            element.getAttribute('data-footnote-number') ||
+            element.querySelector?.('sup')?.textContent ||
+            '1'
           const parsed = Number.parseInt(String(raw).trim(), 10)
           return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
         },
@@ -41,36 +46,58 @@ export const FootnoteRef = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: 'sup.footnote-ref' }, { tag: 'sup[data-footnote-id]' }]
+    return [
+      { tag: 'span.footnote-ref' },
+      { tag: 'span[data-footnote-id]' },
+      // Legacy: bare superscript citations from the earlier implementation
+      {
+        tag: 'sup.footnote-ref',
+        getAttrs: (el) => {
+          const element = el as HTMLElement
+          return {
+            footnoteId: element.getAttribute('data-footnote-id'),
+            number: Number.parseInt(
+              element.getAttribute('data-footnote-number') || element.textContent || '1',
+              10
+            ) || 1,
+          }
+        },
+      },
+    ]
   },
 
-  renderHTML({ node, HTMLAttributes }) {
-    const footnoteId = node.attrs.footnoteId as string | null
+  renderHTML({ mark, HTMLAttributes }) {
+    const footnoteId = mark.attrs.footnoteId as string | null
     return [
-      'sup',
+      'span',
       mergeAttributes(HTMLAttributes, {
-        class: 'footnote-ref',
+        class: 'footnote-ref footnote-ref-text',
         id: footnoteId ? `fnref-${footnoteId}` : undefined,
         title: 'Go to footnote',
+        role: 'link',
+        tabindex: '0',
       }),
-      String(node.attrs.number ?? 1),
+      0,
     ]
   },
 
   addCommands() {
     return {
-      insertFootnoteRef:
+      setFootnoteRef:
         (attrs) =>
-        ({ commands }) => {
+        ({ state, commands }) => {
           if (!attrs.footnoteId) return false
-          return commands.insertContent({
-            type: this.name,
-            attrs: {
-              footnoteId: attrs.footnoteId,
-              number: attrs.number,
-            },
+          const { empty } = state.selection
+          if (empty) return false
+          return commands.setMark(this.name, {
+            footnoteId: attrs.footnoteId,
+            number: attrs.number,
           })
         },
+      unsetFootnoteRef:
+        () =>
+        ({ commands }) =>
+          commands.unsetMark(this.name),
     }
   },
 })

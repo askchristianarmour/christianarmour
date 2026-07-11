@@ -124,12 +124,13 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
     })
   }
 
+  /** Creates a footnote entry; citation is applied to selected text via the toolbar. */
   const createFootnoteForPage = (pageId: string) => {
     const page = structuredRef.current.pages.find((item) => item.id === pageId)
     if (!page) return { id: '', number: 1 }
 
     const footnote = createArticleFootnote()
-    const footnotes = [...page.footnotes, footnote]
+    const footnotes = [...(page.footnotes ?? []), footnote]
     updatePage(pageId, { footnotes })
     return { id: footnote.id, number: footnotes.length }
   }
@@ -139,7 +140,7 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
     if (!page) return
 
     updatePage(pageId, {
-      footnotes: page.footnotes.map((footnote) =>
+      footnotes: (page.footnotes ?? []).map((footnote) =>
         footnote.id === footnoteId ? { ...footnote, ...patch } : footnote
       ),
     })
@@ -149,7 +150,7 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
     const page = structuredRef.current.pages.find((item) => item.id === pageId)
     if (!page) return
 
-    const footnotes = page.footnotes.filter((footnote) => footnote.id !== footnoteId)
+    const footnotes = (page.footnotes ?? []).filter((footnote) => footnote.id !== footnoteId)
     const stripped = stripFootnoteRefFromHtml(page.body, footnoteId)
     const body = renumberFootnoteRefsInHtml(stripped, footnotes)
     updatePage(pageId, { footnotes, body })
@@ -256,10 +257,10 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
                 <div>
                   <label className="block text-sm font-semibold text-slate-700">Page content</label>
                   <p className="mt-1 text-xs text-slate-500">
-                    Place the cursor where a citation should appear, then click{' '}
-                    <strong>Footnote</strong> to insert a blue superscript number. Edit the footnote
-                    text in the Footnotes section below. Select text and use{' '}
-                    <strong>Link articles</strong> to connect phrases to existing articles.
+                    Select a word or phrase, then click the blue <strong>Footnote</strong> button —
+                    that whole selection becomes a blue link with a number. Edit the note text in
+                    the Footnotes section below. Use <strong>Link articles</strong> to connect
+                    phrases to existing articles.
                   </p>
                   <div className="mt-2">
                     <RichTextEditor
@@ -272,23 +273,24 @@ export function ArticlePagesEditor({ value, onChange, excludePostId = null }: Pr
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-4">
+                <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
                   <div className="flex items-center gap-2 text-sm font-semibold text-blue-800">
                     <Superscript size={16} />
                     Footnotes
                   </div>
-                  <p className="mt-1 text-xs text-slate-500">
-                    These appear at the bottom of the page. Readers can click a superscript number to
-                    jump here, then click the number again to return.
+                  <p className="mt-1 text-xs text-slate-600">
+                    Select a word or phrase in the editor, then click the blue{' '}
+                    <strong>Footnote</strong> button. That whole selection becomes a blue link with a
+                    number; fill in the note text here for the bottom of the page.
                   </p>
 
-                  {page.footnotes.length === 0 ? (
+                  {(page.footnotes ?? []).length === 0 ? (
                     <p className="mt-3 text-xs text-slate-500">
-                      No footnotes yet. Use the Footnote button in the editor toolbar.
+                      No footnotes yet on this page.
                     </p>
                   ) : (
                     <div className="mt-4 space-y-3">
-                      {page.footnotes.map((footnote, footnoteIndex) => (
+                      {(page.footnotes ?? []).map((footnote, footnoteIndex) => (
                         <div
                           key={footnote.id}
                           className="rounded-xl border border-white bg-white p-4 shadow-sm"

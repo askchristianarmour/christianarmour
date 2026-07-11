@@ -153,18 +153,28 @@ export function renumberFootnoteRefsInHtml(html: string, footnotes: ArticleFootn
   const doc = new DOMParser().parseFromString(html, 'text/html')
   const byId = new Map(footnotes.map((footnote, index) => [footnote.id, index + 1]))
 
-  doc.querySelectorAll('sup[data-footnote-id]').forEach((element) => {
+  doc.querySelectorAll('[data-footnote-id]').forEach((element) => {
     const id = element.getAttribute('data-footnote-id')
     if (!id) return
     const number = byId.get(id)
     if (!number) {
-      element.remove()
+      // Unwrap linked text; remove legacy bare <sup> markers.
+      if (element.tagName === 'SUP') {
+        element.remove()
+        return
+      }
+      const parent = element.parentNode
+      if (!parent) return
+      while (element.firstChild) parent.insertBefore(element.firstChild, element)
+      parent.removeChild(element)
       return
     }
     element.setAttribute('data-footnote-number', String(number))
     element.id = `fnref-${id}`
     element.classList.add('footnote-ref')
-    element.textContent = String(number)
+    if (element.tagName === 'SUP') {
+      element.textContent = String(number)
+    }
   })
 
   return doc.body.innerHTML
@@ -174,8 +184,15 @@ export function stripFootnoteRefFromHtml(html: string, footnoteId: string): stri
   if (!html?.trim() || typeof DOMParser === 'undefined') return html
 
   const doc = new DOMParser().parseFromString(html, 'text/html')
-  doc.querySelectorAll(`sup[data-footnote-id="${footnoteId}"]`).forEach((element) => {
-    element.remove()
+  doc.querySelectorAll(`[data-footnote-id="${footnoteId}"]`).forEach((element) => {
+    if (element.tagName === 'SUP') {
+      element.remove()
+      return
+    }
+    const parent = element.parentNode
+    if (!parent) return
+    while (element.firstChild) parent.insertBefore(element.firstChild, element)
+    parent.removeChild(element)
   })
   return doc.body.innerHTML
 }
