@@ -23,7 +23,7 @@ const BELIEF_SECTIONS: BeliefSection[] = [
     id: 'doctrine',
     tab: 'Doctrine',
     title: 'Doctrine',
-    tagline: 'OUR CORE TEACHINGS',
+    tagline: 'HOW TO INTERPRET SCRIPTURE',
     body: [
       'Doctrine is created by placing in order of importance: Didactic passages first, Narrative passages next, and Poetic passages last. The Bible should be interpreted using a Literal Grammatical-Historical method while recognizing that Hebrew, Aramaic and Greek have figures of speech, and by determining whether the passage is Prescriptive or Descriptive, Time-restricted or Eternally applicable, People or Place restricted or for all people at all places. The antiquity of a doctrine is not proof of its truth, and the novelty of a doctrine is not proof of its falsehood.',
     ],
@@ -67,7 +67,7 @@ const BELIEF_SECTIONS: BeliefSection[] = [
   },
   {
     id: 'christian-life',
-    tab: 'Christ',
+    tab: 'Holiness',
     title: 'Christian Life',
     tagline: 'LIVING FAITHFULLY IN CHRIST',
     body: [
