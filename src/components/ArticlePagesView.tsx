@@ -422,6 +422,45 @@ export function ArticlePagesView({
 
   if (!currentPage) return null
 
+  const renderPageTurnBar = () => {
+    if (!hasMultiplePages) return null
+    return (
+      <div className="flex items-center justify-between gap-3 sm:gap-4">
+        <button
+          type="button"
+          onClick={() => goToPage(pageIndex - 1, 'prev')}
+          disabled={isFirst || isTurning}
+          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 sm:gap-2 sm:px-4 sm:py-2.5 ${
+            woodSurface
+              ? 'border-[#a87348]/45 bg-[#fdfbf7]/92 text-[#3d2615] hover:bg-white'
+              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+          }`}
+        >
+          <ChevronLeft size={16} />
+          Previous
+        </button>
+
+        <p
+          className={`shrink-0 text-center text-sm font-medium ${
+            woodSurface ? 'text-[#f0dcc0]/80' : 'text-slate-500'
+          }`}
+        >
+          Page {pageIndex + 1} of {pages.length}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => goToPage(pageIndex + 1, 'next')}
+          disabled={isLast || isTurning}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[#1f2f3d] px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-[#182633] disabled:cursor-not-allowed disabled:opacity-40 sm:gap-2 sm:px-4 sm:py-2.5"
+        >
+          Next page
+          <ChevronRight size={16} />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div
       className={`${className} touch-pan-y`}
@@ -432,7 +471,7 @@ export function ArticlePagesView({
       {showPageNav && hasMultiplePages && (
         <nav
           aria-label="Article pages"
-          className={`mb-8 flex flex-wrap gap-2 rounded-2xl border p-3 ${
+          className={`mb-6 flex flex-wrap gap-2 rounded-2xl border p-3 sm:mb-8 ${
             woodSurface
               ? 'border-[#3d2615]/70 bg-[#2f1c12]/35 backdrop-blur-[2px]'
               : 'border-[#e8dfc8] bg-[#faf5e8]/70'
@@ -457,6 +496,8 @@ export function ArticlePagesView({
           ))}
         </nav>
       )}
+
+      {hasMultiplePages && <div className="mb-5 sm:mb-6">{renderPageTurnBar()}</div>}
 
       <div className={woodSurface ? 'article-wood-frame' : undefined}>
         <div className={woodSurface ? 'article-wood-frame-inner' : undefined}>
@@ -529,41 +570,7 @@ export function ArticlePagesView({
         </div>
       </div>
 
-      {hasMultiplePages && (
-        <div className="mt-8 flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => goToPage(pageIndex - 1, 'prev')}
-            disabled={isFirst || isTurning}
-            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-              woodSurface
-                ? 'border-[#a87348]/45 bg-[#fdfbf7]/92 text-[#3d2615] hover:bg-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-            }`}
-          >
-            <ChevronLeft size={16} />
-            Previous
-          </button>
-
-          <p
-            className={`text-sm font-medium ${
-              woodSurface ? 'text-[#f0dcc0]/80' : 'text-slate-500'
-            }`}
-          >
-            Page {pageIndex + 1} of {pages.length}
-          </p>
-
-          <button
-            type="button"
-            onClick={() => goToPage(pageIndex + 1, 'next')}
-            disabled={isLast || isTurning}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1f2f3d] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#182633] disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Next page
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+      {hasMultiplePages && <div className="mt-8">{renderPageTurnBar()}</div>}
 
       {linkedArticleIds && linkedArticleIds.length > 0 && (
         <LinkedArticlesModal

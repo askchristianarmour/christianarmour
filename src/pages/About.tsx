@@ -118,10 +118,10 @@ export function About() {
 
         <div className="relative mx-auto max-w-3xl">
           <h1 className="text-center font-serif text-[48px] font-bold leading-none tracking-normal">
-            Our Beliefs
+            About Us
           </h1>
           <p className="mx-auto mt-3 max-w-2xl text-center font-sans text-[16px] font-normal leading-6 tracking-normal text-white/75">
-            The foundation of our faith and the truth we stand upon.
+            A short summary of what we believe
           </p>
         </div>
       </section>
