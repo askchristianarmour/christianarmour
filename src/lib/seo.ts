@@ -1,3 +1,5 @@
+import { formatSeoKeywordsMeta } from './keywords'
+
 export const SITE_NAME = 'Christian Armour'
 
 export const SITE_URL = (
@@ -7,10 +9,9 @@ export const SITE_URL = (
 export const DEFAULT_TITLE = 'Christian Armour | Bible Study, Theology & Exegesis'
 
 export const DEFAULT_DESCRIPTION =
-  'Christian Armour publishes serious Bible study in plain language — exegesis, theology, church history, and Christian living. Read articles, explore Scripture, and ask theological questions.'
+  'Christian Armour publishes serious Bible study in plain language — exegesis, theology, church history, and apologetics. Explore original sin, predestination, Augustine, Nicaea, atonement, free will, and more.'
 
-export const DEFAULT_KEYWORDS =
-  'Christian Armour, Bible study, exegesis, theology, church history, Scripture, Christian living, biblical articles, theological questions'
+export const DEFAULT_KEYWORDS = formatSeoKeywordsMeta()
 
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.svg`
 

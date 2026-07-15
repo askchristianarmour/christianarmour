@@ -1,19 +1,24 @@
-export const POPULAR_ARTICLE_SEARCHES = [
+import { SEO_TOPIC_PHRASES } from './keywords'
+
+const CORE_SEARCHES = [
   'Genesis',
   'Romans',
   'Trinity',
-  'Salvation',
   'Christology',
   'Grace',
   'Resurrection',
   'Faith',
   'Church',
   'Covenant',
-  'Prayer',
-  'Baptism',
   'Exodus',
   'Revelation',
   'Holy Spirit',
+] as const
+
+/** Popular / SEO topic chips for search UI and article keyword suggestions. */
+export const POPULAR_ARTICLE_SEARCHES = [
+  ...CORE_SEARCHES,
+  ...SEO_TOPIC_PHRASES,
 ] as const
 
 export function buildArticlesSearchPath(keyword: string) {

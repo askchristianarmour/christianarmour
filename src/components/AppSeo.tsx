@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Seo } from './Seo'
+import { BRAND_NAME_VARIATIONS } from '../lib/keywords'
 import { DEFAULT_TITLE, ROUTE_SEO, SITE_URL, resolveCanonicalPath } from '../lib/seo'
 
 export function AppSeo() {
@@ -17,16 +18,20 @@ export function AppSeo() {
           '@type': 'Organization',
           '@id': `${SITE_URL}/#organization`,
           name: 'Christian Armour',
+          alternateName: [...BRAND_NAME_VARIATIONS].filter(
+            (name) => name.toLowerCase() !== 'christian armour'
+          ),
           url: SITE_URL,
           logo: `${SITE_URL}/favicon.svg`,
           description:
-            'Serious Bible study in plain language — exegesis, theology, church history, and Christian living.',
+            'Serious Bible study in plain language — exegesis, theology, church history, and apologetics.',
         },
         {
           '@type': 'WebSite',
           '@id': `${SITE_URL}/#website`,
           url: SITE_URL,
           name: 'Christian Armour',
+          alternateName: ['Christian Armor', 'christianarmour', 'christianarmour.com'],
           publisher: { '@id': `${SITE_URL}/#organization` },
           potentialAction: {
             '@type': 'SearchAction',

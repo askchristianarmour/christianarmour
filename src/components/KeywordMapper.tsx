@@ -30,7 +30,7 @@ export function KeywordMapper({ value, onChange }: Props) {
 
   const suggestions = POPULAR_ARTICLE_SEARCHES.filter(
     (item) => !keywords.includes(item.toLowerCase())
-  ).slice(0, 8)
+  ).slice(0, 12)
 
   return (
     <div>
